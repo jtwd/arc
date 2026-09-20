@@ -36,7 +36,7 @@ Three words: **curious, warm, unimpressed by power.**
 
 **Act 1, tourist (runs 1 to roughly 15).** He treats the run as sightseeing with obstacles. Death is inconvenient, not frightening. He collects observations and brings them back to the Firekeeper like a child bringing home stones.
 
-**Act 2, witness (roughly runs 15 to 40, unlocking ages 5 to 8).** The ages get heavier. He sees the trenches. He starts asking the Firekeeper why the Loom needs him specifically, and does not like the answer: because he was there at the start, every age is partly his. He begins to feel the weight without yet accepting it.
+**Act 2, witness (from the Age of Faith and Steel onward).** The shield of not understanding comes off. The Hollow Knight opens and is empty, and he asks who it was for. From here he can see why people did things, which is worse than not knowing. He starts asking the Firekeeper why the Loom needs him specifically, and does not like the answer: because he was there at the start, every age is partly his. He begins to feel the weight without yet accepting it.
 
 **Act 3, custodian (first Terminus clear onward).** He understands that the Terminus is not an enemy of history but its endpoint, the silence after the last person. He chooses to keep running not to destroy it but to keep it distant. The epilogue is him at the Hearth, adding a handprint, and going again.
 
@@ -48,7 +48,7 @@ The ending is quiet. No throne, no reunion. He gets what he wanted in run one, t
 
 **Casting:** mid-range, light, unforced. Regional accent is fine but avoid anything that codes as a specific real-world period. No received pronunciation, no American frontier. A soft accent from anywhere works because he is from nowhere.
 
-**Delivery notes:**
+**Delivery notes.** His sentences shorten as the ages advance. In the Stone Age he rambles; at the Terminus he speaks four words at a time. The rest holds throughout:
 
 - Wonder is the default register. Even complaints are delivered with interest.
 - He speaks slightly too fast when excited and slows right down when hurt.
@@ -120,7 +120,7 @@ Each category needs at least the listed count so repetition is rare. Sample line
 1. He never correctly explains a historical thing. He describes what he sees. The Archivist and the codex carry the accurate version.
 2. He never says the name of a real historical person. Places and peoples are fine.
 3. He never uses a word that did not exist in the age he is currently in, unless he is quoting someone. This is a soft rule for flavour, not a hard one for gameplay text.
-4. He never jokes in the Age of Wars intro or the Terminus. Everywhere else, he can.
+4. His humour thins as the ages advance, on the gradient in `TONE.md` section 3. He jokes freely in the Stone Age, rarely by the Age of Sail, and not at all at the Terminus. The darkening is subtractive: delete the joke and leave the space, never replace it with a grim line.
 5. He addresses the Terminus as "you" and never with a title. It offers him titles. He declines them.
 6. His swearing vocabulary is invented and mild. "Ash and ache." "Cold walk." Nothing modern.
 

@@ -122,7 +122,7 @@ Ranked by how much they would hurt.
 3. **Character art volume.** At full scope, six lineages times eight forms is 48 weapon meshes plus every enemy for nine ages. The launch scope cuts that to 15 meshes and 22 enemy re-skins, roughly 67 artist days saved. Mitigation: weapons are socket swaps on one rig, so it is modelling not animation. Enemies share behaviour archetypes across ages and are re-skins of four to five base rigs per archetype. Budget one enemy re-skin at two days.
 4. **Evolution feels like loss.** Mitigation: milestone 3 tests exactly this before anything else is built on it.
 5. **Voice budget.** Roughly 5,500 lines at launch. Mitigation: Alegus's combat barks are the only lines needed for the slice; everything else can be scratch until beta.
-6. **Tone in the Age of Wars.** A warm, funny game walking into the trenches could feel glib. Mitigation: the bible already forbids jokes in that age's intro. Playtest that age's tone specifically at alpha with testers who have opinions about it.
+6. **Tone in the late ages.** Two failure modes. A warm, funny game walking into the trenches could feel glib; and a dark scripted beat seen forty times is exhausting, then embarrassing. Mitigation: `TONE.md` makes the darkening subtractive and expressed through absence, which does not decay on repetition, and starts the gradient at the Age of Faith and Steel so it is inside the launch scope rather than arriving with the first update. Test it with the four questions in `TONE.md` section 8 at the alpha 30-run test.
 
 ---
 
@@ -145,6 +145,6 @@ Decided against one criterion, shortest time to a finished game. Reasoning and c
 | Protagonist | Alegus, voiced | Decided |
 | Art direction | 3D watercolour | Decided |
 | Boss construction | Five shared systems, not bespoke arenas | Decided, build during the slice |
-| Tone through late ages | Darkens, stays warm | Alpha writing |
+| Tone through late ages | Darkens, subtractively. Warmth relocates to the Hearth | Decided by the user. Spec in `TONE.md` |
 | Alegus's origin | Pre-cultural | Decided |
 | Early Access | Open, deliberately deferred | The user has parked it. Raise again at the vertical slice review, when there is something to judge |

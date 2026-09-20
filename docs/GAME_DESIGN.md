@@ -261,7 +261,7 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 **References to look at:** Okami for ink and paper; Dordogne for pure watercolour environments; Tchia and Sable for flat-shaded 3D that still reads painterly; Hades 2 for camera and telegraph readability. The target is closer to Dordogne's palette on Sable's rendering approach.
 
-**Palette per age.** The primary tool for "history moving forward":
+**Palette per age.** The primary tool for "history moving forward". The run is also a painting losing its colour: raise the paper composite strength slightly per age so the later ages read as visibly less painted, ending at the Terminus's bare paper. See `TONE.md` section 4.
 
 | Age | Palette |
 |---|---|
@@ -317,7 +317,6 @@ Roughly 14 months for a team of 4 to 5, with a dedicated technical artist from d
 
 The engine, platform, age count, and lineage count are settled in `FAST_PATH.md`. What remains:
 
-- Tone: Hades is warm and funny. Alegus as written is warm and curious. Does the game stay light through the Age of Wars, or does the tone darken with the history?
 - Early Access from around month ten, or a single finished launch? Deferred by choice until the vertical slice review. See `FAST_PATH.md` section 7.
 
 ---

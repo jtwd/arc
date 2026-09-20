@@ -16,6 +16,7 @@ Read in this order:
 10. [CAVE_WALL.md](CAVE_WALL.md), the permanent upgrade tree and the Ochre economy.
 
 11. [FAST_PATH.md](FAST_PATH.md), the launch scope decisions and the 14 month plan behind them. Read this second if you only read two.
+12. [TONE.md](TONE.md), how the game darkens across the ages and where the warmth goes instead.
 
 `tools/run-sim/simulate.js` is a dependency-free Monte Carlo model of a run. It produced the run-length and Ochre numbers quoted in the documents above. Run it with `node tools/run-sim/simulate.js` and re-run it whenever room counts, boss timings, or Ochre values change.
 
