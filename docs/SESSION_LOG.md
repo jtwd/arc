@@ -171,3 +171,28 @@ with cover hands you the punish window rather than hiding it.
 **Wanted:** whether the rooms genuinely play differently, and whether the door
 choice is ever hard. If it is obvious every time, the rewards are too
 comparable and need changing.
+
+---
+
+## Rung 4, Inventions
+
+**Built:** the twenty Stone Age boons from `VERTICAL_SLICE.md` section 7, four
+Inventors, altars offering three from one of them, and rarity.
+
+Rung 4 needed three verbs the prototype did not have, so those came first.
+**Special** is the Blunt ground slam on its real frame data, 22 startup, 10
+active, 30 recovery. **Cast** is the Ember stone: one stone, it lodges in what
+it hits and has to be fetched back, because a Cast is a loan rather than a
+spell. **Call** is a meter that fills from damage dealt and is spent on whatever
+Call boon you took, so an empty Call slot means no Call at all.
+
+Three statuses came with them: Burn, Root and Shatter. Burn shows on the body
+rather than as an icon, by running the paint warm.
+
+**One decision worth keeping.** Boon effects are checked by id at the point they
+apply rather than installed as closures. More typing, far easier to read, and it
+matters once the list reaches a hundred.
+
+**Wanted:** whether a run gets a shape. Two Ember runs and two Forge runs should
+feel like different games rather than the same game with bigger numbers. And
+whether fetching the stone is a cost or a chore.

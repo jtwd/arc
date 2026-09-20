@@ -166,16 +166,16 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; rung 3 &middot; a run</p>
-    <h1>Six rooms, and a choice at every door</h1>
-    <p>Clear a room and two or three doors rise, each showing what is behind it before you commit. That choice is the strategic loop of the whole game. Five layouts rotate and each changes how the fight works rather than how it looks: a crevasse that costs you fifteen health, tar that slows everything in it, ice that makes the dash overshoot, pillars that a charging boar will knock itself out on.</p>
+    <p class="eyebrow">EPOCH &middot; rung 4 &middot; Inventions</p>
+    <h1>Fire, the wheel, the seed and the forge</h1>
+    <p>Twenty boons from four Inventors, three offered at a time from one of them, so a run commits to a theme rather than collecting a shelf. All five verbs now exist for them to attach to: <b>space</b> swings, <b>Z</b> slams, <b>X</b> throws the stone, <b>C</b> spends the Call, <b>shift</b> dashes. The stone has to be fetched back, because a Cast is a loan rather than a spell.</p>
   </header>
 
   <div class="rig">
     <div class="stage">
       <canvas id="c" width="960" height="600" aria-label="Interactive render test: a paper-puppet figure in a watercolour Ice Age scene"></canvas>
       <div class="hud" id="hud"></div>
-      <div class="hint" id="hint">arrows move &middot; space attack &middot; shift dash &middot; walk into a door</div>
+      <div class="hint" id="hint">space attack &middot; Z slam &middot; X stone &middot; C call &middot; shift dash</div>
     </div>
 
     <aside>
@@ -260,12 +260,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. If you cannot tell them apart at a glance, the silhouettes are wrong.</p>
       </div>
       <div class="card">
+        <h3>Is fetching the stone annoying?</h3>
+        <p>It is meant to be a real cost, not a chore. If you stop casting because retrieving it is tedious, that is a design failure and Return Path should not be the only fix.</p>
+      </div>
+      <div class="card">
         <h3>Do the rooms play differently?</h3>
         <p>If you fight the same way in the tar pit as on the ice shelf, the layouts are decoration and I will make them sharper. Bait a charging boar into a pillar and see whether that reads as your idea or as luck.</p>
       </div>
       <div class="card">
-        <h3>Is the door choice interesting?</h3>
-        <p>Right now it is ochre, a heal, or an idea that does not exist yet. Even so: do you ever want both doors? If the choice is obvious every time, the rewards need to be less comparable.</p>
+        <h3>Does a run get a shape?</h3>
+        <p>Two runs with Ember and two with Forge should feel like different games, not the same game with bigger numbers. If they do not, the boons are too timid and I will make them stranger.</p>
       </div>
       <div class="card">
         <h3>Can you close on a hunter?</h3>
@@ -488,7 +492,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
                   turn or an instant stop is what makes a puppet read as a
                   diagram rather than a body. */
                gait:0, faceVis:1, lean:0, hairA:0, hairV:0, moving:false,
-               headA:0, blink:2.5 };
+               headA:0, blink:2.5,
+               slam:-1, slamHit:false, call:0, callDash:0, quench:0,
+               sinceDash:9, dashCharges:1, dashUsed:0 };
   var hitStop = 0;
   var foes = [], washes = [], scenery = [], shots = [], tells = [];
   var kills = 0;
@@ -512,9 +518,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   function startDash(ax, ay){
     if(hero.dash >= 0 || hero.dead > 0) return;
+    if(hero.dashUsed >= hero.dashCharges) return;
     if(!ax && !ay){ ax = hero.face; ay = 0; }
     var l = Math.hypot(ax, ay) || 1;
     hero.dashX = ax/l; hero.dashY = ay/l; hero.dash = 0;
+    hero.dashUsed++;
+    hero.sinceDash = 0;
   }
 
   function resetRun(){
@@ -524,6 +533,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hitStop = 0; kills = 0;
     run.ochre = 0; run.over = 0; run.layout = null;
     floats = []; roomWash.on = false;
+    boons = {attack:null, special:null, cast:null, dash:null, call:null};
+    hero.slam = -1; hero.call = 0; hero.callDash = 0; hero.quench = 0;
+    hero.dashCharges = 1; hero.dashUsed = 0; hero.sinceDash = 9;
+    shock = []; seeds = []; embers = [];
+    stone = {state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0};
     enterRoom(1);
   }
 
@@ -559,6 +573,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     foes.push({ kind:kind, x:side, y: GND_TOP+40+Math.random()*(H-GND_TOP-70),
                 face: side<0?1:-1, step:Math.random()*10,
                 hp:k.hp, maxHp:k.hp, flash:0, squash:0,
+                burn:0, root:0, shatter:0, stagger:0,
                 seed: Math.floor(Math.random()*900)+40,
                 state:'approach', timer: Math.random()*1.4, cool:0 });
   }
@@ -575,6 +590,14 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     /* tar slows them as readily as it slows you, which is the whole point of
        having it in the room */
     var slow = zoneAt(g.x, g.y, 'tar') ? 0.45 : 1;
+    stepStatus(g, dt);
+    if(foes.indexOf(g) < 0) return;
+    if(g.root > 0 || g.stagger > 0){
+      g.step += dt*2;
+      if(g.flash > 0) g.flash -= dt;
+      if(g.squash > 0) g.squash -= dt*6;
+      return;
+    }
     if(g.flash > 0) g.flash -= dt;
     if(g.squash > 0) g.squash -= dt*6;
     g.step += dt * (g.state === 'charge' ? 26 : 11);
@@ -997,6 +1020,18 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       else { k = 1 - (f-18)/14; swing = 1.45*k; lean = 0.27*k; }
     }
     if(hero.dash >= 4 && hero.dash < 14) lean += 0.36;
+    /* the slam: raise it over the head, then put your whole weight through it */
+    if(hero.slam >= 0){
+      var sf = hero.slam;
+      if(sf < SLAM.start){ var q = sf/SLAM.start; swing = -2.7*q; lean = -0.26*q; }
+      else if(sf < SLAM.start+SLAM.active){
+        var q2 = (sf-SLAM.start)/SLAM.active;
+        swing = -2.7 + 4.4*q2; lean = -0.26 + 0.6*q2;
+      } else {
+        var q3 = 1 - (sf-SLAM.start-SLAM.active)/SLAM.recover;
+        swing = 1.7*q3; lean = 0.34*q3;
+      }
+    }
     lean += hero.lean;
 
     /* expression. Curious by default, because that is the character; teeth
@@ -1071,7 +1106,134 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   /* ---------- the Frayed ---------- */
 
-  function foeInk(f, c){ return f.flash > 0 ? '#F6ECD8' : c; }
+
+  /* Burning paint runs warm. The status is on the body, not on an icon. */
+  function foeInk(f, c){
+    if(f.flash > 0) return '#F6ECD8';
+    if(f.burn > 0) return c === pal.foe ? '#C4794A' : '#8A4A26';
+    return c;
+  }
+
+  function drawGroundFx(){
+    for(var i=0;i<embers.length;i++){
+      var e = embers[i], k = e.t/e.dur;
+      ctx.globalAlpha = Math.min(1, (1-k)*1.6) * 0.5;
+      paint(blob(e.x, e.y, e.r*(0.8+k*0.3), e.r*0.38*(0.8+k*0.3), 9, e.x+i),
+        pal.glow, '#8A4A18', {seed:e.x+i, ink:false, edgeW:6});
+      ctx.globalAlpha = 1;
+    }
+    for(var s=0;s<seeds.length;s++){
+      var sd = seeds[s];
+      paint(blob(sd.x, sd.y - 8 - Math.sin(wobT*3+s)*3, 7, 7, 7, sd.x),
+        '#6FA894', '#3F7463', {seed:sd.x, ink:false, edgeW:3});
+    }
+    for(var r=0;r<shock.length;r++){
+      var sh = shock[r], sk = sh.t/0.5;
+      ctx.globalAlpha = (1-sk)*0.55;
+      ctx.strokeStyle = pal.inkc;
+      ctx.lineWidth = 7*(1-sk) + 1;
+      ctx.beginPath();
+      ctx.ellipse(sh.x, sh.y, sh.r*sk, sh.r*0.4*sk, 0, 0, 6.2832);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    /* rooted enemies are pinned by a ring, so the status reads on the floor */
+    for(var f=0;f<foes.length;f++){
+      if(foes[f].root > 0){
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = '#3F7463'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(foes[f].x, foes[f].y, 26, 10, 0, 0, 6.2832);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function drawStone(){
+    if(stone.state === 'held') return;
+    var y = stone.state === 'fly' ? stone.y : stone.y;
+    paint(blob(stone.x, y, 8, 7.5, 8, 77), pal.stoneW, pal.stoneWSh,
+      {seed:77, ink:false, edgeW:3});
+    if(stone.state === 'ground'){
+      ctx.globalAlpha = 0.35 + Math.sin(wobT*4)*0.15;
+      paint(blob(stone.x, y, 15, 13, 9, 78), pal.glow, pal.glow, {seed:78, ink:false, edgeW:3});
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /* Altar offers. Three from one Inventor, because a run should commit to a
+     theme rather than collect a shelf of unrelated effects. */
+  function drawOffers(){
+    if(!run.offers || !run.offers.length) return;
+    var col = INVENTORS[run.altarOf].col;
+    ctx.textAlign = 'center';
+    for(var i=0;i<run.offers.length;i++){
+      var o = run.offers[i];
+      var near = Math.hypot(hero.x-o.x, (hero.y-o.y)*1.3) < 90;
+      var lift = Math.sin(wobT*1.6 + i)*4 + (near ? -6 : 0);
+      ctx.save();
+      ctx.translate(o.x, o.y + lift);
+      ctx.globalAlpha = 0.22; ctx.fillStyle = pal.inkc;
+      trace(blob(0, 66, 40, 11, 9, i)); ctx.fill();
+      ctx.globalAlpha = 1;
+      paint([[-46,-64],[46,-66],[50,58],[-50,60]], pal.paper, '#D6CBB4',
+        {seed:i*11, ink:false, edgeW:6});
+      paint([[-40,-56],[40,-58],[42,-30],[-42,-28]], col, pal.inkc,
+        {seed:i*11+1, ink:false, edgeW:5});
+      ctx.fillStyle = pal.inkc;
+      ctx.font = '600 15px Fraunces, Georgia, serif';
+      ctx.fillText(o.data.name, 0, -2);
+      ctx.font = '400 10.5px "IBM Plex Mono", monospace';
+      ctx.globalAlpha = 0.5;
+      ctx.fillText(o.rar.name.toUpperCase() + ' · ' + o.data.slot.toUpperCase(), 0, -40);
+      ctx.globalAlpha = 0.78;
+      wrapText(o.data.desc, 0, 18, 84, 13);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    ctx.textAlign = 'left';
+  }
+
+  function wrapText(txt, x, y, maxw, lh){
+    var words = txt.split(' '), line = '', lines = [];
+    ctx.font = '400 12px "IBM Plex Sans", sans-serif';
+    for(var i=0;i<words.length;i++){
+      var t = line ? line + ' ' + words[i] : words[i];
+      if(ctx.measureText(t).width > maxw && line){ lines.push(line); line = words[i]; }
+      else line = t;
+    }
+    if(line) lines.push(line);
+    for(var j=0;j<lines.length;j++) ctx.fillText(lines[j], x, y + j*lh);
+  }
+
+  /* What you are holding, as five slots that fill up. An empty slot is as much
+     information as a full one. */
+  function drawBoons(){
+    var order = ['attack','special','cast','dash','call'];
+    var x = 14, y = H - 30;
+    ctx.font = '500 9px "IBM Plex Mono", monospace';
+    for(var i=0;i<order.length;i++){
+      var b = boons[order[i]];
+      var bx = x + i*46;
+      ctx.globalAlpha = b ? 1 : 0.2;
+      ctx.fillStyle = b ? INVENTORS[b.inv].col : pal.inkc;
+      ctx.fillRect(bx, y, 40, 5);
+      ctx.globalAlpha = b ? 0.75 : 0.3;
+      ctx.fillStyle = pal.inkc;
+      ctx.fillText(order[i].toUpperCase(), bx, y + 16);
+      ctx.globalAlpha = 1;
+    }
+    if(boons.call){
+      var cw = 190 * (hero.call/100);
+      ctx.globalAlpha = 0.16; ctx.fillStyle = pal.inkc;
+      ctx.fillRect(12, 26, 194, 7);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = hero.call >= 100 ? INVENTORS[boons.call.inv].col : '#8A7F6B';
+      ctx.fillRect(14, 27, cw, 5);
+    }
+  }
+
 
   function drawFoe(f){
     var d = depth(f.y);
@@ -1410,6 +1572,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ctx.fillRect(0, 0, W, H);
       ctx.globalAlpha = 1;
     }
+    drawBoons();
     ctx.fillStyle = pal.inkc;
     ctx.globalAlpha = 0.62;
     ctx.font = '500 12px "IBM Plex Mono", monospace';
@@ -1503,6 +1666,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         hero.x += hero.dashX * ds * dt;
         hero.y += hero.dashY * ds * dt;
       }
+      if(has('dash','wakeofash') && Math.random() < dt*26){
+        embers.push({x:hero.x, y:hero.y, t:0, dur:2.2, r:30*mul('dash')});
+      }
       if(hero.dash > 20) hero.dash = -1;
       ax = 0; ay = 0;
     }
@@ -1520,6 +1686,42 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       hero.y = hero.y < gap.y ? gap.y - gap.ry - 14 : gap.y + gap.ry + 14;
     }
     if(ax) hero.face = ax>0?1:-1;
+    hero.sinceDash += dt;
+    /* one charge back every nine tenths of a second, so a second axle is
+       genuinely a second chance and not a doubled budget forever */
+    if(hero.dashUsed > 0 && hero.dash < 0){
+      hero.dashTimer = (hero.dashTimer || 0) + dt;
+      if(hero.dashTimer > 0.9){ hero.dashTimer = 0; hero.dashUsed--; }
+    }
+    if(hero.callDash > 0 && hero.dash < 0){
+      hero.callDash--;
+      hero.dashUsed = 0;
+      startDash(hero.dashX, hero.dashY);
+      for(var cd=foes.length-1; cd>=0; cd--){
+        if(Math.hypot(foes[cd].x-hero.x, (foes[cd].y-hero.y)*1.4) < 70){
+          hitFoe(foes[cd], 40, 'dash');
+        }
+      }
+    }
+    stepSlam(dt);
+    stepStone(dt);
+    for(var sk=shock.length-1;sk>=0;sk--){ shock[sk].t += dt; if(shock[sk].t>0.5) shock.splice(sk,1); }
+    for(var em=embers.length-1;em>=0;em--){
+      embers[em].t += dt;
+      if(embers[em].t > embers[em].dur) embers.splice(em,1);
+      else for(var ef=foes.length-1; ef>=0; ef--){
+        if(Math.hypot(foes[ef].x-embers[em].x, (foes[ef].y-embers[em].y)*1.4) < embers[em].r) burn(foes[ef]);
+      }
+    }
+    for(var sd=seeds.length-1;sd>=0;sd--){
+      seeds[sd].t += dt;
+      if(Math.hypot(seeds[sd].x-hero.x, (seeds[sd].y-hero.y)*1.3) < 40){
+        hero.hp = Math.min(hero.maxHp, hero.hp + 5*mul('attack'));
+        floatText(hero.x, hero.y-66, '+' + Math.round(5*mul('attack')), '#4E7A45');
+        seeds.splice(sd,1);
+      } else if(seeds[sd].t > 12) seeds.splice(sd,1);
+    }
+
     hero.moving = (Math.abs(hero.vx)+Math.abs(hero.vy)) > 6;
     if(hero.moving) hero.step += dt*9;
 
@@ -1562,14 +1764,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
             /* a stunned boar takes the bonus, which is the whole point of
                baiting the charge into a wall */
             var dmg = (f.kind==='boar' && f.state==='stun') ? 60 : 20;
-            f.hp -= dmg; f.flash = 0.18; f.squash = 1;
             /* a few frames of held time on contact. Nothing else in a melee
                game buys as much weight for as little work. */
             hitStop = dmg > 40 ? 0.11 : 0.06;
-            if(f.hp <= 0){
-              washes.push({x:f.x,y:f.y,t:0,dur:0.75,seed:f.seed,base:pal.foe,sh:pal.foeSh});
-              foes.splice(i,1); kills++;
-            }
+            hitFoe(f, dmg, hero.sinceDash < 0.3 ? 'dash' : 'attack');
           }
         }
       }
@@ -1611,7 +1809,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     else { ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H); }
 
     if(run.state === 'cleared') drawDoors();
+    drawGroundFx();
     drawTells();
+    if(run.state === 'altar') drawOffers();
 
     var all = [];
     for(var j=0;j<foes.length;j++) all.push({y:foes[j].y, d:foes[j], k:'f'});
@@ -1627,6 +1827,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     }
 
     if(figuresOn) drawShots();
+    drawStone();
     drawFloats();
 
     /* the same wash as the age transition, run short. A door is a small
@@ -1690,8 +1891,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         ctx.beginPath(); ctx.arc(W*0.17, H*0.76, 46, 0, 6.2832); ctx.fill();
       }
       ctx.globalAlpha = 0.10 + Math.max(0,hitPulse)*0.26;
-      ctx.beginPath(); ctx.arc(W*0.84, H*0.30, 50, 0, 6.2832); ctx.fill();
-      ctx.beginPath(); ctx.arc(W*0.84, H*0.74, 44, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.84, H*0.28, 50, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.84, H*0.62, 40, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 0.09;
+      ctx.beginPath(); ctx.arc(W*0.62, H*0.92, 26, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.76, H*0.92, 26, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.90, H*0.92, 26, 0, 6.2832); ctx.fill();
       ctx.globalAlpha = 1;
     }
 
@@ -1712,6 +1917,283 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     requestAnimationFrame(loop);
   }
 
+
+
+
+  /* ------------------------------------------------------------------
+     INVENTIONS
+
+     The boon system. Boons are ideas humanity discovered, granted at altars by
+     Inventors, and each attaches to one of the five verbs. Catalogue is the
+     vertical slice's four Stone Age Inventors, five each, from
+     VERTICAL_SLICE.md section 7.
+
+     Effects are checked by id at the point they apply rather than installed as
+     closures. That is slightly more typing and much easier to read, which
+     matters when the list reaches a hundred.
+     ------------------------------------------------------------------ */
+
+  var INVENTORS = {
+    ember: {name:'Ember',  of:'fire',        col:'#D9883D', status:'Burn'},
+    wheel: {name:'Wheel',  of:'the wheel',   col:'#8A7A5E', status:'Momentum'},
+    seed:  {name:'Seed',   of:'agriculture', col:'#6FA894', status:'Root'},
+    forge: {name:'Forge',  of:'metallurgy',  col:'#A8571F', status:'Shatter'}
+  };
+
+  var INVENTIONS = [
+    {id:'kindling',   inv:'ember', slot:'attack',  name:'Kindling',     desc:'Attacks set them burning'},
+    {id:'flashover',  inv:'ember', slot:'special', name:'Flashover',    desc:'The slam burns, and hits 30% harder'},
+    {id:'coal',       inv:'ember', slot:'cast',    name:'Coal',         desc:'The stone leaves burning ground'},
+    {id:'wakeofash',  inv:'ember', slot:'dash',    name:'Wake of Ash',  desc:'The dash leaves fire behind it'},
+    {id:'hearthring', inv:'ember', slot:'call',    name:'Hearthring',   desc:'A ring of fire around you'},
+
+    {id:'rolling',    inv:'wheel', slot:'attack',  name:'Rolling Strike', desc:'20% more for 2s after a dash'},
+    {id:'freeturn',   inv:'wheel', slot:'special', name:'Free Turn',    desc:'The slam recovers far faster'},
+    {id:'returnpath', inv:'wheel', slot:'cast',    name:'Return Path',  desc:'The stone comes back on its own'},
+    {id:'secondaxle', inv:'wheel', slot:'dash',    name:'Second Axle',  desc:'One more dash before it recharges'},
+    {id:'cartwheel',  inv:'wheel', slot:'call',    name:'Cartwheel',    desc:'Three dashes that cut'},
+
+    {id:'sow',        inv:'seed',  slot:'attack',  name:'Sow',          desc:'Attacks sometimes drop a seed to eat'},
+    {id:'furrow',     inv:'seed',  slot:'special', name:'Furrow',       desc:'The slam roots them where they stand'},
+    {id:'taproot',    inv:'seed',  slot:'cast',    name:'Taproot',      desc:'The stone roots what it hits'},
+    {id:'tread',      inv:'seed',  slot:'dash',    name:'Tread',        desc:'Killing a rooted one feeds you'},
+    {id:'harvest',    inv:'seed',  slot:'call',    name:'Harvest',      desc:'Heal, and root everything'},
+
+    {id:'tempered',   inv:'forge', slot:'attack',  name:'Tempered Edge',desc:'Attacks hit 30% harder'},
+    {id:'hammerfall', inv:'forge', slot:'special', name:'Hammerfall',   desc:'The slam hits 60% harder'},
+    {id:'slug',       inv:'forge', slot:'cast',    name:'Slug',         desc:'The stone hits 80% harder and shatters'},
+    {id:'weight',     inv:'forge', slot:'dash',    name:'Weight',       desc:'The dash-attack hits 50% harder'},
+    {id:'quench',     inv:'forge', slot:'call',    name:'Quench',       desc:'Five hits at triple damage'}
+  ];
+
+  var RARITY = [
+    {name:'Common', mul:1.0,  col:'#8A7F6B', w:60},
+    {name:'Rare',   mul:1.35, col:'#3F6FA8', w:28},
+    {name:'Epic',   mul:1.75, col:'#7A3FA8', w:12}
+  ];
+
+  var boons = {attack:null, special:null, cast:null, dash:null, call:null};
+
+  function has(slot, id){ return boons[slot] !== null && boons[slot].id === id; }
+  function mul(slot){ return boons[slot] ? boons[slot].mul : 1; }
+
+  function rollRarity(){
+    var t = 0, i;
+    for(i=0;i<RARITY.length;i++) t += RARITY[i].w;
+    var r = Math.random()*t;
+    for(i=0;i<RARITY.length;i++){ r -= RARITY[i].w; if(r <= 0) return RARITY[i]; }
+    return RARITY[0];
+  }
+
+  /* An altar offers three from one Inventor, which is what makes a run commit
+     to a theme rather than collect a shelf of unrelated effects. */
+  function makeOffers(){
+    var keys = Object.keys(INVENTORS);
+    var tries = 0, pool = [];
+    var who = null;
+    while(tries++ < 12){
+      who = keys[Math.floor(Math.random()*keys.length)];
+      pool = INVENTIONS.filter(function(x){
+        return x.inv === who && (boons[x.slot] === null || boons[x.slot].inv !== who);
+      });
+      if(pool.length >= 2) break;
+    }
+    if(!pool.length) pool = INVENTIONS.filter(function(x){ return x.inv === who; });
+
+    var offers = [];
+    var used = {};
+    while(offers.length < Math.min(3, pool.length)){
+      var p = pool[Math.floor(Math.random()*pool.length)];
+      if(used[p.id]) continue;
+      used[p.id] = 1;
+      var rar = rollRarity();
+      offers.push({data:p, rar:rar, x:0, y:0});
+    }
+    var n = offers.length;
+    var xs = n === 3 ? [W*0.27, W*0.5, W*0.73] : (n === 2 ? [W*0.36, W*0.64] : [W*0.5]);
+    for(var i=0;i<n;i++){ offers[i].x = xs[i]; offers[i].y = H*0.60; }
+    run.altarOf = who;
+    return offers;
+  }
+
+  function takeOffer(o){
+    var d = o.data;
+    boons[d.slot] = {id:d.id, inv:d.inv, slot:d.slot, name:d.name,
+                     desc:d.desc, mul:o.rar.mul, rar:o.rar.name};
+    if(d.id === 'secondaxle') hero.dashCharges = 2;
+    floatText(W*0.5, H*0.44, o.rar.name + '  ' + d.name, INVENTORS[d.inv].col);
+    run.offers = [];
+    run.state = 'cleared';
+    run.clearT = 0;
+    makeDoors();
+  }
+
+  /* ------------------------------------------------------------------
+     THE FIVE VERBS
+
+     Attack, Special, Cast, Dash, Call, per GAME_DESIGN.md section 6. Every
+     Invention attaches to one of them, so all five have to exist before a boon
+     has anywhere to go. Frame data is from VERTICAL_SLICE.md section 6.
+     ------------------------------------------------------------------ */
+
+  var SLAM = {start:22, active:10, recover:30, dmg:50, radius:92};
+  var CAST_DMG = 50;
+
+  var shock = [];        /* expanding rings from the slam */
+  var seeds = [];        /* Seed's heal drops */
+  var embers = [];       /* Ember's burning ground */
+
+  /* One stone. It lodges in whatever it hits and has to be fetched back, which
+     is the whole point: a Cast is a loan, not a spell. */
+  var stone = { state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0 };
+
+  function castStone(){
+    if(stone.state !== 'held' || hero.dead > 0 || hero.atk >= 0) return;
+    var a = 0, best = 1e9;
+    for(var i=0;i<foes.length;i++){
+      var d = Math.hypot(foes[i].x-hero.x, foes[i].y-hero.y);
+      if(d < best){ best = d; a = Math.atan2((foes[i].y-40)-(hero.y-50), foes[i].x-hero.x); }
+    }
+    if(!foes.length) a = hero.face > 0 ? 0 : Math.PI;
+    stone.state = 'fly';
+    stone.x = hero.x + Math.cos(a)*16; stone.y = hero.y - 50 + Math.sin(a)*16;
+    stone.vx = Math.cos(a)*620; stone.vy = Math.sin(a)*620;
+    stone.t = 0;
+  }
+
+  function stoneHome(){ stone.state = 'held'; stone.host = null; }
+
+  function stepStone(dt){
+    if(stone.state === 'fly'){
+      stone.t += dt;
+      stone.x += stone.vx*dt; stone.y += stone.vy*dt;
+      for(var i=0;i<foes.length;i++){
+        var f = foes[i];
+        if(Math.hypot(stone.x-f.x, (stone.y-(f.y-36))*1.3) < 30){
+          hitFoe(f, CAST_DMG * (has('cast','slug') ? 1 + 0.8*mul('cast') : 1), 'cast');
+          if(has('cast','taproot')) f.root = 1.5;
+          if(has('cast','coal')) embers.push({x:f.x, y:f.y, t:0, dur:4, r:52});
+          if(has('cast','slug')) f.shatter = 5;
+          stone.state = 'stuck'; stone.host = f;
+          return;
+        }
+      }
+      if(stone.t > 0.9 || stone.x < 10 || stone.x > W-10 ||
+         stone.y < GND_TOP-40 || stone.y > H){ stone.state = 'ground'; }
+    } else if(stone.state === 'stuck'){
+      if(!stone.host || foes.indexOf(stone.host) < 0){
+        stone.state = 'ground';
+        stone.host = null;
+      } else {
+        stone.x = stone.host.x; stone.y = stone.host.y - 36;
+      }
+    }
+    if(stone.state === 'ground'){
+      /* Wheel's Return Path fetches it for you, which is what that boon is for */
+      if(has('cast','returnpath')){ stone.t += dt; if(stone.t > 3) stoneHome(); }
+      if(Math.hypot(stone.x-hero.x, (stone.y-(hero.y-40))*1.2) < 44) stoneHome();
+    }
+  }
+
+  function startSlam(){
+    if(hero.slam >= 0 || hero.atk >= 0 || hero.dead > 0) return;
+    hero.slam = 0;
+    hero.slamHit = false;
+  }
+
+  function stepSlam(dt){
+    if(hero.slam < 0) return;
+    hero.slam += dt*60 * (has('special','freeturn') ? 1.4 : 1);
+    if(hero.slam >= SLAM.start && hero.slam < SLAM.start + SLAM.active && !hero.slamHit){
+      hero.slamHit = true;
+      var r = SLAM.radius;
+      shock.push({x:hero.x, y:hero.y, t:0, r:r});
+      hitStop = 0.1;
+      for(var i=foes.length-1;i>=0;i--){
+        var f = foes[i];
+        if(Math.hypot(f.x-hero.x, (f.y-hero.y)*1.5) < r){
+          var d = SLAM.dmg * (has('special','hammerfall') ? 1 + 0.6*mul('special') : 1)
+                           * (has('special','flashover') ? 1 + 0.3*mul('special') : 1);
+          hitFoe(f, d, 'special');
+          f.stagger = 0.6;
+          if(has('special','flashover')) burn(f);
+          if(has('special','furrow')) f.root = 1.5;
+        }
+      }
+    }
+    if(hero.slam > SLAM.start + SLAM.active + SLAM.recover){ hero.slam = -1; }
+  }
+
+  /* ---------- status ---------- */
+
+  function burn(f){
+    f.burn = Math.max(f.burn || 0, 4);
+  }
+
+  function stepStatus(f, dt){
+    if(f.burn > 0){
+      f.burn -= dt;
+      f.hp -= 4 * mul('attack') * dt;
+      if(f.hp <= 0) killFoe(f);
+    }
+    if(f.root > 0) f.root -= dt;
+    if(f.shatter > 0) f.shatter -= dt;
+    if(f.stagger > 0) f.stagger -= dt;
+  }
+
+  /* ---------- damage, in one place so every boon hooks the same path ------- */
+
+  function hitFoe(f, dmg, source){
+    if(f.shatter > 0) dmg *= 1.25;
+    if(source === 'attack' && has('attack','tempered')) dmg *= 1 + 0.3*mul('attack');
+    if(source === 'attack' && has('attack','rolling') && hero.sinceDash < 2) dmg *= 1 + 0.2*mul('attack');
+    if(source === 'dash' && has('dash','weight')) dmg *= 1 + 0.5*mul('dash');
+    if(hero.quench > 0){ dmg *= 3; hero.quench--; f.shatter = 5; }
+    f.hp -= dmg;
+    f.flash = 0.18;
+    f.squash = 1;
+    hero.call = Math.min(100, hero.call + dmg/10);
+    if(source === 'attack'){
+      if(has('attack','kindling')) burn(f);
+      if(has('attack','sow') && Math.random() < 0.10){
+        seeds.push({x:f.x + (Math.random()-0.5)*30, y:f.y, t:0});
+      }
+    }
+    if(f.hp <= 0) killFoe(f);
+  }
+
+  function killFoe(f){
+    var i = foes.indexOf(f);
+    if(i < 0) return;
+    washes.push({x:f.x, y:f.y, t:0, dur:0.75, seed:f.seed, base:pal.foe, sh:pal.foeSh});
+    if(has('dash','tread') && f.root > 0){
+      hero.hp = Math.min(hero.maxHp, hero.hp + 3*mul('dash'));
+    }
+    foes.splice(i, 1);
+    kills++;
+  }
+
+  /* ---------- the Call ---------- */
+
+  function fireCall(){
+    if(hero.call < 100 || !boons.call || hero.dead > 0) return;
+    hero.call = 0;
+    var id = boons.call.id;
+    if(id === 'hearthring'){
+      embers.push({x:hero.x, y:hero.y, t:0, dur:5, r:150});
+      floatText(hero.x, hero.y-80, 'Hearthring', pal.glow);
+    } else if(id === 'cartwheel'){
+      hero.callDash = 3;
+      floatText(hero.x, hero.y-80, 'Cartwheel', '#D9883D');
+    } else if(id === 'harvest'){
+      hero.hp = Math.min(hero.maxHp, hero.hp + 25);
+      for(var i=0;i<foes.length;i++) foes[i].root = 2;
+      floatText(hero.x, hero.y-80, 'Harvest', '#4E7A45');
+    } else if(id === 'quench'){
+      hero.quench = 5;
+      floatText(hero.x, hero.y-80, 'Quench', '#A8571F');
+    }
+  }
 
   /* ------------------------------------------------------------------
      THE RUN
@@ -1800,9 +2282,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     floats.push({x:x, y:y, t:0, txt:txt, col:col || pal.inkc});
   }
 
-  function enterRoom(n){
+  function enterRoom(n, kind){
     run.room = n;
-    run.state = 'fight';
+    run.kind = kind || 'fight';
+    run.state = run.kind === 'altar' ? 'altar' : 'fight';
+    run.offers = [];
     run.clearT = 0;
     run.doors = [];
     obstacles = [];
@@ -1820,15 +2304,20 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     hero.x = W*0.5; hero.y = H*0.88;
 
-    /* the roster thickens as the run goes on */
-    var budget = 2 + Math.floor(n*0.9);
-    while(budget > 0){
-      var r = Math.random();
-      if(budget >= 3 && r < 0.35){ spawnFoe('boar'); budget -= 3; }
-      else if(budget >= 2 && r < 0.62){ spawnFoe('hunter'); budget -= 2; }
-      else { spawnFoe('wolf'); budget -= 1; }
+    if(run.kind === 'altar'){
+      run.offers = makeOffers();
+      floatText(W*0.5, H*0.44, 'An altar to ' + INVENTORS[run.altarOf].name, INVENTORS[run.altarOf].col);
+    } else {
+      /* the roster thickens as the run goes on */
+      var budget = 2 + Math.floor(n*0.9);
+      while(budget > 0){
+        var r = Math.random();
+        if(budget >= 3 && r < 0.35){ spawnFoe('boar'); budget -= 3; }
+        else if(budget >= 2 && r < 0.62){ spawnFoe('hunter'); budget -= 2; }
+        else { spawnFoe('wolf'); budget -= 1; }
+      }
+      floatText(W*0.5, H*0.46, pick.name, pal.inkc);
     }
-    floatText(W*0.5, H*0.46, pick.name, pal.inkc);
   }
 
   function makeDoors(){
@@ -1861,8 +2350,6 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       var h = Math.min(hero.maxHp - hero.hp, Math.round(hero.maxHp*0.3));
       hero.hp += h;
       floatText(hero.x, hero.y-70, '+' + h, '#4E7A45');
-    } else if(kind === 'idea'){
-      floatText(hero.x, hero.y-70, 'an idea, not yet', pal.inkc);
     }
   }
 
@@ -1878,6 +2365,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       return;
     }
 
+    if(run.state === 'altar'){
+      for(var o=0;o<run.offers.length;o++){
+        var of = run.offers[o];
+        if(Math.hypot(hero.x-of.x, (hero.y-of.y)*1.3) < 54){ takeOffer(of); break; }
+      }
+    }
     if(run.state === 'fight' && foes.length === 0 && hero.dead <= 0){
       run.state = 'cleared';
       run.clearT = 0;
@@ -1899,6 +2392,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         if(run.pending === 'out'){
           run.over = 3.0;
           run.state = 'done';
+        } else if(run.pending === 'idea'){
+          enterRoom(run.room + 1, 'altar');
         } else {
           enterRoom(run.room + 1);
           applyReward(run.pending);
@@ -2050,10 +2545,13 @@ It takes about 15 seconds, then prints a block to send back.</pre>
              a:'l',d:'r',w:'u',s:'d',A:'l',D:'r',W:'u',S:'d'};
   window.addEventListener('keydown', function(e){
     if(e.key==='b' || e.key==='B'){ startBench(); return; }
-    if(e.key==='Shift' || e.key==='x' || e.key==='X'){
+    if(e.key==='Shift'){
       startDash((keys.r?1:0)-(keys.l?1:0), (keys.d?1:0)-(keys.u?1:0));
       e.preventDefault(); return;
     }
+    if(e.key==='z' || e.key==='Z'){ startSlam(); e.preventDefault(); return; }
+    if(e.key==='x' || e.key==='X'){ castStone(); e.preventDefault(); return; }
+    if(e.key==='c' || e.key==='C'){ fireCall(); e.preventDefault(); return; }
     if(e.key===' '){ if(hero.atk<0 && hero.dead<=0) hero.atk=0; e.preventDefault(); return; }
     var k = MAP[e.key]; if(k){ keys[k]=1; e.preventDefault(); }
   });
@@ -2076,7 +2574,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     e.preventDefault();
     if(!touchUI){
       touchUI = true;
-      document.getElementById('hint').textContent = 'drag left · tap upper right to hit · lower right to dash';
+      document.getElementById('hint').textContent = 'drag left · upper right hit · right dash · bottom strip slam, stone, call';
     }
     var p = toCanvas(e);
     if(p[0] < W*0.52){
@@ -2084,6 +2582,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       stick.on = true; stick.id = e.pointerId;
       stick.ox = p[0]; stick.oy = p[1]; stick.x = 0; stick.y = 0;
       cv.setPointerCapture(e.pointerId);
+    } else if(p[1] > H*0.84){
+      /* a bottom strip for the three verbs that do not need aiming */
+      if(p[0] < W*0.68) startSlam();
+      else if(p[0] < W*0.84) castStone();
+      else fireCall();
+      hitPulse = 1;
     } else if(p[1] < H*0.52){
       if(hero.atk < 0 && hero.dead <= 0) hero.atk = 0;
       hitPulse = 1;
@@ -2111,7 +2615,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     });
   });
   if(window.matchMedia('(pointer: coarse)').matches){
-    document.getElementById('hint').textContent = 'drag left · tap upper right to hit · lower right to dash';
+    document.getElementById('hint').textContent = 'drag left · upper right hit · right dash · bottom strip slam, stone, call';
     touchUI = true;
   }
 
