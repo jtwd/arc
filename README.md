@@ -4,7 +4,7 @@ Design documentation for a Hades-style action roguelike in which every level is 
 
 You play **Alegus**, who died the night he carried the first fire and was caught by the Loom, the force that keeps the timeline stitched together. Something at the far end of history is pulling the weave apart. Every run begins in the Stone Age and pushes forward through the ages, and each age you clear re-forges your weapon into its next historical form. A stone club becomes a bronze mace, then a warhammer, then a flintlock. Rendered in 3D with a watercolour look.
 
-**Launch scope:** five ages plus the final boss, three weapon lineages, Steam on Windows, built in Unity. Roughly 14 months for a team of four to five. The full nine-age design is the post-launch roadmap.
+**First release:** the Stone Age alone, built in Godot 4 for Steam, by two people and Claude at about twelve hours a week. Roughly 12 to 18 months. Every visual is generated from code rather than authored as image files, which is what makes that possible. The nine-age design is the content plan for afterwards.
 
 ## What is here
 

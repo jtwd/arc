@@ -1,3 +1,5 @@
+> **Superseded in part.** This was written for a team of four to five professionals. The team is now two people and Claude, and `PRODUCTION.md` carries the current plan: Godot rather than Unity, the Stone Age alone rather than five ages, and art authored as code. The reasoning below still holds for why scope beats tooling, and the Steam section is unchanged.
+
 # The fast path: launch scope decisions
 
 Decisions made against one criterion: **shortest time to a finished, good game.** The full design in `GAME_DESIGN.md` is unchanged and remains the target. This document says which part of it ships first and why.

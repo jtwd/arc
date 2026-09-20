@@ -10,7 +10,7 @@ Read in this order:
 4. [BOSSES.md](BOSSES.md), the nine launch boss fights.
 5. [INVENTIONS.md](INVENTIONS.md), the complete boon catalogue with duos and offer rules.
 6. [RENDER_PIPELINE.md](RENDER_PIPELINE.md), the watercolour render stack and the milestone 1 test plan.
-7. [PRODUCTION.md](PRODUCTION.md), team, milestone backlogs, risks, and the decisions log.
+7. [PRODUCTION.md](PRODUCTION.md), **the current plan**: who does what, the art answer, the engine, and the eight-rung ladder to a Stone Age release.
 8. [ENEMIES.md](ENEMIES.md), rosters for ages 2 to 9 built on eight shared archetypes.
 9. [FIREKEEPER_DIALOGUE.md](FIREKEEPER_DIALOGUE.md), the ten hub conversations for the vertical slice.
 10. [CAVE_WALL.md](CAVE_WALL.md), the permanent upgrade tree and the Ochre economy.
@@ -26,6 +26,6 @@ Read in this order:
 
 `tools/run-sim/simulate.js` is a dependency-free Monte Carlo model of a run. It produced the run-length and Ochre numbers quoted in the documents above. Run it with `node tools/run-sim/simulate.js` and re-run it whenever room counts, boss timings, or Ochre values change.
 
-**Launch scope is five ages, three lineages, Steam on Windows, Unity.** The nine-age design in the master document is the full target and the post-launch roadmap. `FAST_PATH.md` says which part ships first and why.
+**The first release is the Stone Age alone, built in Godot for Steam by two people and Claude.** Everything else in these documents is design for later. `PRODUCTION.md` is the plan that governs; read it first.
 
 The game does not live in this repository. This repo holds the design documents and the run simulator; the game is built in Unity in its own repository. See the technology section of the master document.
