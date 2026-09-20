@@ -85,8 +85,8 @@ Each rung ends with something playable. Hours are total build effort, most of it
 | 1 | **The look, running** | Walk a room with the full render stack | 60 | done, in the browser |
 | 2 | **Combat feel** | Fight three Frayed types with the Blunt club and die | 110 | built, plus a character and faces pass |
 | 3 | **A run** | Clear six rooms through doors with rewards, then restart | 60 | built |
-| 4 | **Inventions** | Build a run out of 20 boons from four Inventors | 60 | built, awaiting a verdict |
-| 5 | **The boss** | Fight the Mammoth Mother through three phases | 80 | 7 weeks |
+| 4 | **Inventions** | Build a run out of 20 boons from four Inventors | 60 | built, rewritten once after playtest |
+| 5 | **The boss** | Fight the Mammoth Mother through three phases | 80 | built, awaiting a verdict |
 | 6 | **The Hearth** | Die, come back, spend Ochre, read the Firekeeper, go again | 70 | 6 weeks |
 | 7 | **Content and feel** | Play ten runs without repeating a room or getting bored | 140 | 12 weeks |
 | 8 | **Ship** | Buy it on Steam | 120 | 10 weeks |

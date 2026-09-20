@@ -227,3 +227,34 @@ the retrieval cost into a decision instead of a tax.
 
 **Wanted next:** not which boon is strongest, but which combination made him
 change how he was playing halfway through a run.
+
+---
+
+## Rung 5, the Mammoth Mother
+
+**Built:** the boss from `BOSSES.md` 1 and `VERTICAL_SLICE.md` 5. Fourteen
+hundred health across three phases, on the frozen lake, as the sixth room.
+
+The rule the fight is built on is that **every phase takes something away from
+you**, rather than adding health:
+
+| Phase | What it takes |
+|---|---|
+| 1, to 65% | Your patience. Slow telegraphs, and the four spears teach that weak points take double |
+| 2, to 30% | Your footing. The lake cracks into floes with open water between them, reusing the Ice Shelf room's crevasse rule |
+| 3, to 0 | Your space. She stops moving entirely and everything becomes area denial, so the spears are now the only way through: all four inside six seconds and she falters |
+
+Phase 1 exists to teach the thing phase 3 requires, which is why the spears had
+to be readable from the start.
+
+**One design correction during the build.** The spears began as points to hit,
+and she is far too tall for a man with a club to aim up her side. They are now
+mostly a horizontal test, so a spear is a place to stand rather than a pixel to
+find, which makes the fight positional.
+
+**The trunk is four segments on springs** and it is the only light thing about
+her. It is also the clearest demonstration yet of the lag rule in
+`CHARACTER_RIGS.md`.
+
+**Wanted:** whether she is a fight or a wall. If a phase only adds health it is
+not a phase and it gets rebuilt.
