@@ -22,6 +22,7 @@ Read in this order:
 15. [CAST.md](CAST.md), the Cartographer, Archivist and Wren, plus the keepsake system.
 16. [ROOMS.md](ROOMS.md), the forty room layouts for ages 2 to 5.
 17. [STORY_SCHEDULE.md](STORY_SCHEDULE.md), what unlocks after which run, and what gates it.
+18. [WREN_DIALOGUE.md](WREN_DIALOGUE.md), her ten beats and in-run lines, drafted ahead of the recording order.
 
 `tools/run-sim/simulate.js` is a dependency-free Monte Carlo model of a run. It produced the run-length and Ochre numbers quoted in the documents above. Run it with `node tools/run-sim/simulate.js` and re-run it whenever room counts, boss timings, or Ochre values change.
 

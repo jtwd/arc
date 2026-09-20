@@ -116,4 +116,4 @@ For the production plan, beats are needed in this order:
 2. **Alpha:** Cartographer, Archivist, sections 3 and 4 of this schedule. Roughly 900 lines.
 3. **Beta:** Wren, the Terminus, the ending, section 5 and the epilogue. Roughly 1,100 lines.
 
-Wren lands last and is the largest single writing task after Alegus himself, which is a scheduling risk worth naming: she carries the late-game tone and she is written under the most schedule pressure. Consider writing her beats early even if they are recorded late.
+Wren lands last and is the largest single writing task after Alegus himself, which is a scheduling risk: she carries the late-game tone and would otherwise be written under the most schedule pressure. **Her beats are already drafted in `WREN_DIALOGUE.md`**, ahead of the recording order, which closes that risk.

@@ -84,7 +84,10 @@ Casting: fast, bright, a little rough. The most energy of anyone in the game.
 
 **Arc.** She becomes the only friendship between two people from the same nowhere. Her importance rises as the ages darken, because once Alegus stops joking she is where the humour lives. By the late game the Hearth scenes are mostly her, and that is the plan working.
 
-**Wren's marks.** Cheap, high-value flavour. Some rooms carry a carved W and a scratched tally of her clear time. Finding one gives a small Ochre pickup and, rarely, a one-line voice barb left behind. It puts her in the run without modelling her into every room.
+Her ten beats and in-run lines are written in `WREN_DIALOGUE.md`.
+
+**Wren's marks.** Cheap, high-value flavour, and load-bearing for her arc: she carves her initial everywhere because she drowned in calm water and nobody noticed until morning.
+ Some rooms carry a carved W and a scratched tally of her clear time. Finding one gives a small Ochre pickup and, rarely, a one-line voice barb left behind. It puts her in the run without modelling her into every room.
 
 **The shared room.** Once every few runs she joins for a single room with a competitive kill count, and comments on the result afterwards at the Hearth. Alpha feature.
 

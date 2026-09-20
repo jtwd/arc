@@ -57,6 +57,8 @@ The tone lives in the connective tissue. **It never touches the combat.** Rooms 
 
 **Alegus.** Per the gradient above. His sentences also get shorter as the ages advance. In the Stone Age he rambles. At the Terminus he uses four words at a time.
 
+**Wren is the exception and must not be thinned with him.** She stays as funny in the last age as the first. She is the reason the gradient reads as quiet rather than as misery, and her dialogue is written in `WREN_DIALOGUE.md`.
+
 **The Firekeeper.** Moves in the opposite direction. It is oblique and withholding early, direct and kind late. By the Age of Wars it stops testing him and starts looking after him.
 
 **Music.** Carries most of the late-game weight, because music survives repetition better than dialogue does. The single motif thins out: full arrangements through Empires, fewer instruments each age after, a solo piano over distant artillery in Wars, and at the Terminus the bone flute alone, the first instrument, unaccompanied.
