@@ -48,6 +48,28 @@ var _second_accum: float = 0.0
 var stats: Label
 var _last_paints: int = 0
 
+## Automatic bisect. Holds each configuration for a moment, measures the frame
+## rate, and prints one block to paste back. Turning eight switches on and off
+## by hand and writing down numbers is not a reasonable thing to ask of anyone.
+const BENCH_HOLD := 1.8
+const BENCH_WARM := 0.5
+const BENCH_CONFIGS: Array[Dictionary] = [
+	{"name": "baseline",     "world": true,  "figures": true,  "paper": true,  "reserve": true,  "wobble": true,  "bands": true},
+	{"name": "world off",    "world": false, "figures": true,  "paper": true,  "reserve": true,  "wobble": true,  "bands": true},
+	{"name": "figures off",  "world": true,  "figures": false, "paper": true,  "reserve": true,  "wobble": true,  "bands": true},
+	{"name": "paper off",    "world": true,  "figures": true,  "paper": false, "reserve": true,  "wobble": true,  "bands": true},
+	{"name": "reserve off",  "world": true,  "figures": true,  "paper": true,  "reserve": false, "wobble": true,  "bands": true},
+	{"name": "wobble off",   "world": true,  "figures": true,  "paper": true,  "reserve": true,  "wobble": false, "bands": true},
+	{"name": "bands off",    "world": true,  "figures": true,  "paper": true,  "reserve": true,  "wobble": true,  "bands": false},
+	{"name": "all off",      "world": false, "figures": false, "paper": false, "reserve": false, "wobble": false, "bands": false},
+]
+var _bench_i: int = -1
+var _bench_t: float = 0.0
+var _bench_frames: int = 0
+var _bench_lines: PackedStringArray = PackedStringArray()
+var _bench_proc: float = 0.0
+var report: Label
+
 
 func _ready() -> void:
 	pal = Palette.stone()
@@ -186,6 +208,10 @@ func _process(delta: float) -> void:
 	wob_t += delta
 
 	var dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	if _bench_i >= 0:
+		# walk him in a circle so the measurement is of a moving scene
+		dir = Vector2(cos(wob_t * 2.0), sin(wob_t * 2.0))
+		_bench_tick(delta)
 	alegus.wob_t = wob_t
 	alegus.wob_amp = wob_amp
 	alegus.advance(delta, dir)
@@ -246,6 +272,75 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_SPACE:
 			start_wash()
+		elif event.keycode == KEY_B:
+			start_bench()
+
+
+# --- automatic bisect -------------------------------------------------------
+
+func start_bench() -> void:
+	if _bench_i >= 0:
+		return
+	_bench_lines = PackedStringArray()
+	_bench_i = 0
+	_bench_t = 0.0
+	_bench_frames = 0
+	_bench_proc = 0.0
+	_bench_apply(BENCH_CONFIGS[0])
+	report.text = "measuring..."
+
+
+func _bench_tick(delta: float) -> void:
+	_bench_t += delta
+	if _bench_t > BENCH_WARM:
+		_bench_frames += 1
+		_bench_proc += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	if _bench_t < BENCH_HOLD:
+		return
+
+	var window := BENCH_HOLD - BENCH_WARM
+	var fps := float(_bench_frames) / window
+	var proc := _bench_proc / float(maxi(_bench_frames, 1))
+	_bench_lines.append("%-12s %5.1f fps   process %5.2f ms" % [
+		BENCH_CONFIGS[_bench_i]["name"], fps, proc])
+
+	_bench_i += 1
+	_bench_t = 0.0
+	_bench_frames = 0
+	_bench_proc = 0.0
+	if _bench_i >= BENCH_CONFIGS.size():
+		_bench_finish()
+	else:
+		_bench_apply(BENCH_CONFIGS[_bench_i])
+
+
+func _bench_apply(cfg: Dictionary) -> void:
+	world_rect.visible = cfg["world"]
+	reserve_rect.visible = cfg["figures"]
+	figure_rect.visible = cfg["figures"]
+	shadows.visible = cfg["figures"]
+	paper_mat.set_shader_parameter("enabled", cfg["paper"])
+	reserve_mat.set_shader_parameter("enabled", cfg["reserve"] and cfg["figures"])
+	wob_amp = 1.5 if cfg["wobble"] else 0.0
+	world.bands = cfg["bands"]
+	alegus.bands = cfg["bands"]
+	_bake_world()
+
+
+func _bench_finish() -> void:
+	_bench_i = -1
+	_bench_apply(BENCH_CONFIGS[0])
+	var head := "EPOCH bench  %dx%d  %s  %s" % [
+		W, H,
+		ProjectSettings.get_setting("rendering/renderer/rendering_method", "?"),
+		OS.get_name()]
+	var block := head + "\n" + "\n".join(_bench_lines)
+	report.text = block
+	print("\n" + block + "\n")
+
+
+func _on_bench_pressed() -> void:
+	start_bench()
 
 
 # --- debug panel ------------------------------------------------------------
@@ -280,6 +375,17 @@ func _build_ui() -> void:
 	b.text = "Age transition  (space)"
 	b.pressed.connect(start_wash)
 	box.add_child(b)
+
+	var bench := Button.new()
+	bench.text = "Run benchmark  (B)"
+	bench.pressed.connect(_on_bench_pressed)
+	box.add_child(bench)
+
+	report = Label.new()
+	report.position = Vector2(12, 12)
+	report.text = "press B to benchmark"
+	report.add_theme_color_override("font_color", Color(0.18, 0.14, 0.10))
+	layer.add_child(report)
 
 
 func _check(parent: Node, text: String, on: bool, cb: Callable) -> void:

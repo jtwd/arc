@@ -63,3 +63,12 @@ readout gives frame time, script time, world bake time and rate, figure time
 and shape count, and there are switches to turn each layer off and bisect.
 
 **Still open:** whether that was enough. Claude still cannot run it.
+
+**Correction, same session.** The first ask back was a bisect table: turn eight
+switches on and off by hand, read four numbers each time, report. That is not a
+reasonable thing to ask of a team with twelve hours a week, and James said so.
+Replaced with a single button that runs the whole bisect automatically and
+prints one block to paste back.
+
+Worth keeping as a rule: when Claude needs information from a human, it should
+cost them one action, not a procedure.

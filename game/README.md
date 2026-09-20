@@ -32,33 +32,33 @@ built on top of it.
 
 ## If it still is not 60
 
-The first build was not, so the frame is now instrumented rather than guessed
-at. The readout top right says where the time goes:
+**Press B.** That is the whole job.
+
+It runs for about fifteen seconds, turning each part of the renderer off in
+turn and measuring the frame rate for each. Then it prints a block like this,
+both on screen and in Godot's **Output** panel at the bottom of the editor:
 
 ```
-58 fps
-process 12.40 ms     <- everything Claude's code does per frame
-world    9.10 ms @ 10/s   <- one world bake, and how often they happen
-figures  1.20 ms     <- Alegus
-paints     56        <- watercolour shapes drawn last frame
+EPOCH bench  960x600  gl_compatibility  Windows
+baseline      42.1 fps   process 14.20 ms
+world off     58.4 fps   process  4.10 ms
+figures off   46.0 fps   process 12.80 ms
+paper off     43.2 fps   process 14.10 ms
+reserve off   42.8 fps   process 14.20 ms
+wobble off    51.6 fps   process  8.90 ms
+bands off     49.3 fps   process 11.40 ms
+all off       60.0 fps   process  0.90 ms
 ```
 
-**Read `process` first.** At 60 frames a second the whole frame has 16.6 ms, and
-the renderer needs some of it, so anything over about 8 ms of script is the
-problem.
+Copy that block out of the Output panel and send it to me. Whichever line is
+fastest is the thing that is costing you, and I will cut that specifically.
 
-Then bisect with the two **Layer** switches, which turn a whole layer off:
+Everything restores itself when it finishes, so nothing is left switched off.
 
-| What happens | Means |
-|---|---|
-| `world` is large and turning the world layer off fixes it | Still CPU geometry. Drop **bake Hz**; ten is already generous, four is fine |
-| `process` is small but the frame rate is still low | It is the GPU, not the script. Untick **Paper composite**, then **Paper reserve**, and tell me which one moved it |
-| Turning **Bleed and wobble** off fixes it | The noise is the cost. It can be precomputed per shape instead of per frame |
-| Nothing moves it | Something outside this code. Check the renderer is GL Compatibility in Project Settings |
-
-Tell me the four numbers and which switch moved them and I will cut the right
-thing. Please do not just lower the resolution: this has to be fast honestly,
-because rung 2 adds enemies on top of it.
+The panel on the right has the same switches to poke at by hand if you want to,
+but you do not need to. One request either way: do not fix it by lowering the
+resolution. Rung 2 puts enemies on top of this, so it has to be genuinely fast
+rather than apparently fast.
 
 ## I could not run this
 
