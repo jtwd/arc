@@ -166,9 +166,9 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; rung 4 &middot; Inventions</p>
-    <h1>Fire, the wheel, the seed and the forge</h1>
-    <p>Twenty boons from four Inventors, three offered at a time from one of them, so a run commits to a theme rather than collecting a shelf. All five verbs now exist for them to attach to: <b>space</b> swings, <b>Z</b> slams, <b>X</b> throws the stone, <b>C</b> spends the Call, <b>shift</b> dashes. The stone has to be fetched back, because a Cast is a loan rather than a spell.</p>
+    <p class="eyebrow">EPOCH &middot; rung 4b &middot; stranger Inventions</p>
+    <h1>Not bigger. Different.</h1>
+    <p>The first twenty boons were percentages, and a percentage cannot change how you play. These change the verb instead. Fire spreads between them and the slam detonates it. The first swing out of a dash has no wind-up. Seeds burst where the fight was three seconds ago. Quench deals whatever the room has already cost you. Two duos appear if you commit to two Inventors. <b>Space</b> swings, <b>Z</b> slams, <b>X</b> throws, <b>C</b> calls, <b>shift</b> dashes.</p>
   </header>
 
   <div class="rig">
@@ -260,16 +260,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. If you cannot tell them apart at a glance, the silhouettes are wrong.</p>
       </div>
       <div class="card">
-        <h3>Is fetching the stone annoying?</h3>
-        <p>It is meant to be a real cost, not a chore. If you stop casting because retrieving it is tedious, that is a design failure and Return Path should not be the only fix.</p>
+        <h3>Where do you leave the stone?</h3>
+        <p>You said the fetch is a cost, so it stays. Coal makes it burn where it lies and Taproot makes it root what is near it, which means leaving it out there is now sometimes the better play.</p>
       </div>
       <div class="card">
         <h3>Do the rooms play differently?</h3>
         <p>If you fight the same way in the tar pit as on the ice shelf, the layouts are decoration and I will make them sharper. Bait a charging boar into a pillar and see whether that reads as your idea or as luck.</p>
       </div>
       <div class="card">
-        <h3>Does a run get a shape?</h3>
-        <p>Two runs with Ember and two with Forge should feel like different games, not the same game with bigger numbers. If they do not, the boons are too timid and I will make them stranger.</p>
+        <h3>Is there a run you want to repeat?</h3>
+        <p>Not which boon is strongest. Which combination made you change how you were playing halfway through. If there still is not one, the answer is stranger boons again, not more of them.</p>
       </div>
       <div class="card">
         <h3>Can you close on a hunter?</h3>
@@ -493,8 +493,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
                   diagram rather than a body. */
                gait:0, faceVis:1, lean:0, hairA:0, hairV:0, moving:false,
                headA:0, blink:2.5,
-               slam:-1, slamHit:false, call:0, callDash:0, quench:0,
-               sinceDash:9, dashCharges:1, dashUsed:0 };
+               slam:-1, slamHit:false, call:0, cartwheel:0, quench:0, taken:0,
+               sinceDash:9, dashCharges:1, dashUsed:0, dashHits:{}, dashTimer:0 };
   var hitStop = 0;
   var foes = [], washes = [], scenery = [], shots = [], tells = [];
   var kills = 0;
@@ -506,6 +506,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   function hurtHero(dmg){
     if(hero.dead > 0 || heroInvulnerable()) return;
     hero.hp -= dmg;
+    hero.taken += dmg;
     hero.hurt = 0.6;
     if(hero.hp <= 0){ hero.hp = 0; hero.dead = 2.2; }
   }
@@ -517,13 +518,25 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
 
   function startDash(ax, ay){
-    if(hero.dash >= 0 || hero.dead > 0) return;
-    if(hero.dashUsed >= hero.dashCharges) return;
+    if(hero.dead > 0) return;
+    /* Free Turn: the slam can be abandoned at any frame, which turns the
+       slowest move in the game into something you can throw out safely */
+    if(hero.slam >= 0){
+      if(!has('special','freeturn')) return;
+      hero.slam = -1;
+    }
+    if(hero.dash >= 0) return;
+    if(hero.dashUsed >= hero.dashCharges && hero.cartwheel <= 0) return;
     if(!ax && !ay){ ax = hero.face; ay = 0; }
     var l = Math.hypot(ax, ay) || 1;
     hero.dashX = ax/l; hero.dashY = ay/l; hero.dash = 0;
-    hero.dashUsed++;
+    if(hero.cartwheel <= 0) hero.dashUsed++;
     hero.sinceDash = 0;
+    hero.dashHits = {};
+    /* Fallow: every dash plants something, so movement itself becomes farming */
+    if(boons.duo && boons.duo.id === 'fallow'){
+      seeds.push({x:hero.x, y:hero.y, t:0, grow:2.5});
+    }
   }
 
   function resetRun(){
@@ -533,8 +546,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hitStop = 0; kills = 0;
     run.ochre = 0; run.over = 0; run.layout = null;
     floats = []; roomWash.on = false;
-    boons = {attack:null, special:null, cast:null, dash:null, call:null};
-    hero.slam = -1; hero.call = 0; hero.callDash = 0; hero.quench = 0;
+    boons = {attack:null, special:null, cast:null, dash:null, call:null, duo:null};
+    hero.slam = -1; hero.call = 0; hero.cartwheel = 0; hero.quench = 0; hero.taken = 0;
     hero.dashCharges = 1; hero.dashUsed = 0; hero.sinceDash = 9;
     shock = []; seeds = []; embers = [];
     stone = {state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0};
@@ -1117,14 +1130,23 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   function drawGroundFx(){
     for(var i=0;i<embers.length;i++){
       var e = embers[i], k = e.t/e.dur;
-      ctx.globalAlpha = Math.min(1, (1-k)*1.6) * 0.5;
-      paint(blob(e.x, e.y, e.r*(0.8+k*0.3), e.r*0.38*(0.8+k*0.3), 9, e.x+i),
-        pal.glow, '#8A4A18', {seed:e.x+i, ink:false, edgeW:6});
+      var rooty = e.kind === 'root';
+      ctx.globalAlpha = Math.min(1, (1-k)*1.6) * (rooty ? 0.42 : 0.5);
+      paint(blob(e.x, e.y, e.r*(rooty?1:(0.8+k*0.3)), e.r*0.38*(rooty?1:(0.8+k*0.3)), 9, e.x+i),
+        rooty ? '#6FA894' : pal.glow, rooty ? '#3F7463' : '#8A4A18',
+        {seed:e.x+i, ink:false, edgeW:6});
       ctx.globalAlpha = 1;
     }
+    /* a seed swells as it comes due, so the burst is something you can plan
+       around rather than something that happens at you */
     for(var s=0;s<seeds.length;s++){
-      var sd = seeds[s];
-      paint(blob(sd.x, sd.y - 8 - Math.sin(wobT*3+s)*3, 7, 7, 7, sd.x),
+      var sd = seeds[s], g = Math.min(1, sd.t/sd.grow);
+      var r = 5 + g*9;
+      ctx.globalAlpha = 0.25 + g*0.3;
+      ctx.strokeStyle = '#3F7463'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(sd.x, sd.y, 78*g, 30*g, 0, 0, 6.2832); ctx.stroke();
+      ctx.globalAlpha = 1;
+      paint(blob(sd.x, sd.y - 8 - Math.sin(wobT*3+s)*3, r, r, 7, sd.x),
         '#6FA894', '#3F7463', {seed:sd.x, ink:false, edgeW:3});
     }
     for(var r=0;r<shock.length;r++){
@@ -1222,6 +1244,14 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ctx.globalAlpha = b ? 0.75 : 0.3;
       ctx.fillStyle = pal.inkc;
       ctx.fillText(order[i].toUpperCase(), bx, y + 16);
+      ctx.globalAlpha = 1;
+    }
+    if(boons.duo){
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = INVENTORS[boons.duo.inv].col;
+      ctx.fillRect(x + 5*46, y, 40, 5);
+      ctx.globalAlpha = 0.75; ctx.fillStyle = pal.inkc;
+      ctx.fillText('DUO', x + 5*46, y + 16);
       ctx.globalAlpha = 1;
     }
     if(boons.call){
@@ -1666,8 +1696,23 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         hero.x += hero.dashX * ds * dt;
         hero.y += hero.dashY * ds * dt;
       }
-      if(has('dash','wakeofash') && Math.random() < dt*26){
-        embers.push({x:hero.x, y:hero.y, t:0, dur:2.2, r:30*mul('dash')});
+      if(has('dash','wakeofash') && Math.random() < dt*30){
+        /* fire that stays, so a dash is a wall you can retreat behind */
+        embers.push({x:hero.x, y:hero.y, t:0, dur:5*mul('dash'), r:34, kind:'fire'});
+      }
+      /* everything that happens when you pass through one of them */
+      for(var dh=foes.length-1; dh>=0; dh--){
+        var df = foes[dh];
+        if(hero.dashHits[df.seed]) continue;
+        if(Math.hypot(df.x-hero.x, (df.y-hero.y)*1.4) > 46) continue;
+        hero.dashHits[df.seed] = 1;
+        if(has('dash','weight')){ df.stagger = 1.1*mul('dash'); hitStop = 0.07; }
+        if(has('dash','secondaxle')){ hero.dashUsed = Math.max(0, hero.dashUsed-1); }
+        if(has('dash','tread') && df.hp < df.maxHp*0.3){
+          hero.hp = Math.min(hero.maxHp, hero.hp + 8*mul('dash'));
+          floatText(df.x, df.y-70, 'taken', '#4E7A45');
+          hitFoe(df, 9999, 'dash');
+        }
       }
       if(hero.dash > 20) hero.dash = -1;
       ax = 0; ay = 0;
@@ -1693,15 +1738,23 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       hero.dashTimer = (hero.dashTimer || 0) + dt;
       if(hero.dashTimer > 0.9){ hero.dashTimer = 0; hero.dashUsed--; }
     }
-    if(hero.callDash > 0 && hero.dash < 0){
-      hero.callDash--;
-      hero.dashUsed = 0;
-      startDash(hero.dashX, hero.dashY);
+    /* Cartwheel is a mode, not a burst: for three seconds you are a dash */
+    if(hero.cartwheel > 0){
+      hero.cartwheel -= dt;
+      if(hero.dash < 0){
+        var cax = (keys.r?1:0)-(keys.l?1:0), cay = (keys.d?1:0)-(keys.u?1:0);
+        if(stick.on){ cax = stick.x; cay = stick.y; }
+        startDash(cax, cay);
+      }
       for(var cd=foes.length-1; cd>=0; cd--){
-        if(Math.hypot(foes[cd].x-hero.x, (foes[cd].y-hero.y)*1.4) < 70){
-          hitFoe(foes[cd], 40, 'dash');
+        if(Math.hypot(foes[cd].x-hero.x, (foes[cd].y-hero.y)*1.4) < 62){
+          if(!hero.dashHits[foes[cd].seed + 9000]){
+            hero.dashHits[foes[cd].seed + 9000] = 1;
+            hitFoe(foes[cd], 45, 'dash');
+          }
         }
       }
+      if(hero.cartwheel <= 0) hero.dashUsed = 0;
     }
     stepSlam(dt);
     stepStone(dt);
@@ -1709,17 +1762,38 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     for(var em=embers.length-1;em>=0;em--){
       embers[em].t += dt;
       if(embers[em].t > embers[em].dur) embers.splice(em,1);
-      else for(var ef=foes.length-1; ef>=0; ef--){
-        if(Math.hypot(foes[ef].x-embers[em].x, (foes[ef].y-embers[em].y)*1.4) < embers[em].r) burn(foes[ef]);
+      else {
+        var ez = embers[em];
+        if(ez.follow){ ez.x = hero.x; ez.y = hero.y; ez.r = ez.r0 * (1 - ez.t/ez.dur*0.7); }
+        for(var ef=foes.length-1; ef>=0; ef--){
+          if(Math.hypot(foes[ef].x-ez.x, (foes[ef].y-ez.y)*1.4) < ez.r){
+            if(ez.kind === 'root') foes[ef].root = 0.5;
+            else burn(foes[ef]);
+          }
+        }
       }
     }
     for(var sd=seeds.length-1;sd>=0;sd--){
-      seeds[sd].t += dt;
-      if(Math.hypot(seeds[sd].x-hero.x, (seeds[sd].y-hero.y)*1.3) < 40){
-        hero.hp = Math.min(hero.maxHp, hero.hp + 5*mul('attack'));
-        floatText(hero.x, hero.y-66, '+' + Math.round(5*mul('attack')), '#4E7A45');
+      var sdd = seeds[sd];
+      sdd.t += dt;
+      /* Fallow lets you dash through your own seed to get the dash back, which
+         makes a Wheel and Seed run into a chain of hops across the room */
+      if(boons.duo && boons.duo.id === 'fallow' && hero.dash >= 4 && hero.dash < 14 &&
+         Math.hypot(sdd.x-hero.x, (sdd.y-hero.y)*1.3) < 44){
+        hero.dashUsed = Math.max(0, hero.dashUsed-1);
+        seeds.splice(sd,1); continue;
+      }
+      if(sdd.t > sdd.grow){
+        /* it bursts where the fight was, not where it is */
+        shock.push({x:sdd.x, y:sdd.y, t:0, r:78});
+        for(var rf=0; rf<foes.length; rf++){
+          if(Math.hypot(foes[rf].x-sdd.x, (foes[rf].y-sdd.y)*1.3) < 78){
+            foes[rf].root = 2*mul('attack');
+          }
+        }
+        hero.hp = Math.min(hero.maxHp, hero.hp + 4);
         seeds.splice(sd,1);
-      } else if(seeds[sd].t > 12) seeds.splice(sd,1);
+      }
     }
 
     hero.moving = (Math.abs(hero.vx)+Math.abs(hero.vy)) > 6;
@@ -1754,7 +1828,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     maskPt = [hero.x, hero.y-50];
 
     if(hero.atk>=0){
-      hero.atk += dt*60;
+      hero.atk += dt*60 * (has('attack','tempered') ? 0.85 : 1);
       if(hero.atk>=12 && hero.atk<18 && !hero.hitThisSwing){
         hero.hitThisSwing = true;
         for(var i=foes.length-1;i>=0;i--){
@@ -1941,29 +2015,65 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   };
 
   var INVENTIONS = [
-    {id:'kindling',   inv:'ember', slot:'attack',  name:'Kindling',     desc:'Attacks set them burning'},
-    {id:'flashover',  inv:'ember', slot:'special', name:'Flashover',    desc:'The slam burns, and hits 30% harder'},
-    {id:'coal',       inv:'ember', slot:'cast',    name:'Coal',         desc:'The stone leaves burning ground'},
-    {id:'wakeofash',  inv:'ember', slot:'dash',    name:'Wake of Ash',  desc:'The dash leaves fire behind it'},
-    {id:'hearthring', inv:'ember', slot:'call',    name:'Hearthring',   desc:'A ring of fire around you'},
+    /* EMBER: you set the world alight and then stand in it. Fire persists,
+       spreads, and belongs to the floor as much as to the enemy. */
+    {id:'kindling',   inv:'ember', slot:'attack',  name:'Kindling',
+      desc:'Attacks set them burning, and burning spreads to whatever they touch'},
+    {id:'flashover',  inv:'ember', slot:'special', name:'Flashover',
+      desc:'The slam detonates everything that is burning'},
+    {id:'coal',       inv:'ember', slot:'cast',    name:'Coal',
+      desc:'The stone burns where it lies. You may not want it back'},
+    {id:'wakeofash',  inv:'ember', slot:'dash',    name:'Wake of Ash',
+      desc:'The dash lays fire that stays. Draw a line and stand behind it'},
+    {id:'hearthring', inv:'ember', slot:'call',    name:'Hearthring',
+      desc:'A ring of fire that follows you and closes in. Get amongst them'},
 
-    {id:'rolling',    inv:'wheel', slot:'attack',  name:'Rolling Strike', desc:'20% more for 2s after a dash'},
-    {id:'freeturn',   inv:'wheel', slot:'special', name:'Free Turn',    desc:'The slam recovers far faster'},
-    {id:'returnpath', inv:'wheel', slot:'cast',    name:'Return Path',  desc:'The stone comes back on its own'},
-    {id:'secondaxle', inv:'wheel', slot:'dash',    name:'Second Axle',  desc:'One more dash before it recharges'},
-    {id:'cartwheel',  inv:'wheel', slot:'call',    name:'Cartwheel',    desc:'Three dashes that cut'},
+    /* WHEEL: never stop. Every boon removes a reason to stand still. */
+    {id:'rolling',    inv:'wheel', slot:'attack',  name:'Rolling Strike',
+      desc:'The first swing out of a dash has no wind-up at all'},
+    {id:'freeturn',   inv:'wheel', slot:'special', name:'Free Turn',
+      desc:'The slam can be cancelled into a dash at any moment'},
+    {id:'returnpath', inv:'wheel', slot:'cast',    name:'Return Path',
+      desc:'The stone ricochets through three of them before it drops'},
+    {id:'secondaxle', inv:'wheel', slot:'dash',    name:'Second Axle',
+      desc:'Dashing through one of them costs no charge'},
+    {id:'cartwheel',  inv:'wheel', slot:'call',    name:'Cartwheel',
+      desc:'Three seconds where you are a dash, and cannot be touched'},
 
-    {id:'sow',        inv:'seed',  slot:'attack',  name:'Sow',          desc:'Attacks sometimes drop a seed to eat'},
-    {id:'furrow',     inv:'seed',  slot:'special', name:'Furrow',       desc:'The slam roots them where they stand'},
-    {id:'taproot',    inv:'seed',  slot:'cast',    name:'Taproot',      desc:'The stone roots what it hits'},
-    {id:'tread',      inv:'seed',  slot:'dash',    name:'Tread',        desc:'Killing a rooted one feeds you'},
-    {id:'harvest',    inv:'seed',  slot:'call',    name:'Harvest',      desc:'Heal, and root everything'},
+    /* SEED: hold ground and grow things. Everything is delayed and positional,
+       so a Seed run is about where you were a moment ago. */
+    {id:'sow',        inv:'seed',  slot:'attack',  name:'Sow',
+      desc:'Attacks plant a seed. It bursts and roots whatever is near'},
+    {id:'furrow',     inv:'seed',  slot:'special', name:'Furrow',
+      desc:'The slam leaves ground that roots anything standing on it'},
+    {id:'taproot',    inv:'seed',  slot:'cast',    name:'Taproot',
+      desc:'While the stone lies there it roots everything around it'},
+    {id:'tread',      inv:'seed',  slot:'dash',    name:'Tread',
+      desc:'Dashing through a wounded one finishes it and feeds you'},
+    {id:'harvest',    inv:'seed',  slot:'call',    name:'Harvest',
+      desc:'Everything rooted dies. Nothing rooted, and everything roots'},
 
-    {id:'tempered',   inv:'forge', slot:'attack',  name:'Tempered Edge',desc:'Attacks hit 30% harder'},
-    {id:'hammerfall', inv:'forge', slot:'special', name:'Hammerfall',   desc:'The slam hits 60% harder'},
-    {id:'slug',       inv:'forge', slot:'cast',    name:'Slug',         desc:'The stone hits 80% harder and shatters'},
-    {id:'weight',     inv:'forge', slot:'dash',    name:'Weight',       desc:'The dash-attack hits 50% harder'},
-    {id:'quench',     inv:'forge', slot:'call',    name:'Quench',       desc:'Five hits at triple damage'}
+    /* FORGE: slow, heavy, committed. It changes the room and it punishes you
+       for being impatient. */
+    {id:'tempered',   inv:'forge', slot:'attack',  name:'Tempered Edge',
+      desc:'Swings are slower, but every hit shatters, and shattered breaks open'},
+    {id:'hammerfall', inv:'forge', slot:'special', name:'Hammerfall',
+      desc:'The slam raises a standing stone. Cover you made yourself'},
+    {id:'slug',       inv:'forge', slot:'cast',    name:'Slug',
+      desc:'The stone goes straight through the lot of them, shattering'},
+    {id:'weight',     inv:'forge', slot:'dash',    name:'Weight',
+      desc:'Dashing into one of them knocks it senseless'},
+    {id:'quench',     inv:'forge', slot:'call',    name:'Quench',
+      desc:'Your next hit deals everything this room has done to you'}
+  ];
+
+  /* Duos need one boon from each Inventor and are their own slot, so a run that
+     commits to two themes gets something a run that spreads thin never sees. */
+  var DUOS = [
+    {id:'slag',   a:'ember', b:'forge', name:'Slag',
+      desc:'Shattered enemies burst when their burning runs out'},
+    {id:'fallow', a:'wheel', b:'seed',  name:'Fallow',
+      desc:'Every dash plants a seed, and dashing through one gives the dash back'}
   ];
 
   var RARITY = [
@@ -1972,7 +2082,21 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     {name:'Epic',   mul:1.75, col:'#7A3FA8', w:12}
   ];
 
-  var boons = {attack:null, special:null, cast:null, dash:null, call:null};
+  var boons = {attack:null, special:null, cast:null, dash:null, call:null, duo:null};
+
+  function holds(inv){
+    var k = ['attack','special','cast','dash','call'];
+    for(var i=0;i<k.length;i++) if(boons[k[i]] && boons[k[i]].inv === inv) return true;
+    return false;
+  }
+
+  function availableDuo(){
+    if(boons.duo) return null;
+    for(var i=0;i<DUOS.length;i++){
+      if(holds(DUOS[i].a) && holds(DUOS[i].b)) return DUOS[i];
+    }
+    return null;
+  }
 
   function has(slot, id){ return boons[slot] !== null && boons[slot].id === id; }
   function mul(slot){ return boons[slot] ? boons[slot].mul : 1; }
@@ -2002,7 +2126,14 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     var offers = [];
     var used = {};
-    while(offers.length < Math.min(3, pool.length)){
+    /* a duo takes one of the three places when it is available, because the
+       whole point of committing to two Inventors is that you get told */
+    var duo = availableDuo();
+    if(duo && Math.random() < 0.7){
+      offers.push({data:{id:duo.id, inv:duo.a, slot:'duo', name:duo.name, desc:duo.desc},
+                   rar:RARITY[2], x:0, y:0, isDuo:true});
+    }
+    while(offers.length < Math.min(3, pool.length + (duo?1:0))){
       var p = pool[Math.floor(Math.random()*pool.length)];
       if(used[p.id]) continue;
       used[p.id] = 1;
@@ -2020,7 +2151,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     var d = o.data;
     boons[d.slot] = {id:d.id, inv:d.inv, slot:d.slot, name:d.name,
                      desc:d.desc, mul:o.rar.mul, rar:o.rar.name};
-    if(d.id === 'secondaxle') hero.dashCharges = 2;
+
     floatText(W*0.5, H*0.44, o.rar.name + '  ' + d.name, INVENTORS[d.inv].col);
     run.offers = [];
     run.state = 'cleared';
@@ -2058,7 +2189,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     stone.state = 'fly';
     stone.x = hero.x + Math.cos(a)*16; stone.y = hero.y - 50 + Math.sin(a)*16;
     stone.vx = Math.cos(a)*620; stone.vy = Math.sin(a)*620;
-    stone.t = 0;
+    stone.t = 0; stone.hit = {}; stone.bounces = 0;
   }
 
   function stoneHome(){ stone.state = 'held'; stone.host = null; }
@@ -2069,11 +2200,35 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       stone.x += stone.vx*dt; stone.y += stone.vy*dt;
       for(var i=0;i<foes.length;i++){
         var f = foes[i];
+        if(stone.hit && stone.hit[f.seed]) continue;
         if(Math.hypot(stone.x-f.x, (stone.y-(f.y-36))*1.3) < 30){
-          hitFoe(f, CAST_DMG * (has('cast','slug') ? 1 + 0.8*mul('cast') : 1), 'cast');
+          hitFoe(f, CAST_DMG, 'cast');
+          if(!stone.hit) stone.hit = {};
+          stone.hit[f.seed] = 1;
+          if(has('cast','slug')){
+            /* Slug goes through the lot of them and shatters as it goes */
+            f.shatter = 5;
+            continue;
+          }
+          if(has('cast','returnpath')){
+            /* Return Path ricochets to the next one, three times */
+            stone.bounces = (stone.bounces || 0) + 1;
+            if(stone.bounces < 3){
+              var nx = null, nd = 1e9;
+              for(var b=0;b<foes.length;b++){
+                if(stone.hit[foes[b].seed]) continue;
+                var bd = Math.hypot(foes[b].x-stone.x, foes[b].y-stone.y);
+                if(bd < nd){ nd = bd; nx = foes[b]; }
+              }
+              if(nx){
+                var ba = Math.atan2((nx.y-36)-stone.y, nx.x-stone.x);
+                stone.vx = Math.cos(ba)*620; stone.vy = Math.sin(ba)*620;
+                stone.t = 0;
+                continue;
+              }
+            }
+          }
           if(has('cast','taproot')) f.root = 1.5;
-          if(has('cast','coal')) embers.push({x:f.x, y:f.y, t:0, dur:4, r:52});
-          if(has('cast','slug')) f.shatter = 5;
           stone.state = 'stuck'; stone.host = f;
           return;
         }
@@ -2089,10 +2244,27 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       }
     }
     if(stone.state === 'ground'){
-      /* Wheel's Return Path fetches it for you, which is what that boon is for */
-      if(has('cast','returnpath')){ stone.t += dt; if(stone.t > 3) stoneHome(); }
+      /* Where the stone lies is now a decision. Coal burns there, Taproot roots
+         there, and both mean you might leave it a while. */
+      if(has('cast','coal')){
+        for(var cf=foes.length-1; cf>=0; cf--){
+          if(Math.hypot(foes[cf].x-stone.x, foes[cf].y-stone.y) < 90*mul('cast')) burn(foes[cf]);
+        }
+      }
+      if(has('cast','taproot')){
+        for(var tf=0; tf<foes.length; tf++){
+          if(Math.hypot(foes[tf].x-stone.x, foes[tf].y-stone.y) < 90*mul('cast')) foes[tf].root = 0.4;
+        }
+      }
       if(Math.hypot(stone.x-hero.x, (stone.y-(hero.y-40))*1.2) < 44) stoneHome();
     }
+  }
+
+  function startAttack(){
+    if(hero.atk >= 0 || hero.dead > 0) return;
+    /* Rolling Strike: straight to the active frames. Dash, hit, dash, hit. */
+    hero.atk = (has('attack','rolling') && hero.sinceDash < 0.4) ? 11.5 : 0;
+    hero.hitThisSwing = false;
   }
 
   function startSlam(){
@@ -2109,6 +2281,30 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       var r = SLAM.radius;
       shock.push({x:hero.x, y:hero.y, t:0, r:r});
       hitStop = 0.1;
+      /* Flashover: the slam is a detonator. Burn them, then set it off. */
+      if(has('special','flashover')){
+        for(var fb=foes.length-1; fb>=0; fb--){
+          if(foes[fb].burn > 0){
+            shock.push({x:foes[fb].x, y:foes[fb].y, t:0, r:64});
+            foes[fb].burn = 0;
+            hitFoe(foes[fb], 45*mul('special'), 'special');
+          }
+        }
+      }
+      /* Furrow: the slam zones the ground rather than only hitting it */
+      if(has('special','furrow')){
+        embers.push({x:hero.x, y:hero.y, t:0, dur:6*mul('special'), r:r*0.9, kind:'root'});
+      }
+      /* Hammerfall: you raise cover where you stood, and a charging boar will
+         put itself out on it */
+      if(has('special','hammerfall')){
+        var rocks = 0;
+        for(var ro=0;ro<obstacles.length;ro++) if(obstacles[ro].k==='rock') rocks++;
+        if(rocks < 6){
+          obstacles.push({k:'rock', x:hero.x + hero.face*70, y:hero.y, rx:26, ry:18});
+          bakeWorld();
+        }
+      }
       for(var i=foes.length-1;i>=0;i--){
         var f = foes[i];
         if(Math.hypot(f.x-hero.x, (f.y-hero.y)*1.5) < r){
@@ -2134,6 +2330,21 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(f.burn > 0){
       f.burn -= dt;
       f.hp -= 4 * mul('attack') * dt;
+      /* Kindling: fire is contagious, so lighting one and herding the rest is
+         a real tactic rather than a damage bonus */
+      if(has('attack','kindling')){
+        for(var sp=0;sp<foes.length;sp++){
+          if(foes[sp] !== f && foes[sp].burn <= 0 &&
+             Math.hypot(foes[sp].x-f.x, foes[sp].y-f.y) < 66) burn(foes[sp]);
+        }
+      }
+      if(f.burn <= 0 && f.shatter > 0 && boons.duo && boons.duo.id === 'slag'){
+        /* Slag: shattered and burnt out, it comes apart */
+        for(var bl=foes.length-1; bl>=0; bl--){
+          if(Math.hypot(foes[bl].x-f.x, foes[bl].y-f.y) < 90) hitFoe(foes[bl], 55, 'duo');
+        }
+        shock.push({x:f.x, y:f.y, t:0, r:90});
+      }
       if(f.hp <= 0) killFoe(f);
     }
     if(f.root > 0) f.root -= dt;
@@ -2144,19 +2355,25 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   /* ---------- damage, in one place so every boon hooks the same path ------- */
 
   function hitFoe(f, dmg, source){
-    if(f.shatter > 0) dmg *= 1.25;
-    if(source === 'attack' && has('attack','tempered')) dmg *= 1 + 0.3*mul('attack');
-    if(source === 'attack' && has('attack','rolling') && hero.sinceDash < 2) dmg *= 1 + 0.2*mul('attack');
-    if(source === 'dash' && has('dash','weight')) dmg *= 1 + 0.5*mul('dash');
-    if(hero.quench > 0){ dmg *= 3; hero.quench--; f.shatter = 5; }
+    /* Tempered Edge trades swing speed for shatter on everything, and makes
+       shattered mean something much larger */
+    if(f.shatter > 0) dmg *= has('attack','tempered') ? 1.6 : 1.25;
+    if(source === 'attack' && has('attack','tempered')) f.shatter = 5;
+    if(hero.quench > 0){
+      dmg += hero.quench;
+      floatText(f.x, f.y-70, 'Quench ' + Math.round(hero.quench), '#A8571F');
+      hero.quench = 0;
+    }
     f.hp -= dmg;
     f.flash = 0.18;
     f.squash = 1;
     hero.call = Math.min(100, hero.call + dmg/10);
     if(source === 'attack'){
       if(has('attack','kindling')) burn(f);
-      if(has('attack','sow') && Math.random() < 0.10){
-        seeds.push({x:f.x + (Math.random()-0.5)*30, y:f.y, t:0});
+      /* Sow is delayed and positional: the seed bursts where the fight was a
+         few seconds ago, which is a different game from a heal drop */
+      if(has('attack','sow') && Math.random() < 0.22){
+        seeds.push({x:f.x + (Math.random()-0.5)*30, y:f.y, t:0, grow:3});
       }
     }
     if(f.hp <= 0) killFoe(f);
@@ -2180,18 +2397,25 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.call = 0;
     var id = boons.call.id;
     if(id === 'hearthring'){
-      embers.push({x:hero.x, y:hero.y, t:0, dur:5, r:150});
+      /* it closes in, so it is only worth anything if you go to them */
+      embers.push({x:hero.x, y:hero.y, t:0, dur:6*mul('call'), r:210, r0:210,
+                   follow:true, kind:'fire'});
       floatText(hero.x, hero.y-80, 'Hearthring', pal.glow);
     } else if(id === 'cartwheel'){
-      hero.callDash = 3;
+      hero.cartwheel = 3*mul('call');
+      hero.dashUsed = 0;
       floatText(hero.x, hero.y-80, 'Cartwheel', '#D9883D');
     } else if(id === 'harvest'){
-      hero.hp = Math.min(hero.maxHp, hero.hp + 25);
-      for(var i=0;i<foes.length;i++) foes[i].root = 2;
-      floatText(hero.x, hero.y-80, 'Harvest', '#4E7A45');
+      /* everything rooted dies. Nothing rooted, and it roots the lot, so the
+         boon rewards a Call you set up rather than one you panic with */
+      var got = 0;
+      for(var i=foes.length-1;i>=0;i--) if(foes[i].root > 0){ hitFoe(foes[i], 9999, 'call'); got++; }
+      if(!got){ for(var j=0;j<foes.length;j++) foes[j].root = 3*mul('call'); }
+      floatText(hero.x, hero.y-80, got ? 'Harvest  ' + got : 'Harvest', '#4E7A45');
     } else if(id === 'quench'){
-      hero.quench = 5;
-      floatText(hero.x, hero.y-80, 'Quench', '#A8571F');
+      /* the number is whatever this room has already cost you */
+      hero.quench = Math.max(20, Math.round(hero.taken * mul('call')));
+      floatText(hero.x, hero.y-80, 'Quench  ' + hero.quench, '#A8571F');
     }
   }
 
@@ -2304,6 +2528,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     hero.x = W*0.5; hero.y = H*0.88;
 
+    hero.taken = 0;
     if(run.kind === 'altar'){
       run.offers = makeOffers();
       floatText(W*0.5, H*0.44, 'An altar to ' + INVENTORS[run.altarOf].name, INVENTORS[run.altarOf].col);
@@ -2552,7 +2777,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(e.key==='z' || e.key==='Z'){ startSlam(); e.preventDefault(); return; }
     if(e.key==='x' || e.key==='X'){ castStone(); e.preventDefault(); return; }
     if(e.key==='c' || e.key==='C'){ fireCall(); e.preventDefault(); return; }
-    if(e.key===' '){ if(hero.atk<0 && hero.dead<=0) hero.atk=0; e.preventDefault(); return; }
+    if(e.key===' '){ startAttack(); e.preventDefault(); return; }
     var k = MAP[e.key]; if(k){ keys[k]=1; e.preventDefault(); }
   });
   window.addEventListener('keyup', function(e){
@@ -2589,7 +2814,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       else fireCall();
       hitPulse = 1;
     } else if(p[1] < H*0.52){
-      if(hero.atk < 0 && hero.dead <= 0) hero.atk = 0;
+      startAttack();
       hitPulse = 1;
     } else {
       startDash(stick.on ? stick.x : 0, stick.on ? stick.y : 0);

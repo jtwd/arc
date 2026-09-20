@@ -196,3 +196,34 @@ matters once the list reaches a hundred.
 **Wanted:** whether a run gets a shape. Two Ember runs and two Forge runs should
 feel like different games rather than the same game with bigger numbers. And
 whether fetching the stone is a cost or a chore.
+
+**Edward's call:** *"They don't. Make them stranger. It is a cost."*
+
+---
+
+## Rung 4b, stranger Inventions
+
+**The diagnosis.** Almost every boon in the first pass was a percentage, and a
+percentage cannot change how you play. Rewrote all twenty against one rule, now
+recorded at the top of `INVENTIONS.md`: **a boon changes what a verb does, not
+how much it does.** If it can be written as a number and a percent sign it is
+not finished.
+
+Each Inventor got an identity that the boons actually enforce:
+
+| Inventor | What a run with it becomes |
+|---|---|
+| Ember | Fire spreads between them, persists on the floor, and the slam detonates it |
+| Wheel | Every boon removes a reason to stand still; the first swing out of a dash has no wind-up |
+| Seed | Delayed and positional; seeds burst where the fight was three seconds ago |
+| Forge | Slow and committed; the slam raises cover, and Quench deals what the room has cost you |
+
+Added the two slice duos, which only appear once a run holds both Inventors, so
+committing to two themes is told rather than merely allowed.
+
+**The stone stays a cost**, confirmed. Coal and Taproot now make it burn or root
+where it lies, so leaving it out there is sometimes the better play. That turns
+the retrieval cost into a decision instead of a tax.
+
+**Wanted next:** not which boon is strongest, but which combination made him
+change how he was playing halfway through a run.

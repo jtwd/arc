@@ -1,3 +1,17 @@
+> **The Stone Age four were rewritten after playtest.** Edward's note was that
+> runs did not feel different from one another, and the reason was that almost
+> every boon in the first pass was a percentage. A percentage cannot change how
+> you play. The rule now, and it applies to every Inventor still to be written:
+>
+> **A boon changes what a verb does, not how much it does.** If it can be
+> described as a number followed by a percent sign, it is not finished. The test
+> is whether it creates a loop: something to set up, something to pay off, or a
+> reason to move differently.
+>
+> The rewritten twenty are in `tools/render-test/index.html`; the tables below
+> are the original design and are being brought up to the same standard as each
+> Inventor is built.
+
 # Inventions catalogue
 
 Full launch list for the boon system in `GAME_DESIGN.md` section 5. Twelve Inventors, one Invention per slot each, plus two passives, one legendary, and the duo table.
