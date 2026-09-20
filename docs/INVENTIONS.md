@@ -176,7 +176,7 @@ Requires at least one Invention from each named Inventor. Offered as a Rare from
 | Slag | Ember, Forge | Shattered enemies take double Burn damage |
 | Firebreak | Ember, Seed | Burning enemies that die drop a heal seed |
 | Brushfire | Ember, Wheel | Dash trail fire spreads to enemies it touches for full Burn |
-| Fallow | Wheel, Seed | Each dash heals 2 |
+| Fallow | Wheel, Seed | Each dash heals 2, and rooted enemies drop a heal seed on death |
 | Flywheel | Wheel, Forge | Heavy hits refund a dash |
 | Slipstream | Wheel, Compass | Dashing toward a beacon is twice as long |
 | Runoff | Seed, Salt | Heal seeds also cleanse Burn and gas |
