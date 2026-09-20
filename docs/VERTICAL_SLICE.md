@@ -194,7 +194,7 @@ These come from `tools/run-sim` with the tight scenario. Ten runs is roughly 75 
 
 ## 10. Acceptance criteria
 
-The slice is done when all of these are true on a mid-range PC at 1080p:
+The slice is done when all of these are true on a mid-range Windows PC at 1080p:
 
 - 60 frames per second sustained in all rooms and the boss, with the full render stack on.
 - A new player with a controller clears room 1 without instruction.
@@ -203,6 +203,8 @@ The slice is done when all of these are true on a mid-range PC at 1080p:
 - At least one playtester says the age transition wash is the best moment.
 - No playtester reports being unable to tell an enemy from the background.
 - Zero crashes across ten consecutive runs.
+- Every UI frame is legible at 1280 by 800, the Steam Deck resolution.
+- The build runs from a Steam Playtest branch with no launcher and no Proton compatibility warning.
 
 ## 11. Playtest questions
 

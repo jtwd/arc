@@ -11,7 +11,7 @@ The short version: the engine and platform questions are worth about one month b
 | Decision | Call | Cost of the alternative |
 |---|---|---|
 | Engine | **Unity, Universal Render Pipeline** | Godot adds roughly 3 weeks to milestone 1 and more later |
-| Platform | **PC only, Steam, at launch** | Switch adds certification, dev kits, and a permanent art ceiling |
+| Platform | **Steam only, Windows build** | Switch adds certification, dev kits, and a permanent art ceiling |
 | Ages at launch | **Five, plus the Terminus** | Nine ages costs roughly 7 months |
 | Lineages at launch | **Three: Blunt, Edge, Sling** | Six costs roughly 3 months |
 | Inventors at launch | **Nine** (falls out of the age cut) | — |
@@ -38,15 +38,47 @@ The critical path is the watercolour render stack, not gameplay. Pick the engine
 
 ---
 
-## 3. Platform: PC only
+## 3. Platform: Steam, Windows build only
 
-Switch is the expensive option and none of its cost is visible in a feature list.
+**Confirmed.** Steam is the only launch platform. Consoles become a quote from a porting house after launch, against a finished game.
 
-- The render pipeline currently carries a provisional Switch budget of 4 to 5 ms at 30 frames per second on ARM. Dropping it lifts the ceiling on the whole art direction from day one and removes a second performance target from every art review.
-- Certification, dev kits, the NDA, and either a porting partner or in-house porting expertise all sit on the calendar, not the backlog.
-- Suspend and resume, platform UI requirements, and store compliance are weeks of work that produce nothing a player notices.
+Switch was the expensive alternative and none of its cost was visible in a feature list. Certification, dev kits, the NDA, and either a porting partner or in-house porting expertise all sit on the calendar rather than the backlog. It also imposed a 4 to 5 ms post-process budget at 30 frames per second on ARM, which would have capped the art direction from day one.
 
-**Do this instead:** target Steam Deck verification. It is a good proxy for modest hardware, it costs almost nothing beyond testing, and there is no certification process. Then decide on consoles after launch, when the game is finished and a porting house can quote against a fixed target.
+### 3.1 One build, not three
+
+Ship a **Windows build only**. No native Linux or macOS.
+
+- Steam Deck runs Windows builds through Proton, and Deck Verified is achievable that way. Most verified games ship Windows-only. A native Linux build buys nothing and doubles the QA matrix.
+- macOS costs a second graphics backend for a custom render stack, plus notarization and Apple Silicon testing. For a hand-written pass stack that is real risk on a platform that is a small share of this genre's audience.
+
+One build target is the single cheapest platform decision available. Revisit macOS after launch if the numbers justify it.
+
+### 3.2 Steam Deck Verified
+
+Verification has no certification process and no gatekeeper beyond a checklist, but three of its criteria reach back into design and should be handled from the slice rather than retrofitted:
+
+| Criterion | What it means here |
+|---|---|
+| Full controller support with correct glyphs | Already planned. The game must show Deck glyphs, not generic Xbox ones |
+| Legible text at 1280 by 800 | The era-framed UI in `GAME_DESIGN.md` (clay tablet, papyrus, illuminated manuscript) is the risk. Test every UI frame at Deck resolution as it is built |
+| Single launch path, no launcher, no compatibility warning | A Unity default if nobody adds a launcher. Keep it that way |
+
+Add a Deck resolution check to the vertical slice acceptance criteria. Finding an illegible UI frame at beta costs an art pass per age.
+
+### 3.3 Steamworks work, and when
+
+None of this is large, but it is all calendar time if left to the end.
+
+| Feature | Milestone | Note |
+|---|---|---|
+| SteamPipe build and depot upload | Vertical slice | Needed for Steam Playtest, below |
+| Steam Playtest | Vertical slice | Distributes test builds and collects testers without manual builds |
+| Steam Input | Alpha | Gives Deck glyphs and rebinding nearly free |
+| Cloud saves | Beta | Small, and expected |
+| Achievements | Polish | Tie to first boss kills, first clear per lineage, first duo |
+| Store page, capsule art, trailer | Polish, starting 3 months out | Wishlists need lead time |
+
+**Use Steam Playtest for the slice test.** The production plan calls for ten external testers at two hours each. Playtest handles distribution, keys, and build updates, so the alternative is hand-delivering builds ten times. It also means the alpha 30-run test can use the same channel with a larger group at no extra setup.
 
 ---
 

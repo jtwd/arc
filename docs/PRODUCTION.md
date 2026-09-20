@@ -96,6 +96,7 @@ Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 
 **Weeks 9 to 10, polish and test.**
 - [ ] Performance pass to acceptance criteria
+- [ ] SteamPipe upload and a Steam Playtest branch for test distribution
 - [ ] Ten external testers, two hours each, the question list from the slice doc
 - [ ] Decision meeting: proceed to alpha, iterate the slice, or stop
 
@@ -107,7 +108,7 @@ Revised for the launch scope in `FAST_PATH.md`.
 
 **Beta (3 months):** Age of Sail and the Terminus, Anachronisms, keepsakes, twelve Aspects, Wren, Compass and Powder, fifteen duos, six music arrangements, localisation prep.
 
-**Polish and ship (2.5 months):** balance, accessibility, achievements, Steam Deck verification, store assets, launch.
+**Polish and ship (2.5 months):** balance, accessibility, Steam achievements, Deck verification submission, store page and trailer, launch. Store page goes up roughly three months before launch so wishlists have lead time.
 
 ---
 
@@ -133,7 +134,7 @@ Decided against one criterion, shortest time to a finished game. Reasoning and c
 | Decision | Call | Status |
 |---|---|---|
 | Engine | Unity URP | Decided. Reverses only if the render-stack author already knows Godot |
-| Target platforms | PC only at launch, Steam, Steam Deck verified | Decided. Consoles are a post-launch quote |
+| Target platforms | Steam only, Windows build, Deck Verified | Confirmed by the user. Consoles are a post-launch quote |
 | Age count at launch | Five, plus the Terminus | Decided |
 | Lineages at launch | Three: Blunt, Edge, Sling | Decided |
 | Inventors at launch | Nine. Press, Volt, and Atom fall out with ages 6 and 8 | Decided |

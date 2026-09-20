@@ -21,7 +21,7 @@ Technical spec for the look described in `GAME_DESIGN.md` section 8. Written for
 | PC, minimum | 1080p | 60 | 2.5 ms with bleed and wobble off |
 | Steam Deck | 800p | 60 | 3.0 ms |
 
-Launch is PC only, so there is no console budget to design against. Steam Deck verification is the low-spec target and needs no certification process. The stack is still designed so that passes can be dropped in order without breaking the look, which keeps a console port open as a post-launch quote rather than a constraint now.
+Launch is Steam only with a Windows build, so there is no console budget to design against. Steam Deck verification is the low-spec target and needs no certification process. The stack is still designed so that passes can be dropped in order without breaking the look, which keeps a console port open as a post-launch quote rather than a constraint now.
 
 ---
 

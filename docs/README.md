@@ -19,6 +19,6 @@ Read in this order:
 
 `tools/run-sim/simulate.js` is a dependency-free Monte Carlo model of a run. It produced the run-length and Ochre numbers quoted in the documents above. Run it with `node tools/run-sim/simulate.js` and re-run it whenever room counts, boss timings, or Ochre values change.
 
-**Launch scope is five ages, three lineages, PC only, Unity.** The nine-age design in the master document is the full target and the post-launch roadmap. `FAST_PATH.md` says which part ships first and why.
+**Launch scope is five ages, three lineages, Steam on Windows, Unity.** The nine-age design in the master document is the full target and the post-launch roadmap. `FAST_PATH.md` says which part ships first and why.
 
 The game does not live in this repository. This repo is an ARc React boilerplate and may later host a companion web tool. The engine recommendation is Unity URP; see the technology section of the master document.
