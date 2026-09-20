@@ -258,3 +258,32 @@ her. It is also the clearest demonstration yet of the lag rule in
 
 **Wanted:** whether she is a fight or a wall. If a phase only adds health it is
 not a phase and it gets rebuilt.
+
+---
+
+## Rung 6, the Hearth
+
+**Built:** the loop closes. A cave lit by the first fire, the Firekeeper's ten
+conversations one per return, the Cave Wall's first three rows, and persistence
+across visits.
+
+Everything from `FIREKEEPER_DIALOGUE.md` is in verbatim, including the gating:
+the fifth conversation waits for the first Mammoth kill rather than firing on a
+run count, so the beat about her kneeling only lands once she has.
+
+**The wall is `CAVE_WALL.md` rows 1 to 3** with the Mirror's rule intact:
+switching sides is free and you keep the ranks you bought on both. Ember's Grace
+is a real Death Defiance now, and it is not a respawn. He gets up where he fell
+at half health and says "Not yet", which is his line from the bible.
+
+**One detail worth keeping.** The wall shows one ochre handprint per Mammoth
+kill, so it is a record of him rather than a menu. That is straight out of
+`ALEGUS.md`, where his forearms are the progress log.
+
+**Saving goes through one interface**, as `PRODUCTION.md` 7a requires. Browser
+storage now, a file when this is wrapped for Steam, one function changed and
+nothing else. Every read and write is wrapped, so a blocked-storage browser
+still plays; it just forgets.
+
+**Wanted:** whether coming back feels like arriving somewhere, or like a menu
+between attempts.

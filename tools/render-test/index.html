@@ -166,9 +166,9 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; rung 5 &middot; the Mammoth Mother</p>
-    <h1>She has not moved in a long time</h1>
-    <p>Five rooms, then her. Four hunters' spears are already in her flank and they take double, which is the thing phase one is teaching you. At 65% the lake gives way and you are fighting on floes with open water between them. At 30% she stops moving entirely and stands over the place the calf is, and from then on the spears are the only way through: light all four inside six seconds and she falters.</p>
+    <p class="eyebrow">EPOCH &middot; rung 6 &middot; the Hearth</p>
+    <h1>Die, come back, put your hand on the wall</h1>
+    <p>The loop is closed. You start at the fire, the Firekeeper says something new every time you return, you spend ochre on the Cave Wall, and you walk into the cold light to go again. Ten conversations, three wall rows with two sides each, and it all persists between visits. Walk to the left for the wall, into the light at the top to leave. <b>Space</b> advances the Firekeeper.</p>
   </header>
 
   <div class="rig">
@@ -220,7 +220,8 @@
         <button class="act" id="b_hunter">Send a hunter</button>
           <button class="act" id="b_bench">Run benchmark  (B)</button>
           <button class="act" id="b_skip">Clear the room</button>
-        <button class="act" id="b_reset">Start a new run</button>
+        <button class="act" id="b_reset">Hearth / new run</button>
+        <button class="act" id="b_wipe">Wipe the save</button>
         </div>
       </div>
 
@@ -312,6 +313,22 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       stoneW:'#9AA3A8', stoneWSh:'#6B757B',
       foe:'#7F8C97', foeSh:'#54626D',
       glow:'#E28E3E'
+    },
+    hearth: {
+      name:'Hearth',
+      paper:'#E4D9C2', inkc:'#241B12',
+      sky:'#3A2F26', skyLo:'#2A211A', horizon:'#4A3B2E',
+      gnd:'#5E4D3C', gndSh:'#3C3026',
+      patch:'#6E5B45', patchSh:'#473A2C',
+      rock:'#6B5B49', rockSh:'#443729',
+      tuft:'#7A6A52', tuftSh:'#4E4132',
+      skin:'#D69C6A', skinSh:'#A06E45',
+      hide:'#B87C4E', hideSh:'#845434',
+      hair:'#3B2A1C', hairSh:'#241810',
+      wood:'#8A6440', woodSh:'#5C4026',
+      stoneW:'#9A8A78', stoneWSh:'#6B5C4B',
+      foe:'#7F8C97', foeSh:'#54626D',
+      glow:'#F0A44C'
     },
     rivers: {
       name:'Rivers',
@@ -504,7 +521,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var kills = 0;
 
   function heroInvulnerable(){
-    return (hero.dash >= 4 && hero.dash < 14) || hero.hurt > 0.4;
+    return (hero.dash >= 4 && hero.dash < dashIFrameEnd()) || hero.hurt > 0.4;
   }
 
   function hurtHero(dmg){
@@ -512,7 +529,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.hp -= dmg;
     hero.taken += dmg;
     hero.hurt = 0.6;
-    if(hero.hp <= 0){ hero.hp = 0; hero.dead = 2.2; }
+    if(hero.hp <= 0 && !tryDefiance()){ hero.hp = 0; hero.dead = 2.2; }
   }
 
   /* a telegraph is a hard-edged dark shape on the ground. Never a soft wash:
@@ -541,21 +558,6 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(boons.duo && boons.duo.id === 'fallow'){
       seeds.push({x:hero.x, y:hero.y, t:0, grow:2.5});
     }
-  }
-
-  function resetRun(){
-    hero.hp = hero.maxHp; hero.dead = 0; hero.hurt = 0;
-    hero.atk = -1; hero.dash = -1; hero.hitThisSwing = false;
-    hero.gait = 0; hero.hairA = 0; hero.hairV = 0; hero.lean = 0;
-    hitStop = 0; kills = 0;
-    run.ochre = 0; run.over = 0; run.layout = null;
-    floats = []; roomWash.on = false;
-    boons = {attack:null, special:null, cast:null, dash:null, call:null, duo:null};
-    hero.slam = -1; hero.call = 0; hero.cartwheel = 0; hero.quench = 0; hero.taken = 0;
-    hero.dashCharges = 1; hero.dashUsed = 0; hero.sinceDash = 9;
-    shock = []; seeds = []; embers = []; boss = null;
-    stone = {state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0};
-    enterRoom(1);
   }
 
   function buildScenery(){
@@ -756,7 +758,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     /* the rigs work in world space, so shift world y 500 to the sheet floor */
     sheetCtx.translate(0, SHEET_H - 40 - 500);
 
-    var prevScale = artScale;
+    var prevScale = artScale, prevPal = pal;
+    pal = AGES.stone;
     /* 1.75 is as large as the character buffer holds without clipping his hair */
     artScale = 1.75;
     maskOn = false;
@@ -776,6 +779,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     }
 
     artScale = prevScale;
+    pal = prevPal;
     sheetCtx.restore();
 
     if(opt.paper){
@@ -1036,7 +1040,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       else if(f < 18){ k = (f-12)/6; swing = -2.05 + 3.5*k; lean = -0.21 + 0.48*k; }
       else { k = 1 - (f-18)/14; swing = 1.45*k; lean = 0.27*k; }
     }
-    if(hero.dash >= 4 && hero.dash < 14) lean += 0.36;
+    if(hero.dash >= 4 && hero.dash < dashIFrameEnd()) lean += 0.36;
     /* the slam: raise it over the head, then put your whole weight through it */
     if(hero.slam >= 0){
       var sf = hero.slam;
@@ -1068,7 +1072,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ctx.scale(hero.faceVis*s, s);
       /* during the invulnerable frames he thins out: a thread the Loom is
          pulling through, and a readable tell that nothing can touch him */
-      if(hero.dash >= 4 && hero.dash < 14) ctx.globalAlpha = 0.5;
+      if(hero.dash >= 4 && hero.dash < dashIFrameEnd()) ctx.globalAlpha = 0.5;
 
       at(0, -bob, lean, function(){
         legIK(-3, -54, hipF, kneeF, 24, 22, 7, pal.skinSh, pal.hairSh, 11, true);
@@ -1563,6 +1567,229 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
 
 
+
+  /* ---------- the loop between runs ---------- */
+
+  function dashIFrameEnd(){ return 14 + 2*wallIs('r2','R'); }
+
+  function startRun(){
+    scene = 'run';
+    talk.on = false; wallOpen = false;
+    meta.runs++;
+    saveMeta();
+    pal = AGES.stone; palFrom = AGES.stone; palTo = AGES.rivers;
+    /* the wall, spent */
+    hero.lives = wallIs('r1','L');
+    hero.dashCharges = 1 + wallIs('r2','L');
+    hero.maxHp = 100; hero.hp = 100;
+    hero.gait = 0; hero.hairA = 0; hero.hairV = 0; hero.lean = 0;
+    hero.slam = -1; hero.call = 0; hero.cartwheel = 0; hero.quench = 0;
+    hero.dashUsed = 0; hero.sinceDash = 9; hero.dashHits = {};
+    hitStop = 0; kills = 0;
+    boons = {attack:null, special:null, cast:null, dash:null, call:null, duo:null};
+    run.ochre = 0; run.over = 0; run.layout = null;
+    floats = []; roomWash.on = false; wash.on = false;
+    shock = []; seeds = []; embers = []; boss = null;
+    stone = {state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0};
+    enterRoom(1);
+  }
+
+  function endRun(){
+    /* Red Earth pays here, on the way home, which is where it is felt */
+    var gain = Math.round(run.ochre * (1 + 0.1*wallIs('r3','L')));
+    meta.ochre += gain;
+    meta.kills += kills;
+    if(run.room > meta.best) meta.best = run.room;
+    saveMeta();
+    lastRun = {room:run.room, kills:kills, ochre:gain, won:run.state === 'done'};
+    toHearth();
+  }
+  var lastRun = null;
+
+  /* Ember's Grace. Not a respawn: he gets up where he fell, at half, once per
+     rank, and the game tells him so in his own words. */
+  function tryDefiance(){
+    if(!hero.lives || hero.lives <= 0) return false;
+    hero.lives--;
+    hero.hp = Math.round(hero.maxHp*0.5);
+    hero.hurt = 1.2;
+    hero.dead = 0;
+    floatText(hero.x, hero.y-80, 'Not yet', pal.glow);
+    hitStop = 0.14;
+    return true;
+  }
+
+  /* ---------- the Hearth, drawn ---------- */
+
+  var HEARTH_FIRE = {x: 0, y: 0};
+
+  function drawHearth(){
+    HEARTH_FIRE.x = W*0.5; HEARTH_FIRE.y = H*0.52;
+
+    /* the cave mouth: the only cold light in the room, and the way out */
+    ctx.globalAlpha = 0.5;
+    paint(blob(W*0.5, GND_TOP+6, 96, 54, 11, 401), '#8FA9BE', '#4A5E70',
+      {seed:401, ink:false, edgeW:8});
+    ctx.globalAlpha = 1;
+    paint(blob(W*0.5, GND_TOP+30, 74, 40, 11, 402), pal.sky, pal.skyLo,
+      {seed:402, ink:false, edgeW:7});
+
+    /* the wall. One ochre handprint per mammoth, so it is a record of him
+       rather than a menu. */
+    paint([[0,GND_TOP+40],[150,GND_TOP+10],[176,H],[0,H]], pal.rock, pal.rockSh,
+      {seed:403, ink:false, edgeW:9});
+    var prints = Math.min(18, meta.mammoth);
+    for(var p=0;p<prints;p++){
+      var px = 30 + (p%3)*44, py = GND_TOP+90 + Math.floor(p/3)*46;
+      ctx.globalAlpha = 0.8;
+      paint(blob(px, py, 11, 13, 8, 410+p), pal.glow, pal.hideSh,
+        {seed:410+p, ink:false, edgeW:3});
+      ctx.globalAlpha = 1;
+    }
+    ctx.globalAlpha = 0.55; ctx.fillStyle = pal.paper;
+    ctx.font = '500 11px "IBM Plex Mono", monospace';
+    ctx.fillText('THE WALL', 34, GND_TOP+70);
+    ctx.globalAlpha = 1;
+
+    /* the rack: a club you may take, a knife you may not */
+    paint([[W-170,GND_TOP+20],[W,GND_TOP+46],[W,H],[W-150,H]], pal.rock, pal.rockSh,
+      {seed:404, ink:false, edgeW:9});
+    at(W-92, H*0.72, 0, function(){
+      paint([[-56,0],[56,-6],[56,6],[-56,12]], pal.wood, pal.woodSh,
+        {seed:405, ink:false, edgeW:4});
+      at(-22, -6, 0.25, function(){
+        paint([[-4,-2],[4,-2],[5,30],[-5,30]], pal.wood, pal.woodSh, {seed:406, ink:false, edgeW:3});
+        paint(blob(0,34,11,12,8,407), pal.stoneW, pal.stoneWSh, {seed:407, ink:false, edgeW:4});
+      });
+      /* greyed until a key is earned, which is what conversation six is about */
+      ctx.globalAlpha = meta.mammoth > 0 ? 1 : 0.28;
+      at(24, -4, -0.2, function(){
+        paint([[-3,0],[3,0],[4,22],[-4,22]], pal.wood, pal.woodSh, {seed:408, ink:false, edgeW:3});
+        paint([[-5,0],[5,0],[2,-26],[-2,-26]], pal.stoneW, pal.stoneWSh, {seed:409, ink:false, edgeW:3});
+      });
+      ctx.globalAlpha = 1;
+    });
+
+    /* the first fire */
+    var f = HEARTH_FIRE;
+    ctx.globalAlpha = 0.22;
+    paint(blob(f.x, f.y+16, 190, 62, 12, 420), pal.glow, pal.glow, {seed:420, ink:false, edgeW:12});
+    ctx.globalAlpha = 1;
+    for(var l=0;l<5;l++){
+      var a = l/5*Math.PI*2 + wobT*0.4;
+      paint([[f.x-34+Math.cos(a)*10, f.y+22],[f.x+34+Math.cos(a)*10, f.y+16],
+             [f.x+28, f.y+30],[f.x-30, f.y+32]], pal.wood, pal.woodSh,
+        {seed:421+l, ink:false, edgeW:4});
+    }
+    for(var fl=0;fl<4;fl++){
+      var h = 34 + Math.sin(wobT*6 + fl*1.7)*14;
+      var ox = (fl-1.5)*13 + Math.sin(wobT*3.4+fl)*4;
+      ctx.globalAlpha = 0.85 - fl*0.1;
+      paint([[f.x+ox-12, f.y+18],[f.x+ox, f.y+18-h],[f.x+ox+12, f.y+18]],
+        pal.glow, '#C46A22', {seed:430+fl, ink:false, edgeW:4});
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function hearthZones(){
+    return {
+      wall: hero.x < 180 && hero.y > GND_TOP+60,
+      rack: hero.x > W-172,
+      exit: hero.y < GND_TOP+66 && Math.abs(hero.x - W*0.5) < 100
+    };
+  }
+
+  function stepHearth(dt){
+    hearthT += dt;
+    if(talk.on){ talk.t += dt; return; }
+    var z = hearthZones();
+    wallOpen = z.wall;
+    if(z.exit && hearthT > 0.6) startRun();
+  }
+
+  function drawTalk(){
+    if(!talk.on) return;
+    var line = talk.lines[talk.i];
+    var who = line[0] === 'F' ? 'THE FIREKEEPER' : 'ALEGUS';
+    var h = 132;
+    ctx.globalAlpha = 0.88; ctx.fillStyle = pal.paper;
+    ctx.fillRect(0, H-h, W, h);
+    ctx.globalAlpha = 0.14; ctx.fillStyle = pal.inkc;
+    ctx.fillRect(0, H-h, W, 2);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = line[0] === 'F' ? '#B4651F' : pal.inkc;
+    ctx.font = '500 11px "IBM Plex Mono", monospace';
+    ctx.fillText(who, 46, H-h+30);
+    ctx.fillStyle = pal.inkc;
+    ctx.font = '400 19px Fraunces, Georgia, serif';
+    var words = line[1].split(' '), ln = '', lines = [];
+    for(var i=0;i<words.length;i++){
+      var t = ln ? ln+' '+words[i] : words[i];
+      if(ctx.measureText(t).width > W-100 && ln){ lines.push(ln); ln = words[i]; }
+      else ln = t;
+    }
+    if(ln) lines.push(ln);
+    for(var j=0;j<lines.length && j<3;j++) ctx.fillText(lines[j], 46, H-h+62+j*27);
+    ctx.globalAlpha = 0.4 + Math.sin(wobT*3)*0.2;
+    ctx.font = '400 11px "IBM Plex Mono", monospace';
+    ctx.fillText('space', W-96, H-18);
+    ctx.globalAlpha = 1;
+  }
+
+  function drawWallPanel(){
+    if(!wallOpen || talk.on) return;
+    var x = 200, y = GND_TOP+20, w = W-400, rowH = 104;
+    ctx.globalAlpha = 0.92; ctx.fillStyle = pal.paper;
+    ctx.fillRect(x, y, w, rowH*3 + 54);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = pal.inkc;
+    ctx.font = '600 17px Fraunces, Georgia, serif';
+    ctx.fillText('The Cave Wall', x+22, y+32);
+    ctx.font = '500 11px "IBM Plex Mono", monospace';
+    ctx.globalAlpha = 0.6;
+    ctx.fillText('OCHRE ' + meta.ochre + '   ·   press 1 to 6, or click', x+22, y+50);
+    ctx.globalAlpha = 1;
+
+    for(var r=0;r<3;r++){
+      var spec = WALL[r], ry = y + 62 + r*rowH;
+      ['L','R'].forEach(function(side, si){
+        var sx = x + 22 + si*(w/2 - 10), sw = w/2 - 40;
+        var opt = spec[side], rank = meta.wall[spec.id][side];
+        var on = meta.wall[spec.id].side === side;
+        var cost = wallCost(spec.id, side);
+        ctx.globalAlpha = on ? 1 : 0.42;
+        ctx.fillStyle = on ? '#B4651F' : pal.inkc;
+        ctx.fillRect(sx, ry, 4, 74);
+        ctx.fillStyle = pal.inkc;
+        ctx.font = '600 15px Fraunces, Georgia, serif';
+        ctx.fillText(opt.name, sx+14, ry+18);
+        ctx.font = '400 12px "IBM Plex Sans", sans-serif';
+        ctx.globalAlpha = on ? 0.72 : 0.34;
+        ctx.fillText(opt.desc, sx+14, ry+38);
+        ctx.globalAlpha = 1;
+        for(var k=0;k<opt.ranks;k++){
+          ctx.fillStyle = k < rank ? '#B4651F' : pal.inkc;
+          ctx.globalAlpha = k < rank ? 1 : 0.18;
+          ctx.fillRect(sx+14 + k*16, ry+50, 11, 6);
+        }
+        ctx.globalAlpha = 1;
+        ctx.font = '500 11px "IBM Plex Mono", monospace';
+        ctx.fillStyle = pal.inkc;
+        ctx.globalAlpha = cost === null ? 0.3 : (meta.ochre >= cost ? 0.9 : 0.3);
+        ctx.fillText('[' + (si + r*2 + 1) + ']  ' +
+          (cost === null ? 'full' : cost + ' ochre'), sx+14, ry+72);
+        ctx.globalAlpha = 1;
+      });
+    }
+  }
+
+  function wallKey(n){
+    if(!wallOpen || talk.on) return;
+    var r = Math.floor((n-1)/2), side = (n-1)%2 === 0 ? 'L' : 'R';
+    if(r < 0 || r > 2) return;
+    if(buyWall(WALL[r].id, side)) floatText(hero.x, hero.y-80, 'the wall remembers', pal.glow);
+  }
+
   /* ---------- the Mammoth Mother, drawn ----------
      She needs her own buffer because she does not fit in the one the others
      share. Everything else is the same rig: painted parts on pivots, two bones
@@ -1849,15 +2076,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     if(hero.dead > 0){
       hero.dead -= dt;
-      if(hero.dead <= 0) resetRun();
+      if(hero.dead <= 0) endRun();
       ax = 0; ay = 0;
     }
+    if(talk.on){ ax = 0; ay = 0; }
 
     /* dash: 4 frames of startup, 10 invulnerable, 6 of recovery. The i-frames
        are the whole combat system. Without them every telegraph is unfair. */
     if(hero.dash >= 0){
       hero.dash += dt*60;
-      if(hero.dash >= 4 && hero.dash < 14){
+      if(hero.dash >= 4 && hero.dash < dashIFrameEnd()){
         /* ice is the one place the dash overshoots, which is the room's lesson */
         var ds = zoneAt(hero.x, hero.y, 'ice') ? 980 : 640;
         hero.x += hero.dashX * ds * dt;
@@ -2022,6 +2250,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       if(hero.atk>32){ hero.atk = -1; hero.hitThisSwing = false; }
     }
 
+    if(scene === 'hearth'){ stepHearth(dt); return; }
+
     for(var j=0;j<foes.length;j++) stepFoe(foes[j], dt);
     stepRun(dt);
 
@@ -2055,6 +2285,40 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     ctx.clearRect(0,0,W,H);
     if(worldOn) ctx.drawImage(worldCv, 0, 0, W, H);
     else { ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H); }
+
+    if(scene === 'hearth'){
+      drawHearth();
+      maskOn = false;
+      drawHero();
+      if(opt.paper){
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = 0.34;
+        ctx.drawImage(paperCv,0,0);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = pal.paper; ctx.globalAlpha = 0.72;
+      ctx.font = '500 12px "IBM Plex Mono", monospace';
+      ctx.fillText('ochre ' + meta.ochre, 200, GND_TOP+6);
+      ctx.fillText('runs ' + meta.runs + '   deepest room ' + meta.best +
+        '   mammoths ' + meta.mammoth, 200, GND_TOP-12);
+      if(lastRun && !talk.on){
+        ctx.fillText(lastRun.won ? 'you came out the far side' :
+          ('you fell in room ' + lastRun.room) + '  ·  +' + lastRun.ochre + ' ochre',
+          200, GND_TOP-30);
+      }
+      ctx.globalAlpha = 1;
+      drawWallPanel();
+      drawTalk();
+      if(!talk.on && !wallOpen){
+        ctx.globalAlpha = 0.5 + Math.sin(wobT*2)*0.2;
+        ctx.fillStyle = pal.paper; ctx.textAlign = 'center';
+        ctx.font = '400 13px "IBM Plex Mono", monospace';
+        ctx.fillText('walk into the light to go again', W*0.5, GND_TOP+80);
+        ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+      }
+      return;
+    }
 
     if(run.state === 'cleared') drawDoors();
     drawGroundFx();
@@ -2538,7 +2802,14 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   /* ---------- damage, in one place so every boon hooks the same path ------- */
 
+  function firstStrike(){
+    if(run.firstHit) return 1;
+    run.firstHit = true;
+    return 1 + 0.2*wallIs('r1','R');
+  }
+
   function hitFoe(f, dmg, source){
+    dmg *= firstStrike();
     /* Tempered Edge trades swing speed for shatter on everything, and makes
        shattered mean something much larger */
     if(f.shatter > 0) dmg *= has('attack','tempered') ? 1.6 : 1.25;
@@ -2604,6 +2875,189 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
 
 
+
+  /* ------------------------------------------------------------------
+     THE HEARTH
+
+     A cave lit by the first fire. Timeless, and the only place that persists.
+     You die, you come back here, the Firekeeper says something, you put ochre
+     on the wall, you go again. That loop is the game; the run is what happens
+     in between.
+
+     Saving goes through one interface on purpose, per PRODUCTION.md 7a: browser
+     storage now, a real file when this is wrapped for Steam, one function
+     changed and nothing else.
+     ------------------------------------------------------------------ */
+
+  var store = {
+    read: function(k, dflt){
+      try {
+        var v = window.localStorage.getItem('epoch.' + k);
+        return v === null ? dflt : JSON.parse(v);
+      } catch(e){ return dflt; }
+    },
+    write: function(k, v){
+      try { window.localStorage.setItem('epoch.' + k, JSON.stringify(v)); }
+      catch(e){ /* private window, blocked storage. The game still plays. */ }
+    }
+  };
+
+  var meta = store.read('meta', null) || {
+    ochre: 0, runs: 0, kills: 0, best: 0, mammoth: 0, convo: 0,
+    wall: {r1:{side:'L', L:0, R:0}, r2:{side:'L', L:0, R:0}, r3:{side:'L', L:0, R:0}}
+  };
+  function saveMeta(){ store.write('meta', meta); }
+
+  /* CAVE_WALL.md rows 1 to 3. Two positions per row, switching is free, and you
+     keep the ranks you bought on both sides, exactly as the Mirror does. */
+  var WALL = [
+    {id:'r1', L:{name:"Ember's Grace", desc:'One more death you can walk away from',
+                 ranks:3, cost:[30,60,120]},
+              R:{name:'First Strike',  desc:'The first hit in a room lands much harder',
+                 ranks:5, cost:[20,30,40,50,60]}},
+    {id:'r2', L:{name:'Second Step',   desc:'One more dash before it recharges',
+                 ranks:1, cost:[50]},
+              R:{name:'Long Step',     desc:'The dash keeps you untouchable longer',
+                 ranks:4, cost:[30,30,30,30]}},
+    {id:'r3', L:{name:'Red Earth',     desc:'More ochre from everything',
+                 ranks:5, cost:[40,40,40,40,40]},
+              R:{name:'Sharp Flint',   desc:'Shops ask less of you',
+                 ranks:5, cost:[40,40,40,40,40]}}
+  ];
+
+  function wallIs(row, side){ return meta.wall[row].side === side ? meta.wall[row][side] : 0; }
+
+  function wallCost(row, side){
+    var spec = WALL.filter(function(w){ return w.id === row; })[0][side];
+    var r = meta.wall[row][side];
+    return r >= spec.ranks ? null : spec.cost[r];
+  }
+
+  function buyWall(row, side){
+    var c = wallCost(row, side);
+    if(c === null || meta.ochre < c) return false;
+    meta.ochre -= c;
+    meta.wall[row][side]++;
+    meta.wall[row].side = side;
+    saveMeta();
+    return true;
+  }
+
+  /* FIREKEEPER_DIALOGUE.md, one per return, in order. The fire has no body. It
+     only ever speaks. */
+  var CONVOS = [
+    [['F','There you are.'],
+     ['A','Where is here?'],
+     ['F','The Hearth. It is where you come back to.'],
+     ['A','I was on a lake. There was something enormous and it was hurt and it was angry about it.'],
+     ['F','She is still there. She will be there when you go back.'],
+     ['A','Go back?'],
+     ['F','You will want to. You will not be able to help it. The cold gets in everything else, but not the wanting to see what is over the ridge. That is yours.'],
+     ['A','I do not remember getting here.'],
+     ['F','No. That is all right. Pick something up from the rack. Go and look.']],
+    [['A','She killed me again.'],
+     ['F','Mm.'],
+     ['A','You do not sound surprised.'],
+     ['F','She has been protecting the same thing for a very long time. She is good at it. You have been fighting for two days.'],
+     ['A','Two days? It feels like longer.'],
+     ['F','It is longer. It is also two days. Both of those are true here. Do not pull at it, it does not come apart in any useful way.'],
+     ['A','What is she protecting?'],
+     ['F','Listen, next time. Not to her. Under her.']],
+    [['F','You have been bringing things back.'],
+     ['A','The red earth. It is in my hands when I wake up. I did not pick it up.'],
+     ['F','You did. You just were not holding it with your hands. Put some on the wall.'],
+     ['A','Why?'],
+     ['F','Because that is what it is for. People put their hands on walls so that the wall remembers. The wall is very old. It has a good memory. It will give some back.'],
+     ['A','It is warm.'],
+     ['F','Everything here is.']],
+    [['A','The wolves are not wolves.'],
+     ['F','No.'],
+     ['A','They look like wolves until they die and then they run. Like water. Like they were never held together properly.'],
+     ['F','They were not. They are Frayed. Something at the far end is pulling, and things come loose. The ones that come loose do not know what they are any more. They only know what they were for. A wolf was for hunting.'],
+     ['A','And the big one? Her?'],
+     ['F','She is not Frayed. She is the opposite. She is holding on so hard she is the only solid thing on that lake.'],
+     ['A','I carried something once. I remember carrying it. I do not remember what.'],
+     ['F','You did.']],
+    [['A','She knelt.'],
+     ['F','Yes.'],
+     ['A','I did not want her to. I thought I would feel like I had won. There was something under the ice and it stopped calling and she knelt down and the lake went. All of it went. Like I had spilled it.'],
+     ['F','You will feel that again. Not every time. Enough times.'],
+     ['A','Is that what you want from me? Spilling things?'],
+     ['F','No. I want you to go and see what is past the lake. That is all I have ever wanted from you. The spilling is what it costs. I am sorry that it does.'],
+     ['F','There. Now the wall is not the only thing that remembers.']],
+    [['F','There is a knife on the rack.'],
+     ['A','There has always been a knife on the rack. It has been grey.'],
+     ['F','It is not now. You have earned a key. You do not have to understand what that means yet. It means the rack trusts you with something with an edge.'],
+     ['A','Do you trust me with something with an edge?'],
+     ['F','I trust you to try to talk to it first. That is usually the problem.']],
+    [['A','What is past the lake?'],
+     ['F','Warm stone. A river so wide you cannot see the other bank. People who put their dead in the ground with bread so they will not be hungry.'],
+     ['A','You have been.'],
+     ['F','I have been everywhere you will go. I was carried there.'],
+     ['A','By who?'],
+     ['F','By everyone. One at a time. Go and see the river, Alegus. It is the same water as the lake. It just got further.']],
+    [['A','I tried to talk to the bear.'],
+     ['F','How did that go?'],
+     ['A','Poorly. It did not have a mouth any more. Just the shape of one. I think that was the worst part, that it was still trying to use it.'],
+     ['F','They all still try. That is the thing about people, and about bears. Being pulled apart does not stop the trying. That is why they are dangerous, and it is why I do not hate them. You do not either. I have watched you not hate them.'],
+     ['A','Should I?'],
+     ['F','It would be easier. You will not, though. You are not built that way. You picked up something hot once when everyone else stayed back. Hating things is not in a person who does that.']],
+    [['A','The wall is giving me things back. More than I put in.'],
+     ['F','It does that.'],
+     ['A','Why?'],
+     ['F','Because a hand on a wall is a promise to come back and look at it. The wall pays for promises. Everything here does. The rack. The fire. All of it runs on someone deciding to go and look again.'],
+     ['A','And if I stopped?'],
+     ['F','Then the far end would finish pulling, and it would be very quiet, and I would sit here and remember you. I would rather not. But it is yours to decide. It always has been. Nobody made you pick up the hot thing either.']],
+    [['F','You have seen the lake enough times to know it now.'],
+     ['A','I know the ice. I know where it breaks and where the wolves come from and how she leans when she is about to stamp. I know her better than I know myself. I do not know myself at all.'],
+     ['F','You know one thing.'],
+     ['A','I carried something.'],
+     ['F','You did. And it got here, and you did not, and the Loom caught you on the way down because it needed one thread that had been there at the start. That is you. That is all it is. You are the one who was there first.'],
+     ['A','First for what?'],
+     ['F','Go and see the river. Then come back and I will tell you what you carried.']]
+  ];
+
+  var scene = 'hearth';
+  var talk = { on:false, lines:null, i:0, t:0 };
+  var wallOpen = false;
+  var hearthT = 0;
+
+  function startTalk(idx){
+    if(idx < 0 || idx >= CONVOS.length) return;
+    talk.on = true; talk.lines = CONVOS[idx]; talk.i = 0; talk.t = 0;
+  }
+
+  function advanceTalk(){
+    if(!talk.on) return;
+    if(talk.t < 0.4){ talk.t = 99; return; }
+    talk.i++; talk.t = 0;
+    if(talk.i >= talk.lines.length){
+      talk.on = false;
+      meta.convo++;
+      saveMeta();
+    }
+  }
+
+  function toHearth(){
+    scene = 'hearth';
+    wallOpen = false;
+    hearthT = 0;
+    hero.x = W*0.5; hero.y = H*0.82;
+    hero.hp = hero.maxHp; hero.dead = 0; hero.hurt = 0;
+    hero.atk = -1; hero.dash = -1; hero.slam = -1; hero.call = 0;
+    hero.gait = 0; hero.dashUsed = 0;
+    foes = []; shots = []; tells = []; washes = [];
+    seeds = []; embers = []; shock = []; boss = null;
+    pal = AGES.hearth;
+    obstacles = [];
+    buildScenery();
+    bakeWorld();
+    /* one conversation per return, and the fifth waits for the first kill */
+    var next = meta.convo;
+    if(next === 4 && meta.mammoth === 0) next = -1;
+    startTalk(next);
+  }
+
   /* ------------------------------------------------------------------
      THE MAMMOTH MOTHER
 
@@ -2649,6 +3103,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
      lighting all four inside six seconds is the only thing that opens her up. */
   function hitBoss(dmg, x, y){
     if(!boss || boss.kneel > 0) return;
+    dmg *= firstStrike();
     var mult = 1, litOne = -1;
     for(var i=0;i<4;i++){
       var sp = spearWorld(i);
@@ -2677,6 +3132,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     else if(boss.phase === 2 && frac <= 0.30) enterBossPhase(3);
     if(boss.hp <= 0 && boss.kneel <= 0){
       boss.hp = 0; boss.kneel = 4.5; boss.state = 'kneel';
+      meta.mammoth++; saveMeta();
       floatText(boss.x, boss.y - 210, 'You were only protecting something.', pal.inkc);
     }
   }
@@ -2947,6 +3403,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.x = W*0.5; hero.y = H*0.88;
 
     hero.taken = 0;
+    run.firstHit = false;
     boss = null;
     if(run.kind === 'boss'){
       spawnBoss();
@@ -3009,7 +3466,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     if(run.over > 0){
       run.over -= dt;
-      if(run.over <= 0) resetRun();
+      if(run.over <= 0) endRun();
       return;
     }
 
@@ -3176,6 +3633,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     wash.on = true; wash.t = 0;
   });
   document.getElementById('b_bench').addEventListener('click', startBench);
+  document.getElementById('b_wipe').addEventListener('click', function(){
+    meta = {ochre:0, runs:0, kills:0, best:0, mammoth:0, convo:0,
+            wall:{r1:{side:'L',L:0,R:0}, r2:{side:'L',L:0,R:0}, r3:{side:'L',L:0,R:0}}};
+    saveMeta(); lastRun = null; toHearth();
+  });
   document.getElementById('b_skip').addEventListener('click', function(){
     for(var i=foes.length-1;i>=0;i--){
       washes.push({x:foes[i].x, y:foes[i].y, t:0, dur:0.75,
@@ -3187,10 +3649,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   document.getElementById('b_boar').addEventListener('click', function(){ spawnFoe('boar'); });
   document.getElementById('b_hunter').addEventListener('click', function(){ spawnFoe('hunter'); });
   document.getElementById('b_reset').addEventListener('click', function(){
-    pal = AGES.stone; palFrom = AGES.stone; palTo = AGES.rivers;
     wash.on = false;
-    resetRun();
-    document.getElementById('r_age').textContent = 'Stone';
+    if(scene === 'hearth') startRun(); else endRun();
   });
 
   var MAP = {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',
@@ -3204,7 +3664,13 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(e.key==='z' || e.key==='Z'){ startSlam(); e.preventDefault(); return; }
     if(e.key==='x' || e.key==='X'){ castStone(); e.preventDefault(); return; }
     if(e.key==='c' || e.key==='C'){ fireCall(); e.preventDefault(); return; }
-    if(e.key===' '){ startAttack(); e.preventDefault(); return; }
+    if(e.key===' '){
+      if(talk.on){ advanceTalk(); e.preventDefault(); return; }
+      startAttack(); e.preventDefault(); return;
+    }
+    if(scene === 'hearth' && e.key >= '1' && e.key <= '6'){
+      wallKey(parseInt(e.key,10)); e.preventDefault(); return;
+    }
     var k = MAP[e.key]; if(k){ keys[k]=1; e.preventDefault(); }
   });
   window.addEventListener('keyup', function(e){
@@ -3224,6 +3690,21 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   cv.addEventListener('pointerdown', function(e){
     if(e.pointerType !== 'touch') return;
     e.preventDefault();
+    if(talk.on){ advanceTalk(); return; }
+    if(scene === 'hearth' && wallOpen){
+      var wp = toCanvas(e);
+      var wx = 200, wy = GND_TOP+20, ww = W-400, rowH = 104;
+      for(var wr=0; wr<3; wr++){
+        var ry = wy + 62 + wr*rowH;
+        if(wp[1] < ry - 8 || wp[1] > ry + 80) continue;
+        var side = wp[0] < wx + ww/2 ? 'L' : 'R';
+        if(buyWall(WALL[wr].id, side)){
+          floatText(hero.x, hero.y-80, 'the wall remembers', pal.glow);
+        }
+        return;
+      }
+      return;
+    }
     if(!touchUI){
       touchUI = true;
       document.getElementById('hint').textContent = 'drag left · upper right hit · right dash · bottom strip slam, stone, call';
@@ -3286,7 +3767,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   fit();
 
   if(reduce){ opt.wob = false; document.getElementById('p_wob').checked = false; }
-  enterRoom(1);
+  toHearth();
   updateHud();
   requestAnimationFrame(loop);
 })();
