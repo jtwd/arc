@@ -259,7 +259,7 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 ## 9. Technology
 
-This repository is currently an ARc React boilerplate (React, Webpack, Jest, Storybook). It is not a game engine, and a 3D watercolour game will not live here. The engine choice is driven by the render pipeline.
+This repository holds planning only. The game is built in its own repository. The engine choice is driven by the render pipeline.
 
 **Decided: Unity with the Universal Render Pipeline.** The watercolour look is a custom shader and post-process stack, and Unity has the deepest pool of published non-photorealistic rendering techniques, Shader Graph for iteration, and the most reference material for exactly the effects listed in section 8. It handles console ports and has proven Hades-like projects behind it.
 
@@ -267,7 +267,7 @@ This repository is currently an ARc React boilerplate (React, Webpack, Jest, Sto
 
 **Not recommended: Unreal.** Excellent renderer but heavier than this project needs, and its default look fights a flat watercolour style.
 
-**Use of this repo.** Keep it for a companion web tool if useful: a codex viewer, a run planner, or a marketing site. Not for the game.
+**Use of this repo.** Design documents and the run simulator. Not the game.
 
 **First technical milestone is the render test**, not combat. The art style is the biggest unknown, so prove it before anything else.
 

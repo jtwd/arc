@@ -1,86 +1,32 @@
-<p align="center">
-  <img alt="arclogo" src="https://cloud.githubusercontent.com/assets/3068563/23199029/55e9d55a-f8aa-11e6-91a2-74b82db3813c.png"><br><br>
-  <a href="https://github.com/diegohaz/arc/releases/latest"><img src="https://github-release-version.herokuapp.com/github/diegohaz/arc/release.svg?style=flat-square" alt="Latest release" /></a>
-  <a href="https://travis-ci.org/diegohaz/arc"><img src="https://img.shields.io/travis/diegohaz/arc/master.svg?style=flat-square" alt="Build Status" /></a>
-  <a href="https://codecov.io/gh/diegohaz/arc"><img src="https://img.shields.io/codecov/c/github/diegohaz/arc.svg?style=flat-square" alt="Coverage Status" /></a>
-  <a href="https://gitter.im/diegohaz/arc"><img src="https://img.shields.io/badge/chat-on%20gitter-1dce73.svg?style=flat-square" alt="Gitter chat" /></a>
-</p>
+# EPOCH
 
-**ARc** (Atomic React) is a React starter kit based on the [Atomic Design](http://bradfrost.com/blog/post/atomic-web-design/) methodology. It's progressive, which means that you can start with the basic boilerplate and try the other features when you are comfortable.
+Design documentation for a Hades-style action roguelike in which every level is a different point in history.
 
-- **[Demo](https://arc.js.org)**
-- **[Documentation](https://github.com/diegohaz/arc/wiki)**
+You play **Alegus**, who died the night he carried the first fire and was caught by the Loom, the force that keeps the timeline stitched together. Something at the far end of history is pulling the weave apart. Every run begins in the Stone Age and pushes forward through the ages, and each age you clear re-forges your weapon into its next historical form. A stone club becomes a bronze mace, then a warhammer, then a flintlock. Rendered in 3D with a watercolour look.
 
-## Branches
+**Launch scope:** five ages plus the final boss, three weapon lineages, Steam on Windows, built in Unity. Roughly 14 months for a team of four to five. The full nine-age design is the post-launch roadmap.
 
-- ### [`master`](https://github.com/diegohaz/arc)
+## What is here
 
-  The basic stack with [React](https://facebook.github.io/react/), [Webpack](https://github.com/webpack/webpack), [react-router](https://github.com/ReactTraining/react-router) and [Jest](https://facebook.github.io/jest/).
+This repository holds planning only. The game is built in Unity in its own repository.
 
-  - ### [`redux`](https://github.com/diegohaz/arc/tree/redux) <sup><sub>([compare](https://github.com/diegohaz/arc/compare/master...redux?diff=split#files_bucket))</sub></sup>
+| Path | Contents |
+|---|---|
+| `docs/` | The design documents. Start at [docs/README.md](docs/README.md) |
+| `tools/run-sim/` | A dependency-free Monte Carlo model of a run |
 
-    Master plus [redux](https://github.com/reactjs/redux), [redux-saga](https://github.com/yelouafi/redux-saga) and [redux-form](https://github.com/erikras/redux-form).
+Start with [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) for the design, then [docs/FAST_PATH.md](docs/FAST_PATH.md) for what ships first and why.
 
-    - ### [`redux-ssr`](https://github.com/diegohaz/arc/tree/redux-ssr) <sup><sub>([compare](https://github.com/diegohaz/arc/compare/redux...redux-ssr?diff=split#files_bucket))</sub></sup>
+## The run simulator
 
-      Redux plus [Server Side Rendering](https://github.com/reactjs/redux/blob/master/docs/recipes/ServerRendering.md)
+`tools/run-sim/simulate.js` models room types, door choice, player skill, and the Ochre economy across a run. It produced the run-length and currency numbers quoted throughout the documents, and it is what showed the original nine-age design came to 75 minutes per clear rather than the 30 to 40 the pitch claimed.
 
-## Why
-
-I've been a web developer for the past 14 years and after dealing with IE vs. Netscape wars, `<table>` layouts and flash websites, I can say that we are now living in the best moment in web development. Web components are awesome and React makes it better.
-
-React encourages you to create very small and pure components. However, as your project grows, you will have an increasingly complex components folder. At some point, this will be really huge and hard to maintain.
-
-I had a React project with more than 100 components in the `components` folder. The first approach I tried to organize it was separating the components by domain (described [here](http://marmelab.com/blog/2015/12/17/react-directory-structure.html)), but I realized that most of my components didn't belong to any domain, but were shared. This meant that my problems just moved to the `commons` folder.
-
-The [Atomic Design](http://bradfrost.com/blog/post/atomic-web-design/) approach comes handy to solve this problem because it considers the reusability through composition, *which is actually what React is*. You will have your minimal/stylish components in one folder, pages in another and so on.
-
-## Setup
-
-### 1. Get the source code
-
-Just clone one of the ARc [branches](#branches):
-```sh
-$ git clone -b master https://github.com/diegohaz/arc my-app
-$ cd my-app
+```
+node tools/run-sim/simulate.js [runs] [profile] [--scenario=launch|tight|baseline]
 ```
 
-You will probably want to remove ARc git history and start a brand new repository:
-```sh
-$ rm -rf .git
-$ git init
-```
+Profiles are `new`, `mid`, `expert`, or `all`. The default scenario is `launch`, the five-age shipping scope. Re-run it whenever room counts, boss timings, or Ochre values change.
 
-### 2. Install dependencies
+## History
 
-```sh
-$ npm install
-```
-
-### 3. Run the app
-
-```sh
-$ npm run dev
-```
-
-It will start the development server with [HMR](https://webpack.github.io/docs/hot-module-replacement) on top of it.
-
-> [http://localhost:3000](http://localhost:3000) — Development server<br>
-> [http://localhost:3001](http://localhost:3001) — Webpack assets server (for `redux-ssr` only)<br>
-
-Now you can open [http://localhost:3000](http://localhost:3000) in browser and start developing.
-
-## Contributing
-
-When submitting an issue, use the following patterns in the title for better understanding:
-```bash
-[v0.3.1-redux] Something wrong is not right # the v0.3.1 release of the redux branch
-[redux] Something wrong is not right # the actual code of the redux branch
-Something wrong is right # general, related to master or not directly related to any branch
-```
-
-PRs are very appreciated. For bugs/features consider creating an issue before sending a PR.
-
-## License
-
-MIT © [Diego Haz](https://github.com/diegohaz)
+This repository previously held [ARc](https://github.com/diegohaz/arc), a React boilerplate, which has been removed. That code is still in the history and on the default branch.

@@ -21,4 +21,4 @@ Read in this order:
 
 **Launch scope is five ages, three lineages, Steam on Windows, Unity.** The nine-age design in the master document is the full target and the post-launch roadmap. `FAST_PATH.md` says which part ships first and why.
 
-The game does not live in this repository. This repo is an ARc React boilerplate and may later host a companion web tool. The engine recommendation is Unity URP; see the technology section of the master document.
+The game does not live in this repository. This repo holds the design documents and the run simulator; the game is built in Unity in its own repository. See the technology section of the master document.
