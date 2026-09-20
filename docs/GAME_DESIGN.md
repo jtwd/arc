@@ -1,6 +1,8 @@
 # Working title: EPOCH
 
-A Hades-style action roguelike where every run is a sprint through human history. You start each run in the Stone Age with a rock and a stick, and you fight your way forward through the ages. Each era you clear evolves your weapon into its next historical form. Between runs you unlock new weapon lineages, new eras, and new story.
+A Hades-style action roguelike where every run is a sprint through human history. You play **Alegus**, who died at the moment the first fire was lit and now runs the whole timeline again and again. You start each run in the Stone Age with a rock and a stick. Each age you clear evolves your weapon into its next historical form. Between runs you unlock new weapon lineages, new ages, and new story.
+
+Rendered in **3D with a watercolour look**: painted-paper surfaces, bleeding pigment, ink edges, and a camera that reads like a Hades screen.
 
 This document is the planning baseline. It is deliberately opinionated so there is something concrete to argue with. Sections marked **Decision** need a call from you before that part gets built.
 
@@ -10,13 +12,13 @@ This document is the planning baseline. It is deliberately opinionated so there 
 
 **One-liner:** Hades, but the underworld is the timeline.
 
-**Pillars** (borrowed from what makes Hades work, adapted to the theme):
+**Pillars:**
 
-1. **Fast, readable, top-down combat.** Attack, special, cast, dash, call. Every hit has weight. Death comes from being outplayed, never from reading failure.
-2. **Every run is a full arc through history.** Stone Age to the modern day in 25 to 35 minutes. The player always feels the world advancing under their feet.
-3. **Your weapon grows with the world.** The club you start with becomes a mace, then a flail, then a warhammer. Progression inside a run is visible and physical, not just a stat sheet.
-4. **Death is the story.** Every failed run sends you back to the hub, where the cast reacts to how you died and what you found. Story is delivered in small, frequent doses.
-5. **Builds emerge from Inventions.** The boon system is driven by ideas humanity discovered: Fire, the Wheel, Writing, Gunpowder. Combining them is the core creative act of a run.
+1. **Fast, readable, top-down combat.** Attack, special, cast, dash, call. Every hit has weight. Death comes from being outplayed, never from reading failure. The watercolour look must never cost readability.
+2. **Every run is a full arc through history.** Stone Age to the edge of the future in 30 to 40 minutes. The player always feels the world advancing under their feet.
+3. **Your weapon grows with the world.** The club you start with becomes a mace, then a warhammer, then a trench club. Progression inside a run is visible and physical, not just a stat sheet.
+4. **Death is the story.** Every failed run sends Alegus back to the hub, where the cast reacts to how he died and what he found. Story is delivered in small, frequent doses, fully voiced.
+5. **Builds emerge from Inventions.** The boon system is driven by ideas humanity discovered: Fire, the Wheel, Writing, Gunpowder, the Atom. Combining them is the core creative act of a run.
 
 **Not in scope:** open world, crafting menus, party members, historical accuracy as a goal. History is a flavour engine, not a curriculum.
 
@@ -24,14 +26,16 @@ This document is the planning baseline. It is deliberately opinionated so there 
 
 ## 2. Narrative frame
 
-**Premise:** The player is a nameless human who died at the very dawn of history, at the moment the first fire was lit. Instead of passing on, they were caught by **the Loom**, a force that keeps the timeline stitched together. The Loom is fraying. Something at the far end of history, the **Terminus**, is pulling every era toward a single silent point. The player is the only thread that can be re-run through the whole weave, again and again, until the fray is found and cut.
+**Premise:** Alegus was the first human to carry fire, and he died the night he did it. Instead of passing on, he was caught by **the Loom**, the force that keeps the timeline stitched together. The Loom is fraying. Something at the far end of history, the **Terminus**, is pulling every age toward a single silent point. Alegus is the only thread that can be re-run through the whole weave, again and again, until the fray is found and cut.
 
 Why this frame works:
 
 - It explains why you restart at the Stone Age every run (you always begin at your own death).
-- It explains why weapons evolve mid-run (the Loom re-forges your tools as it pushes you forward through each era).
+- It explains why weapons evolve mid-run (the Loom re-forges your tools as it pushes you forward through each age).
 - It gives the hub a natural cast: figures who fell out of time and now live at the edge of the weave.
 - It gives the final boss an identity that isn't just "the last historical era".
+
+**Alegus.** Named, voiced, and talkative. He is curious rather than heroic: he has never seen any of this before and says so. His arc across the game is from tourist to custodian. He starts wanting to see what humans became and ends up responsible for whether they get to keep becoming it. Voice direction: dry, warm, quick to wonder, slow to despair. Think Zagreus's energy with less swagger and more awe.
 
 **Hub: The Hearth.** A cave lit by the first fire. Timeless. Cave paintings on the wall serve as the run log and the meta-upgrade tree. Cast members wander in over time as you unlock them.
 
@@ -39,38 +43,59 @@ Why this frame works:
 
 | Character | Role | Hades analogue |
 |---|---|---|
-| The Firekeeper | Mentor, gives weapon lineages and lore on each era | Achilles / Nyx |
-| The Cartographer | Sells map upgrades, era-skip tokens, run modifiers | Charon |
-| Pytheas the Wanderer | Comic relief, rival runs, occasional co-op fight in an era | Thanatos / Meg |
-| The Archivist | Unlocks story beats via a codex, tracks kills and discoveries | The Codex / Hypnos |
-| The Terminus | Final antagonist, voice at the end of every run | Hades (the character) |
+| The Firekeeper | Mentor, gives weapon lineages and lore on each age | Achilles / Nyx |
+| The Cartographer | Sells map upgrades, thread choices, run modifiers | Charon |
+| Wren | Rival runner from a later age, comic relief, occasional co-op fight | Thanatos / Meg |
+| The Archivist | Unlocks story via the codex, tracks kills and discoveries | The Codex / Hypnos |
+| The Terminus | Final antagonist, a voice at the end of every run | Hades (the character) |
 
-**Decision:** Is the protagonist a fixed character with a voice, or a silent avatar? Hades gets a lot of mileage from Zagreus talking back. Recommend a voiced, named protagonist.
+All cast members are invented. No real historical people appear as characters. Real events and cultures appear as places, enemies, and set dressing.
+
+**Voice plan.** Alegus is the largest role by far. Budget roughly:
+
+| Role | Lines (launch target) |
+|---|---|
+| Alegus | 2,500 |
+| Firekeeper | 900 |
+| Cartographer | 500 |
+| Wren | 700 |
+| Archivist | 400 |
+| Terminus | 300 |
+| Bosses (barks, intros, defeats) | 60 to 80 each |
+
+Record Alegus in three sessions: combat barks and reactions first (needed for the vertical slice), hub dialogue second, ending and late-game third.
 
 ---
 
 ## 3. Run structure
 
-A run is a fixed sequence of **Eras** (biomes). Each era is a set of hand-authored rooms drawn randomly, ending in a boss.
+A run is a fixed sequence of **Ages** (biomes). Each age has one or more **Threads**: regional variants of that age with their own palette, enemy roster, and boss. On any given run the Cartographer's map shows which thread each age is on. Threads are how the game covers a lot of history without making runs longer.
 
-| # | Era | Rooms | Visual identity | Boss |
+Room counts are tuned so a full run is about 40 rooms, in line with Hades.
+
+| # | Age | Rooms | Threads (region variants) | Boss per thread |
 |---|---|---|---|---|
-| 1 | **Stone Age** | 8 to 10 | Tundra, caves, tar pits, aurora skies | The Mammoth Mother, a wounded mammoth wrapped in the first hunters' spears |
-| 2 | **Bronze Age** | 8 to 10 | Ziggurats, river deltas, burning reed fields | The Bull of Heaven, a bronze automaton bull from a lost temple |
-| 3 | **Classical** | 8 to 10 | Marble colonnades, sea cliffs, arenas | The Strategos, a phalanx commander who fights with his formation as a single unit |
-| 4 | **Medieval** | 8 to 10 | Castle courtyards, plague-lit villages, cathedral scaffolds | The Hollow Knight, a suit of armour animated by a whole crusade's oaths |
-| 5 | **Gunpowder** | 6 to 8 | Ship decks, powder magazines, siege lines | The Admiral, a duel on a sinking ship with cannon timing |
-| 6 | **Industrial** | 4 to 6 (short, like Temple of Styx) | Foundries, rail yards, smog | Gauntlet, no single boss: the Furnace, a survival room against waves |
-| 7 | **Terminus** | 1 | A white room with every era layered on top of each other | The Terminus, three-phase final boss |
+| 1 | **Stone Age** | 6 | Ice Age tundra; First villages (Çatalhöyük-style) | The Mammoth Mother; The Harvest Idol |
+| 2 | **Age of Rivers** (Bronze) | 6 | Egypt; Mesopotamia; Indus | The Sphinx of Sand; The Bull of Heaven; The Unnamed King |
+| 3 | **Age of Empires** (Iron and Classical) | 6 | Greece; Rome; Han China; Persia | The Strategos; The Legate; The Jade General; The Immortal |
+| 4 | **Age of Faith and Steel** (Medieval) | 6 | Crusader Europe; Viking North; Mongol Steppe; Sengoku Japan | The Hollow Knight; The Draugr Jarl; The Khan's Shadow; The Masterless |
+| 5 | **Age of Sail** (Renaissance, Exploration, Gunpowder) | 5 | Venice; Caribbean; Ottoman siege | The Doge's Automaton; The Admiral; The Bombard |
+| 6 | **Age of Revolution** (Enlightenment, Napoleonic, Industrial) | 5 | Paris barricades; Foundry city; American frontier | The Marshal; The Furnace; The Marshal of Iron Rails |
+| 7 | **Age of Wars** (1914 to 1945) | 3 | Trenches; Bombed city | The Landship (tank); The Siren (air raid gauntlet) |
+| 8 | **Age of Atoms and Stars** (Cold War, space, digital) | 3 | Silo; Launch pad; Server hall | Countdown gauntlet, no single boss |
+| 9 | **Terminus** | 1 | A white room with every age layered on top of each other | The Terminus, three-phase final boss |
+
+What this covers that the first draft missed: Egypt, the Indus Valley, Rome, China, Persia, the Vikings, the Mongols, feudal Japan, the Renaissance, the Ottomans, the Enlightenment, the Napoleonic wars, the American frontier, both world wars, the Cold War, the space race, and the digital age. Still absent and worth a thread each later: the Aztec and Inca empires, the Islamic Golden Age, Mali and Great Zimbabwe, the Byzantines, Polynesian navigation, and the Indian empires. These are listed as post-launch threads in section 12.
 
 Rules:
 
-- **Era count grows with progression.** A new player sees eras 1 to 3 and a placeholder ending. Beating the Strategos for the first time unlocks the Medieval era for all future runs, and so on. This mirrors how Hades gates Elysium and Styx and keeps early runs short.
-- **Room types**, shared across eras and re-skinned: combat, elite combat, mini-boss, shop, Invention altar, fountain (heal), a story room with a cast member, and a challenge room (survive, escort, break the objects).
-- **Door choice** shows the reward type ahead, exactly as Hades does. This is the main strategic decision loop and it should be copied faithfully.
-- **Era transitions** are a short scripted moment: the Loom re-forges your weapon on screen, the Firekeeper says one line about the era ahead, and the palette shifts. This is the payoff moment for pillar 3 and should get real animation budget.
+- **Age count grows with progression.** A new player sees ages 1 to 3 and a placeholder ending. Beating an Age of Empires boss for the first time unlocks age 4 for all future runs, and so on. This mirrors how Hades gates Elysium and Styx and keeps early runs short.
+- **Thread selection.** At launch, one thread per age is always available and the rest unlock through the Cartographer. Once unlocked, the thread for each age is chosen randomly per run, and the Cartographer sells a one-run override.
+- **Room types**, shared across ages and re-skinned: combat, elite combat, mini-boss, shop, Invention altar, fountain (heal), a story room with a cast member, and a challenge room (survive, escort, break the objects).
+- **Door choice** shows the reward type ahead, exactly as Hades does. This is the main strategic decision loop and should be copied faithfully.
+- **Age transitions** are a short scripted moment: the Loom re-forges Alegus's weapon on screen, the watercolour of the current age runs and bleeds into the palette of the next, the Firekeeper says one line, and Alegus reacts. This is the payoff moment for pillar 3 and should get real animation budget.
 
-**Decision:** Seven eras is a lot of content. If scope is tight, cut Gunpowder and fold cannons into the Industrial gauntlet. Recommend building 1 to 4 first and adding 5 to 7 after the vertical slice.
+**Decision:** Nine ages with 20-odd threads is a big game. The launch scope recommendation is **one thread per age** (nine bosses), with second and third threads as the post-launch content plan. See section 12.
 
 ---
 
@@ -78,16 +103,16 @@ Rules:
 
 ### 4.1 Lineages
 
-Instead of six separate weapons, the player picks a **Lineage** at the start of a run. A lineage is a family of weapons with the same moveset skeleton. Each era you clear evolves it into that era's form. Stats, range, and visuals change. The core inputs and rhythm stay the same, so muscle memory carries across a run.
+Instead of six separate weapons, the player picks a **Lineage** at the start of a run. A lineage is a family of weapons with the same moveset skeleton. Each age you clear evolves it into that age's form. Stats, range, and visuals change. The core inputs and rhythm stay the same, so muscle memory carries across a run.
 
-| Lineage | Stone Age | Bronze | Classical | Medieval | Gunpowder | Industrial | Style |
-|---|---|---|---|---|---|---|---|
-| **Blunt** | Stone club | Bronze mace | Iron flanged mace | Warhammer | Pistol-butt hammer | Sledge with steam piston | Slow, heavy, big stagger |
-| **Edge** | Flint knife | Bronze sickle sword | Gladius | Longsword | Sabre | Bayonet | Fast combos, parry on special |
-| **Reach** | Sharpened spear | Bronze spear | Sarissa | Halberd | Pike | Trench spike on a rifle | Thrust range, spear throw on special |
-| **Sling** | Stone sling | Bronze javelins | Recurve bow | Crossbow | Musket | Bolt-action rifle | Ranged, reload rhythm |
-| **Guard** | Hide shield and rock | Bronze shield and axe | Hoplon and xiphos | Kite shield and mace | Buckler and pistol | Riot plate and baton | Block, bash, throw the shield |
-| **Twin** | Two hand-axes | Two bronze daggers | Two short swords | Twin flails | Twin pistols | Twin revolvers | Highest speed, dash-attack focus |
+| Lineage | 1 Stone | 2 Rivers | 3 Empires | 4 Faith and Steel | 5 Sail | 6 Revolution | 7 Wars | 8 Atoms | Style |
+|---|---|---|---|---|---|---|---|---|---|
+| **Blunt** | Stone club | Bronze mace | Iron flanged mace | Warhammer | Gunner's maul | Steam-piston sledge | Trench club | Powered breaching ram | Slow, heavy, big stagger |
+| **Edge** | Flint knife | Khopesh | Gladius | Longsword | Cutlass | Sabre | Trench knife | Ceramic combat blade | Fast combos, parry on special |
+| **Reach** | Sharpened spear | Bronze spear | Sarissa | Halberd | Boarding pike | Bayonet rifle | Trench spike | Rail lance | Thrust range, throw on special |
+| **Sling** | Stone sling | Bronze javelins | Recurve bow | Crossbow | Musket | Lever-action rifle | Bolt-action and grenades | Coilgun | Ranged, reload rhythm |
+| **Guard** | Hide shield and rock | Bronze shield and axe | Hoplon and xiphos | Kite shield and mace | Buckler and pistol | Sapper's plate and pick | Trench shield and club | Riot shield and baton | Block, bash, throw the shield |
+| **Twin** | Two hand-axes | Two bronze daggers | Two short swords | Twin flails | Twin flintlocks | Twin revolvers | Twin trench pistols | Twin machine pistols | Highest speed, dash-attack focus |
 
 Each evolution step has a **defining change**, not just bigger numbers. Examples for Blunt:
 
@@ -95,16 +120,20 @@ Each evolution step has a **defining change**, not just bigger numbers. Examples
 - Bronze mace: third hit now stuns.
 - Iron mace: special becomes a ground slam with shockwave.
 - Warhammer: charged attack added, holds enemies in place.
-- Pistol-butt hammer: special fires a point-blank shot, single ammo that reloads over time.
+- Gunner's maul: special fires a point-blank shot, single ammo that reloads over time.
 - Piston sledge: every third hit vents steam that burns.
+- Trench club: attacks apply Bleed, special is a lunge.
+- Breaching ram: charged attack becomes a shield-breaking charge through enemies.
+
+Age 8 forms lean lightly into near-future flavour because Alegus is close to the Terminus and the Loom is fraying. Nothing is magic; it is all plausible equipment.
 
 ### 4.2 Aspects
 
-As in Hades, each lineage has 4 **Aspects**, unlocked with a rare meta currency. An aspect changes the whole lineage's identity. Example for Reach: "Aspect of the Hunter" adds a second thrown spear and a recall dash; "Aspect of the Phalanx" makes the special summon a ghost line of spears.
+As in Hades, each lineage has 4 **Aspects**, unlocked with a rare meta currency. An aspect changes the whole lineage's identity across every age form. Example for Reach: "Aspect of the Hunter" adds a second thrown spear and a recall dash; "Aspect of the Phalanx" makes the special summon a ghost line of spears.
 
 ### 4.3 Unlock order (meta progression)
 
-Blunt is free. The others unlock with **Keys of Ages** earned mostly from first-time era clears and boss kills:
+Blunt is free. The others unlock with **Keys of Ages** earned mostly from first-time age clears and boss kills:
 
 1. Blunt (start)
 2. Edge (1 key)
@@ -123,25 +152,28 @@ This gives the "unlock newer and better weapons" fantasy at two speeds: inside a
 
 Boons are **Inventions**, granted at altars by **Inventors**: mythologised spirits of ideas, not real historical people. Each Inventor has a theme and a status effect, and each Invention attaches to one of the five slots: Attack, Special, Cast, Dash, Call.
 
-| Inventor | Theme | Status effect | Signature |
-|---|---|---|---|
-| **Ember** (fire) | Damage over time | Burn | Attacks ignite; burn spreads on kill |
-| **Wheel** | Mobility | Momentum | Dash goes further and deals damage at full speed |
-| **Seed** (agriculture) | Sustain | Root | Heals on room clear; rooted enemies take bonus damage |
-| **Glyph** (writing) | Control | Marked | Marked enemies take crit damage; Cast marks a target |
-| **Forge** (metallurgy) | Raw power | Shatter | Flat damage, armour break on heavy hits |
-| **Lens** (astronomy) | Precision and timing | Exposed | Perfect dodge and last-hit bonuses |
-| **Salt** (medicine) | Survival | Weakened | Death defiance charges, enemies do less damage |
-| **Powder** (gunpowder) | Burst and area | Primed | Enemies explode on death, Cast becomes a bomb |
-| **Steam** | Late-era only | Pressure | Stacks build into a large release; only appears in eras 5+ |
+| Inventor | Theme | Status effect | Signature | First appears |
+|---|---|---|---|---|
+| **Ember** (fire) | Damage over time | Burn | Attacks ignite; burn spreads on kill | Age 1 |
+| **Wheel** | Mobility | Momentum | Dash goes further and deals damage at full speed | Age 1 |
+| **Seed** (agriculture) | Sustain | Root | Heals on room clear; rooted enemies take bonus damage | Age 1 |
+| **Forge** (metallurgy) | Raw power | Shatter | Flat damage, armour break on heavy hits | Age 1 |
+| **Glyph** (writing) | Control | Marked | Marked enemies take crit damage; Cast marks a target | Age 2 |
+| **Lens** (astronomy) | Precision and timing | Exposed | Perfect dodge and last-hit bonuses | Age 3 |
+| **Salt** (medicine) | Survival | Weakened | Death defiance charges, enemies do less damage | Age 3 |
+| **Compass** (navigation) | Positioning | Adrift | Enemies drift toward Cast; dash leaves a beacon you can return to | Age 5 |
+| **Powder** (gunpowder) | Burst and area | Primed | Enemies explode on death, Cast becomes a bomb | Age 5 |
+| **Press** (printing) | Duplication | Copied | Attacks have a chance to repeat; Call spawns a copy of your last hit | Age 6 |
+| **Volt** (electricity) | Chain | Charged | Damage arcs between charged enemies | Age 6 |
+| **Atom** | Late-age only | Fission | Stacks build into a large release; only appears in age 8 | Age 8 |
 
-**Duo Inventions** combine two Inventors. Example: Ember and Powder give "Wildfire", which makes exploding enemies leave burning ground. Aim for 20 to 25 duos at launch.
+**Duo Inventions** combine two Inventors. Example: Ember and Powder give "Wildfire", which makes exploding enemies leave burning ground. Volt and Compass give "Storm Front", where the beacon pulses lightning. Aim for 25 to 30 duos at launch.
 
 **Legendary Inventions** are a single build-defining pickup per Inventor.
 
-**Era gating:** Inventors are not all available from room one. Ember, Wheel, Seed, and Forge appear from the Stone Age. Glyph and Lens arrive in Bronze. Powder arrives in Gunpowder, Steam in Industrial. This means late-era altars matter more than early ones and rewards pushing deep. It also naturally teaches new players fewer systems up front.
+**Age gating** means late altars matter more than early ones and rewards pushing deep. It also naturally teaches new players fewer systems up front.
 
-**Keepsakes** from cast members work as in Hades: a small passive that you can swap at each era boundary.
+**Keepsakes** from cast members work as in Hades: a small passive that you can swap at each age boundary.
 
 ---
 
@@ -157,11 +189,12 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 **Enemy design rules:**
 
-- Every era introduces one new mechanic that later eras keep. Stone Age: pack animals that flank. Bronze: shielded enemies that must be hit from behind or shattered. Classical: formations that move as a unit. Medieval: armoured enemies immune to Burn until broken. Gunpowder: ranged enemies with telegraphed reload windows. Industrial: environmental hazards that kill enemies too.
-- Enemies from earlier eras never appear in later eras. The world moves on.
+- Every age introduces one new mechanic that later ages keep. Stone: pack animals that flank. Rivers: shielded enemies that must be hit from behind or shattered. Empires: formations that move as a unit. Faith and Steel: armoured enemies immune to Burn until broken. Sail: ranged enemies with telegraphed reload windows. Revolution: environmental hazards that kill enemies too. Wars: cover that blocks projectiles both ways, and area denial (gas, artillery marks). Atoms: countdown rooms where the objective is to survive or disarm, not to kill.
+- Threads within an age share the mechanic but re-skin the roster. Rome's legion and Han's crossbow line are both "formation" enemies with different shapes.
+- Enemies from earlier ages never appear in later ages. The world moves on.
 - Elite variants get one modifier drawn from a shared pool (armoured, swift, exploding, healing others).
 
-**Difficulty scaling (Anachronism, the Pact of Punishment):** after the first full clear, the player can add **Anachronisms** to a run for better rewards. Each is a break in history: "Enemies carry weapons from one era later", "Bosses have a second health bar", "Rooms are 30% smaller", "No fountains", "Era 6 is a full era, not a gauntlet". Anachronism total is the difficulty number for leaderboards and story gates.
+**Difficulty scaling (Anachronism, the Pact of Punishment):** after the first full clear, the player can add **Anachronisms** to a run for better rewards. Each is a break in history: "Enemies carry weapons from one age later", "Bosses have a second health bar", "Rooms are 30% smaller", "No fountains", "Ages 7 and 8 are full length". Anachronism total is the difficulty number for leaderboards and story gates.
 
 ---
 
@@ -173,6 +206,7 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 | **Keys of Ages** | First-time boss kills, rare room rewards | Lineage unlocks, Cave Wall row unlocks |
 | **Amber** | Rare, boss drops and challenge rooms | Aspects, keepsake upgrades |
 | **Tallow** | Uncommon, elite kills | Hearth cosmetics and story-unlocking gifts for the cast |
+| **Charts** | Boss kills on a thread you have not cleared before | New threads at the Cartographer |
 | **Flint** | In-run only, resets | Shops during a run |
 
 **The Cave Wall** has two columns per row like the Mirror, with a toggle between them. Examples: extra death defiance versus bonus damage on first hit; dash i-frame length versus dash count; Ochre gain versus Flint gain.
@@ -181,50 +215,102 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 ---
 
-## 8. Art and audio direction
+## 8. Art direction: 3D watercolour
 
-- **Camera:** fixed three-quarter top-down, 2D hand-drawn characters over painted 3D-lit backgrounds, same as Hades. This is the cheapest way to get the look and the readability.
-- **Palette shift per era** is the primary tool for "history moving forward". Stone Age is cold blues and firelight. Bronze is ochre and turquoise. Classical is white marble and sea. Medieval is grey stone and stained glass. Gunpowder is tar, brass, and powder smoke. Industrial is rust and gaslight.
-- **Weapon evolution animation** at era boundaries is the signature visual. Budget it like a boss intro.
-- **Music:** one motif that is arranged in the instruments of each era. Bone flute and drum in the Stone Age, lyre in Classical, choir and organ in Medieval, brass and fife in Gunpowder, industrial percussion at the end. Same melody, whole run. This is cheap to write and very memorable.
-- **UI:** cave painting style in the hub, era-appropriate framing in runs (clay tablet, papyrus, illuminated manuscript, printed broadsheet, telegraph strip).
+**Camera.** Fixed three-quarter top-down, roughly 50 degrees, orthographic or near-orthographic. Same framing as Hades so readability rules transfer directly. Full 3D scene: characters, props, and environments are all meshes. This is a change from the Hades approach of 2D sprites over 3D backgrounds, chosen because it makes weapon evolution and age transitions far cheaper to animate and lets one Alegus rig carry every weapon form.
+
+**Watercolour render pipeline.** A non-photorealistic post and material stack:
+
+1. **Paper.** A global paper-grain texture that everything is composited onto, with slight vignette and warm tint. The paper is the same across all ages; only the pigment changes.
+2. **Pigment.** Flat-shaded base colours with soft, blotchy lighting quantised to two or three tones. Shadow regions get a hue shift toward a complementary colour, as real watercolour does.
+3. **Edge darkening.** A screen-space effect that darkens colour at the boundary of each shape, mimicking pigment pooling at the edge of a wash.
+4. **Bleed and wobble.** UV distortion by a low-frequency noise that drifts slowly, so edges never sit perfectly still. Kept subtle in combat, stronger in the hub.
+5. **Ink lines.** Thin outline pass for characters and enemies only, not environments. This is the readability guarantee: every hostile thing has an ink edge, backgrounds do not.
+6. **Age-transition wash.** At age boundaries, the whole frame runs like a wet painting, pigment drains, and the new age's palette floods in. This same effect at small scale is used for enemy deaths (they dissolve into a wash rather than ragdoll).
+
+**Readability rules that override the look:**
+
+- Enemy attacks telegraph with a hard-edged ink shape on the ground, never a soft wash.
+- Alegus, enemies, and projectiles always get the ink outline. Set dressing never does.
+- Damage numbers and status icons are flat UI, not painted.
+- The bleed effect is disabled on any surface within a fixed radius of Alegus so the play space is crisp.
+
+**References to look at:** Okami for ink and paper; Dordogne for pure watercolour environments; Tchia and Sable for flat-shaded 3D that still reads painterly; Hades 2 for camera and telegraph readability. The target is closer to Dordogne's palette on Sable's rendering approach.
+
+**Palette per age.** The primary tool for "history moving forward":
+
+| Age | Palette |
+|---|---|
+| Stone | Cold blues, snow whites, one warm orange from firelight |
+| Rivers | Ochre, turquoise, black river silt |
+| Empires | White marble, deep sea blue, terracotta, Han lacquer red |
+| Faith and Steel | Grey stone, stained glass jewel tones, snow and pine for the North |
+| Sail | Teal water, tar, brass, powder smoke |
+| Revolution | Rust, gaslight yellow, tricolour reds and blues |
+| Wars | Mud brown, mustard gas green, searchlight white |
+| Atoms | Concrete grey, phosphor green, one hard red warning light |
+| Terminus | Unpainted paper with pencil underdrawing showing through |
+
+**Music.** One motif arranged in the instruments of each age. Bone flute and drum in the Stone Age, oud and harp in Rivers, lyre and Chinese guqin in Empires, choir and organ in Faith and Steel, fife and shanty in Sail, brass band and industrial percussion in Revolution, a solo piano over distant artillery in Wars, synths and Geiger clicks in Atoms, then the bone flute alone at the Terminus. Same melody, whole run.
+
+**UI.** Cave painting style in the hub, age-appropriate framing in runs: clay tablet, papyrus, scroll, illuminated manuscript, sea chart, printed broadsheet, telegram, terminal.
 
 ---
 
 ## 9. Technology
 
-This repository is currently an ARc React boilerplate (React, Webpack, Jest, Storybook). It is not a game engine. Two realistic routes:
+This repository is currently an ARc React boilerplate (React, Webpack, Jest, Storybook). It is not a game engine, and a 3D watercolour game will not live here. The engine choice is driven by the render pipeline.
 
-**Route A, recommended: Godot 4 in a new repo.** 2D-first engine with a built-in physics layer, tilemaps, animation tools, and a scripting language that suits rapid iteration. Free, exports to desktop and consoles via partners. Best fit for a Hades-like from a small team.
+**Recommended: Unity with the Universal Render Pipeline.** The watercolour look is a custom shader and post-process stack, and Unity has the deepest pool of published non-photorealistic rendering techniques, Shader Graph for iteration, and the most reference material for exactly the effects listed in section 8. It handles console ports and has proven Hades-like projects behind it.
 
-**Route B: browser prototype in this repo.** Add Phaser 3 or PixiJS as a dependency, mount the canvas inside a React shell, use React for menus, the hub, the codex, and the Cave Wall. Good for a fast playable prototype to test combat feel and the evolution idea, and it fits the existing tooling. Would not be the shipping engine.
+**Alternative: Godot 4.** Free, capable 3D, a good shader language, and rapidly improving. Choose it if licensing cost or open source matter more than tooling maturity. The watercolour stack is achievable but you will be writing more of it yourself.
 
-Recommendation: do Route B for a 2 to 4 week combat prototype (one lineage, one era, one boss) to validate the evolution mechanic, then move to Route A once the core loop is proven.
+**Not recommended: Unreal.** Excellent renderer but heavier than this project needs, and its default look fights a flat watercolour style.
 
-**Decision:** Which route, and is there a target platform (PC, Switch, browser) that forces the choice?
+**Use of this repo.** Keep it for a companion web tool if useful: a codex viewer, a run planner, or a marketing site. Not for the game.
+
+**First technical milestone is the render test**, not combat. The art style is the biggest unknown, so prove it before anything else.
 
 ---
 
 ## 10. Milestones
 
-Each milestone is playable and answers one question.
+Each milestone is playable or viewable and answers one question.
 
-1. **Combat prototype** (4 weeks). One lineage (Blunt), one room, three enemy types, no Inventions. Question: does the attack, special, dash loop feel good?
-2. **Evolution prototype** (3 weeks). Stone Age club to Bronze mace transition, with the re-forge animation and a Bronze room. Question: does mid-run weapon evolution feel like a reward, or like losing a weapon you liked?
-3. **Vertical slice** (10 weeks). Stone Age era complete: 8 rooms, Mammoth Mother boss, four Inventors, Blunt and Edge lineages, a hub with the Firekeeper and Cave Wall, death and restart loop. Question: is one full era fun for ten runs?
-4. **Alpha** (5 months). Eras 1 to 4, all six lineages at base aspect, all Inventors except Steam, 10 duos, placeholder ending after the Hollow Knight. Question: does progression across 30 runs hold attention?
-5. **Beta** (4 months). Eras 5 to 7, Terminus fight, Anachronisms, full cast and story, aspects, keepsakes, music.
-6. **Polish and ship** (3 months).
+1. **Watercolour render test** (3 weeks). One static room, one Alegus placeholder model, one enemy, the full shader stack from section 8. Question: does the look work in motion at the target camera, and does it stay readable?
+2. **Combat prototype** (4 weeks). One lineage (Blunt), one room, three enemy types, no Inventions, first Alegus combat barks recorded as scratch audio. Question: does the attack, special, dash loop feel good?
+3. **Evolution prototype** (3 weeks). Stone club to Bronze mace transition, with the re-forge animation, the age-transition wash, and a Rivers room. Question: does mid-run weapon evolution feel like a reward, or like losing a weapon you liked?
+4. **Vertical slice** (10 weeks). Stone Age complete on one thread: 6 rooms, Mammoth Mother boss, four Inventors, Blunt and Edge lineages, a hub with the Firekeeper and Cave Wall, death and restart loop, first Alegus voice session. Question: is one full age fun for ten runs?
+5. **Alpha** (6 months). Ages 1 to 5 on one thread each, all six lineages at base aspect, Inventors through Powder, 12 duos, placeholder ending after the Admiral. Question: does progression across 30 runs hold attention?
+6. **Beta** (5 months). Ages 6 to 9, Terminus fight, Anachronisms, full cast and story, aspects, keepsakes, music, full voice.
+7. **Polish and ship** (3 months).
 
-Total roughly 16 to 18 months for a team of 3 to 5. A solo developer should halve the era count and double the timeline.
+Total roughly 20 to 22 months for a team of 4 to 6, with a dedicated technical artist from day one. A solo developer should halve the age count and double the timeline.
 
 ---
 
 ## 11. Open questions
 
-- Protagonist: voiced and named, or silent?
-- Era count: 7 as written, or 5 to protect scope?
+- Nine ages at launch, or ship with seven (drop Wars and Atoms into a single short gauntlet) and add them later?
 - Forced evolution, or let players lock a favourite form?
-- Engine route and target platform.
-- Tone: Hades is warm and funny. Does EPOCH keep that, or lean more solemn given it is about all of human history ending?
-- Real historical figures as cast members (Pytheas is a real name) versus fully invented ones. Invented is safer and easier to write.
+- Unity or Godot.
+- Target platform: PC first, or PC and Switch together? Switch affects how heavy the post-process stack can be.
+- Tone: Hades is warm and funny. Alegus as written is warm and curious. Does the game stay light through the Age of Wars, or does the tone darken with the history?
+- Alegus's origin: is he from a specific real culture, or deliberately pre-cultural since he predates all of them? Recommend pre-cultural; it lets every age be equally foreign to him.
+
+---
+
+## 12. Post-launch thread plan
+
+Second and third threads per age, in rough priority order. Each is one biome skin, one enemy roster, and one boss.
+
+1. Age of Empires: **Mauryan India**
+2. Age of Faith and Steel: **Islamic Golden Age** (Baghdad, House of Wisdom)
+3. Age of Sail: **Aztec Tenochtitlan** (the conquest, seen from the city)
+4. Age of Faith and Steel: **Mali** (Timbuktu, the salt roads)
+5. Age of Empires: **Byzantium**
+6. Age of Sail: **Polynesian navigation** (open ocean, star paths)
+7. Age of Sail: **Inca Andes**
+8. Age of Rivers: **Minoan Crete**
+9. Age of Revolution: **Meiji Japan**
+10. Age of Atoms: **Berlin Wall**
