@@ -84,6 +84,7 @@ Beyond difficulty. Several of these are cheap now and expensive later, so they b
 | Feature | Why now |
 |---|---|
 | Full input remapping, controller and keyboard | Retrofitting hardcoded inputs is expensive |
+| A floating thumbstick for any touch build | Learned from the render test: a fixed d-pad fails because the thumb covers the target it is trying to find, and it has no diagonal for down-left. A stick that appears where the thumb lands has neither problem |
 | Hold or toggle for every held input | Affects the Sling draw and the Blunt charge, which are being designed now |
 | **Bleed and wobble intensity slider, 0 to 100%** | The render stack drifts the image continuously. That will cause discomfort for some players. The pass is already droppable, so the slider is nearly free |
 | Screen shake and flash intensity sliders | Same reason |

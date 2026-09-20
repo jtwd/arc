@@ -20,7 +20,7 @@ Start with [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) for the design, then [docs
 
 ## The render test
 
-`tools/render-test/index.html` is a single self-contained page. Open it in any browser, move Alegus with the arrow keys, attack with space, and toggle the render passes.
+`tools/render-test/index.html` is a single self-contained page. Open it in any browser, move Alegus with the arrow keys, attack with space, and toggle the render passes. On a touch screen, drag anywhere on the left of the frame for a floating thumbstick and tap the right to attack.
 
 It is Canvas 2D approximating the look rather than the real shader stack, so treat it as a floor and not a ceiling. It exists to answer the one question a still image cannot: whether the watercolour direction holds up in motion. It did, and the first review cut the ink outline and edge darkening on the strength of it. A paper reserve carries the readability instead.
 

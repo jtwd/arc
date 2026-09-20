@@ -28,6 +28,15 @@
     font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
     font-size:15px; line-height:1.55;
     padding-inline:16px; padding-block:22px 36px;
+    /* kills the double-tap-to-zoom gesture and the grey tap flash, while
+       leaving pinch zoom alone */
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* the play surface and the control rail are operated, not read, so nothing
+     in them should ever select on a tap-and-hold */
+  .stage, aside{
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
   }
   .shell{max-width:1180px; margin:0 auto; display:flex; flex-direction:column; gap:20px}
 
@@ -51,7 +60,8 @@
     overflow:hidden; background:#EDE6D6; line-height:0;
     box-shadow:0 1px 0 rgba(0,0,0,.06), 0 10px 30px -18px rgba(0,0,0,.5);
   }
-  canvas{display:block; width:100%; height:auto; max-width:100%; touch-action:none}
+  canvas{display:block; width:100%; height:auto; max-width:100%; touch-action:none; outline:none}
+  canvas:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
 
   .hud{
     position:absolute; left:10px; top:10px; display:flex; gap:6px; flex-wrap:wrap;
@@ -71,19 +81,6 @@
     background:rgba(34,26,16,.66); color:#E8DCC6; padding:3px 8px; border-radius:2px;
     letter-spacing:.03em; line-height:1.7; text-align:right; pointer-events:none;
   }
-
-  .pad{
-    position:absolute; left:0; right:0; bottom:0; display:none;
-    justify-content:space-between; align-items:flex-end; padding:12px; gap:10px;
-  }
-  .pad.on{display:flex}
-  .dpad{display:grid; grid-template-columns:repeat(3,42px); grid-template-rows:repeat(2,38px); gap:4px}
-  .pad button{
-    font-family:"IBM Plex Mono", monospace; font-size:15px; border:0; border-radius:3px;
-    background:rgba(34,26,16,.66); color:#F1E7D4; line-height:1;
-  }
-  .pad button:active{background:var(--accent)}
-  .hit{width:74px; height:74px; border-radius:50%; font-size:11px !important; letter-spacing:.08em}
 
   aside{
     background:var(--panel); border:1px solid var(--line); border-radius:3px;
@@ -162,17 +159,6 @@
       <canvas id="c" width="960" height="600" aria-label="Interactive render test: a paper-puppet figure in a watercolour Ice Age scene"></canvas>
       <div class="hud" id="hud"></div>
       <div class="hint" id="hint">&larr; &rarr; &uarr; &darr; move &middot; space attack</div>
-      <div class="pad" id="pad">
-        <div class="dpad">
-          <button data-k="uk" aria-label="up-left">&#8598;</button>
-          <button data-k="u" aria-label="up">&#8593;</button>
-          <button data-k="ur" aria-label="up-right">&#8599;</button>
-          <button data-k="l" aria-label="left">&#8592;</button>
-          <button data-k="d" aria-label="down">&#8595;</button>
-          <button data-k="r" aria-label="right">&#8594;</button>
-        </div>
-        <button class="hit" data-k="a" aria-label="attack">HIT</button>
-      </div>
     </div>
 
     <aside>
@@ -689,15 +675,28 @@
 
   /* ---------- frame ---------- */
   var keys = {}, last = performance.now(), fps = 60, acc = 0, frames = 0;
+  /* a floating thumbstick, not a d-pad: a six-button grid has no down-left and
+     needs the thumb to find a 40px target it cannot see under itself */
+  var STICK_R = 66;
+  var stick = { on:false, id:null, ox:0, oy:0, x:0, y:0 };
+  var touchUI = false, hitPulse = 0;
 
   function step(dt){
     wobT += dt;
     /* input */
-    var ax = (keys.r?1:0) - (keys.l?1:0);
-    var ay = (keys.d?1:0) - (keys.u?1:0);
-    var len = Math.hypot(ax,ay) || 1;
+    var ax = 0, ay = 0;
+    if(stick.on){
+      var m = Math.hypot(stick.x, stick.y);
+      if(m > 0.16){ ax = stick.x/m; ay = stick.y/m; }
+    } else {
+      ax = (keys.r?1:0) - (keys.l?1:0);
+      ay = (keys.d?1:0) - (keys.u?1:0);
+      var l = Math.hypot(ax,ay);
+      if(l > 0){ ax /= l; ay /= l; }
+    }
+    if(hitPulse > 0) hitPulse -= dt*3;
     var spd = (hero.atk>=0) ? 40 : 240;
-    hero.vx = ax/len*spd; hero.vy = ay/len*spd;
+    hero.vx = ax*spd; hero.vy = ay*spd;
     hero.x = Math.max(28, Math.min(W-28, hero.x + hero.vx*dt));
     hero.y = Math.max(GND_TOP+24, Math.min(H-16, hero.y + hero.vy*dt));
     if(ax) hero.face = ax>0?1:-1;
@@ -806,6 +805,25 @@
       vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(52,38,20,0.20)');
       ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
     }
+
+    /* touch controls draw last and flat, never painted, per the pipeline's UI rule */
+    if(touchUI){
+      ctx.fillStyle = pal.inkc;
+      if(stick.on){
+        ctx.globalAlpha = 0.14;
+        ctx.beginPath(); ctx.arc(stick.ox, stick.oy, STICK_R, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 0.42;
+        ctx.beginPath();
+        ctx.arc(stick.ox + stick.x*STICK_R, stick.oy + stick.y*STICK_R, 26, 0, 6.2832);
+        ctx.fill();
+      } else {
+        ctx.globalAlpha = 0.10;
+        ctx.beginPath(); ctx.arc(W*0.17, H*0.76, 46, 0, 6.2832); ctx.fill();
+      }
+      ctx.globalAlpha = 0.10 + Math.max(0,hitPulse)*0.3;
+      ctx.beginPath(); ctx.arc(W*0.84, H*0.76, 54, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
   }
 
   function loop(now){
@@ -885,24 +903,52 @@
   cv.setAttribute('tabindex','0');
   cv.addEventListener('pointerdown', function(){ cv.focus(); });
 
-  /* touch pad */
-  if(window.matchMedia('(pointer: coarse)').matches){
-    document.getElementById('pad').classList.add('on');
-    document.getElementById('hint').textContent = 'pad to move · HIT to attack';
-    var padEl = document.getElementById('pad');
-    function setk(k,v){
-      if(k==='a'){ if(v && hero.atk<0) hero.atk=0; return; }
-      if(k==='uk'){ keys.u=v; keys.l=v; return; }
-      if(k==='ur'){ keys.u=v; keys.r=v; return; }
-      keys[k]=v;
+  /* touch: the left of the frame is a thumbstick that appears where the thumb
+     lands, the right is the attack. No fixed targets to hunt for, and no DOM
+     elements over the canvas to select or double-tap. */
+  function toCanvas(e){
+    var r = cv.getBoundingClientRect();
+    return [ (e.clientX-r.left) * (W/r.width), (e.clientY-r.top) * (H/r.height) ];
+  }
+  cv.addEventListener('pointerdown', function(e){
+    if(e.pointerType !== 'touch') return;
+    e.preventDefault();
+    if(!touchUI){
+      touchUI = true;
+      document.getElementById('hint').textContent = 'drag left to move · tap right to attack';
     }
-    padEl.querySelectorAll('button').forEach(function(b){
-      var k = b.getAttribute('data-k');
-      b.addEventListener('pointerdown', function(e){ e.preventDefault(); setk(k,1); });
-      ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
-        b.addEventListener(ev, function(){ setk(k,0); });
-      });
+    var p = toCanvas(e);
+    if(p[0] < W*0.52){
+      if(stick.on) return;
+      stick.on = true; stick.id = e.pointerId;
+      stick.ox = p[0]; stick.oy = p[1]; stick.x = 0; stick.y = 0;
+      cv.setPointerCapture(e.pointerId);
+    } else {
+      if(hero.atk < 0) hero.atk = 0;
+      hitPulse = 1;
+    }
+  });
+  cv.addEventListener('pointermove', function(e){
+    if(!stick.on || e.pointerId !== stick.id) return;
+    e.preventDefault();
+    var p = toCanvas(e);
+    var dx = p[0]-stick.ox, dy = p[1]-stick.oy;
+    var m = Math.hypot(dx,dy);
+    if(m > STICK_R){ dx = dx/m*STICK_R; dy = dy/m*STICK_R; m = STICK_R; }
+    stick.x = dx/STICK_R; stick.y = dy/STICK_R;
+  });
+  /* pointercancel and lostpointercapture both have to clear the stick, or a
+     thumb that slides off the canvas leaves Alegus walking forever */
+  ['pointerup','pointercancel','lostpointercapture'].forEach(function(ev){
+    cv.addEventListener(ev, function(e){
+      if(stick.on && e.pointerId === stick.id){
+        stick.on = false; stick.id = null; stick.x = 0; stick.y = 0;
+      }
     });
+  });
+  if(window.matchMedia('(pointer: coarse)').matches){
+    document.getElementById('hint').textContent = 'drag left to move · tap right to attack';
+    touchUI = true;
   }
 
   /* crisp on high-density displays without changing the drawing code */
