@@ -5,18 +5,53 @@ Alegus around one room and run the age transition. That is the whole scope, and
 it is deliberate. Rung 1 exists to prove the render stack before anything is
 built on top of it.
 
-## Running it
+## First time setup
 
-1. Install **Godot 4.3 or newer**, standard build. No C# needed.
-2. Open Godot, choose **Import**, and select `game/project.godot`.
-3. Press **F5**.
+Two downloads, about ten minutes, nothing to configure.
+
+### 1. Get Godot
+
+From **<https://godotengine.org/download>**, take **Godot Engine 4.3 or newer**,
+the plain one. Not **.NET** — that build is for writing the game in C#, and this
+project is GDScript.
+
+There is no installer and no account. You get a zip with a single executable
+inside, and running that executable *is* Godot. It is about 100MB.
+
+| | |
+|---|---|
+| **Windows** | Unzip, double-click `Godot_v4.x-stable_win64.exe`. Windows may warn about an unknown publisher: More info, then Run anyway |
+| **macOS** | Unzip, drag `Godot.app` to Applications, open it. The first launch may need System Settings, Privacy and Security, Open Anyway |
+| **Linux** | Unzip, `chmod +x` the binary, run it |
+
+The editor and the game runtime are the same program, so that is everything.
+
+### 2. Get this repository
+
+Either clone it, or on GitHub press the green **Code** button, **Download ZIP**,
+and unzip it somewhere you will find again. Make sure you are on the
+`claude/historical-roguelike-planning-nk5h7d` branch.
+
+### 3. Open the project
+
+1. Launch Godot. The Project Manager window appears.
+2. **Import**, then browse to the repository and select **`game/project.godot`**.
+   Pick that file, not the folder above it.
+3. **Import & Edit**. The editor opens.
+4. Press **F5**, or the play triangle at the top right.
+
+The first launch takes a few seconds while shaders compile. After that F5 is
+instant.
+
+## Running it
 
 | Input | Does |
 |---|---|
 | Arrow keys | Walk |
 | Space, or the button | Run the age transition |
+| **B** | Run the benchmark. This is the one I need |
 | The checkboxes | Turn each render pass on and off |
-| The slider | Wobble amplitude, 0 to 4 pixels |
+| The sliders | Wobble amplitude, and how often the world re-bakes |
 
 ## What to look at
 
