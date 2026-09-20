@@ -24,6 +24,10 @@ Read in this order:
 17. [STORY_SCHEDULE.md](STORY_SCHEDULE.md), what unlocks after which run, and what gates it.
 18. [WREN_DIALOGUE.md](WREN_DIALOGUE.md), her ten beats and in-run lines, drafted ahead of the recording order.
 
+18. [SESSION_LOG.md](SESSION_LOG.md), what Edward said in each session and what it changed.
+
+The game itself is in [`game/`](../game), a Godot 4 project. `game/README.md` says how to run it.
+
 `tools/run-sim/simulate.js` is a dependency-free Monte Carlo model of a run. It produced the run-length and Ochre numbers quoted in the documents above. Run it with `node tools/run-sim/simulate.js` and re-run it whenever room counts, boss timings, or Ochre values change.
 
 **The first release is the Stone Age alone, built in Godot for Steam by two people and Claude.** Everything else in these documents is design for later. `PRODUCTION.md` is the plan that governs; read it first.

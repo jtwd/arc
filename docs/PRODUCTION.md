@@ -82,7 +82,7 @@ Each rung ends with something playable. Hours are total build effort, most of it
 | # | Rung | You can | Hours | Calendar |
 |---|---|---|---|---|
 | 0 | Browser prototype | Move, swing, see the look | done | done |
-| 1 | **Godot port of the look** | Walk a room with the real shader stack at 60fps | 60 | 5 weeks |
+| 1 | **Godot port of the look** | Walk a room with the real shader stack at 60fps | 60 | written, awaiting a run |
 | 2 | **Combat feel** | Fight three Frayed types with the Blunt club and die | 110 | 9 weeks |
 | 3 | **A run** | Clear six rooms through doors with rewards, then restart | 60 | 5 weeks |
 | 4 | **Inventions** | Build a run out of 20 boons from four Inventors | 60 | 5 weeks |
@@ -92,6 +92,8 @@ Each rung ends with something playable. Hours are total build effort, most of it
 | 8 | **Ship** | Buy it on Steam | 120 | 10 weeks |
 
 Roughly **800 hours, 12 to 18 months**, and the spread is entirely about how many hours the two of you actually find.
+
+**Rung 1 is written and unverified.** Godot is not installed in the container Claude works in, so it is the first code on the project nobody has seen execute. `game/README.md` carries the failure list and the one-line fix for each. Getting it running is the first job of the next session.
 
 **Rung 2 is the gate.** If the combat does not feel good, nothing after it matters and the project should stop or change. Edward decides, and he should be ruthless about it. It is much cheaper to fail at week fourteen than at month twelve.
 
