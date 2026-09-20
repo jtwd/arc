@@ -1,3 +1,9 @@
+> **Parked.** The development machine is a Chromebook, which cannot run a
+> meaningful performance test or produce a Steam build, so the project builds in
+> the browser for now. See `docs/PRODUCTION.md` section 7a. This port is kept
+> because it proved the look survives a real engine, and it is the fallback if
+> the browser route hits a ceiling. Do not work on it.
+
 # EPOCH, rung 1
 
 The watercolour look running in Godot. There is no game here yet: you can walk

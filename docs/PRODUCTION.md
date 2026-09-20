@@ -126,26 +126,44 @@ Keep a single running note of what Edward said in each session. Taste judgements
 
 ---
 
-## 7a. The hardware constraint
+## 7a. The hardware constraint, and the route through it
 
 The development machine is a **Chromebook**. Claude recommended Godot without
-asking, which was a mistake, and it changes two things.
+asking, which was a mistake.
 
-**Godot will run**, through the ChromeOS Linux environment, on most devices from
-2019 onward. But it runs inside a container with software-assisted graphics, so
-a frame rate measured there says nothing about a Windows target, and the whole
-point of rung 1 was to measure a frame rate.
+Godot does run there, through the ChromeOS Linux environment, but inside a
+container with software-assisted graphics, so any frame rate measured on it says
+nothing about a Windows target. And a Steam build cannot be produced or tested
+on a Chromebook at all. That is true of any engine, not just Godot.
 
-**A Steam build cannot be produced or tested on it at all.** Not exported, not
-run, not verified on Deck. That is not a Godot limitation; it is true of any
-engine. Shipping to Steam needs a Windows, macOS or Linux machine at some point,
-even if only near the end.
+**Decided: build in the browser now, Steam later.**
 
-So the real options are in the chat, and the decision is James and Edward's:
-build in the browser and defer the platform question, get a second machine, or
-change the target to a browser release. The browser prototype already runs on
-the Chromebook and now carries the same optimisations and benchmark as the
-Godot port, so rung 1's question can be answered today either way.
+The game is written in JavaScript and runs in a browser tab, which the
+Chromebook does perfectly. Claude publishes each build as a link; James opens it
+and plays. No install, no build step, no local server, nothing to set up. The
+source lives in this repository as normal.
+
+Steam stays the goal. Reaching it means wrapping the finished game with Electron
+or Tauri, which needs a desktop machine for an afternoon, once, near the end.
+
+### What keeps Steam open
+
+These are constraints on how the browser build is written, and they cost nothing
+now while a wrap later would be expensive without them:
+
+| Rule | Why |
+|---|---|
+| Game logic stays free of the DOM | Only the shell touches the page, so the shell is the only thing a wrap replaces |
+| Saving goes through one storage interface | `localStorage` behind it now, a real file later, one file changed |
+| Input goes through one input interface | Keyboard and touch now; the Gamepad API is the same in a wrap, and Deck needs it |
+| Audio through the Web Audio API | Works unchanged inside Electron and Tauri |
+| Art stays code, never files | Already true, and it ports to anything |
+| No framework the wrap has to fight | Plain modules and a canvas |
+
+### The Godot port is parked, not deleted
+
+`game/` stays as it is. It proved the look ports to a real engine and it is the
+fallback if the browser route hits a ceiling. Nobody should work on it.
 
 ---
 

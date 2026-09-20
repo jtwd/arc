@@ -85,3 +85,8 @@ the actual hardware today, with nothing to install.
 
 A rule worth keeping alongside the first: **ask what the machine is before
 recommending a toolchain.**
+
+**Decided:** build in the browser now, Steam eventually. Claude publishes each
+build as a link, James opens it on the Chromebook and plays, nothing is
+installed. The Godot port is parked rather than deleted. `PRODUCTION.md` 7a
+carries the six rules that keep a Steam wrap cheap later.
