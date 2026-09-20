@@ -10,16 +10,17 @@
  *   node tools/run-sim/simulate.js [runs] [profile] [--scenario=baseline|tight]
  *
  * profile is one of: new, mid, expert, all (default all). The default
- * scenario is "tight", the one the docs now describe.
+ * scenario is "launch", the shipping scope the docs now describe.
  */
 
 'use strict';
 
 // ---------------------------------------------------------------- config
 
-// Two scenarios. "baseline" is the first draft of the docs. "tight" is the
-// tuned set adopted after the first simulation showed baseline clears at
-// roughly 75 minutes. Select with --scenario=name.
+// Three scenarios. "baseline" is the first draft of the docs. "tight" is the
+// nine-age set adopted after the first simulation showed baseline clears at
+// roughly 75 minutes. "launch" is the five-age shipping scope from
+// docs/FAST_PATH.md and is the default. Select with --scenario=name.
 const SCENARIOS = {
   baseline: {
     ages: [
@@ -55,6 +56,27 @@ const SCENARIOS = {
       { name: 'Revolution',      rooms: 4, boss: 150 },
       { name: 'Wars',            rooms: 3, boss: 120 },
       { name: 'Atoms',           rooms: 3, boss: 120 },
+      { name: 'Terminus',        rooms: 1, boss: 240 },
+    ],
+    roomTime: {
+      combat: [40, 70], elite: [65, 95], altar: [15, 25],
+      shop: [15, 30], fountain: [8, 12], story: [20, 30],
+    },
+    ageTimeScale: 0.04,
+    transitionTime: 20,
+    hearthTime: [45, 75],
+    ochre: {
+      doorBase: 15, doorPerAge: 3, eliteBonus: 10, story: 25,
+      bossFirst: 100, bossRepeat: 10, perRoomCleared: 5,
+    },
+  },
+  launch: {
+    ages: [
+      { name: 'Stone',           rooms: 6, boss: 150 },
+      { name: 'Rivers',          rooms: 5, boss: 160 },
+      { name: 'Empires',         rooms: 5, boss: 170 },
+      { name: 'Faith and Steel', rooms: 5, boss: 180 },
+      { name: 'Sail',            rooms: 4, boss: 180 },
       { name: 'Terminus',        rooms: 1, boss: 240 },
     ],
     roomTime: {
@@ -220,7 +242,7 @@ function report(cfg, label, profile, maxAges, runs, firstKills) {
 function main() {
   const args = process.argv.slice(2);
   const scenarioArg = args.find((a) => a.startsWith('--scenario='));
-  const scenarioName = scenarioArg ? scenarioArg.split('=')[1] : 'tight';
+  const scenarioName = scenarioArg ? scenarioArg.split('=')[1] : 'launch';
   const positional = args.filter((a) => !a.startsWith('--'));
   const runs = Number(positional[0]) || 20000;
   const which = positional[1] || 'all';

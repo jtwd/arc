@@ -6,7 +6,7 @@ Team, backlog, risks, and decisions for `GAME_DESIGN.md`. Covers milestones 1 to
 
 ## 1. Team
 
-Minimum team to hit the milestone plan in roughly 20 to 22 months:
+Minimum team to hit the launch scope in `FAST_PATH.md` in roughly 14 months:
 
 | Role | Count | Notes |
 |---|---|---|
@@ -14,10 +14,10 @@ Minimum team to hit the milestone plan in roughly 20 to 22 months:
 | Gameplay programmer | 1 to 2 | Combat, enemies, bosses, Inventions. Second hire at alpha. |
 | Systems programmer | 1 | Hub, meta progression, save, UI, platform. Can be shared with gameplay until alpha. |
 | 3D artist | 1 | Environments and props. Concept work up front, then production. |
-| Character artist and animator | 1 | Alegus, six lineages at eight forms, all enemies and bosses. The largest single content load; see risk 3. |
+| Character artist and animator | 1 | Alegus, three lineages at five forms, all enemies and bosses. The largest single content load; see risk 3. |
 | Designer and writer | 1 | Levels, encounter tuning, all dialogue, boss design. The role that owns `ALEGUS.md`. |
-| Composer and sound | contract | The single motif and its nine arrangements, plus a sound library. |
-| Voice | contract | Alegus is the anchor casting. Three sessions per `ALEGUS.md`. |
+| Composer and sound | contract | The single motif and its six launch arrangements, plus a sound library. |
+| Voice | contract | Alegus is the anchor casting. Two sessions at launch scope; `ALEGUS.md` plans three across the full design. |
 
 A solo developer should build the Stone Age only, with one lineage, and treat that as the full first release.
 
@@ -74,6 +74,7 @@ If more than two of five wanted to keep the club, the evolution design needs wor
 Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 
 **Weeks 1 to 3, content.**
+- [ ] The five shared boss systems from `FAST_PATH.md` section 5, built before the Mammoth Mother
 - [ ] Ten room layouts, grey-box then art
 - [ ] Frayed Cave Bear and three elite modifiers
 - [ ] Edge Flint knife moveset with parry
@@ -100,11 +101,13 @@ Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 
 ## 6. Milestones 5 to 7 in outline
 
-**Alpha (6 months):** ages 2 to 5 on one thread each, four more bosses from `BOSSES.md`, four more lineages, Inventors through Powder, twelve duos, the Cartographer and Archivist, Keys of Ages and Amber, Alegus session 2. Ends with a 30-run external test.
+Revised for the launch scope in `FAST_PATH.md`.
 
-**Beta (5 months):** ages 6 to 9, the Terminus, Anachronisms, keepsakes, Aspects, Wren, all remaining Inventors and duos, all nine music arrangements, Alegus session 3, localisation prep, platform certification if Switch is in.
+**Alpha (4 months):** ages 2 to 4 on one thread each, three more bosses from `BOSSES.md` built on the five shared systems, the Sling lineage, Inventors through Salt, ten duos, the Cartographer and Archivist, Keys of Ages and Amber, Alegus session 2. Ends with a 30-run external test.
 
-**Polish and ship (3 months):** balance, accessibility, achievements, store assets, launch.
+**Beta (3 months):** Age of Sail and the Terminus, Anachronisms, keepsakes, twelve Aspects, Wren, Compass and Powder, fifteen duos, six music arrangements, localisation prep.
+
+**Polish and ship (2.5 months):** balance, accessibility, achievements, Steam Deck verification, store assets, launch.
 
 ---
 
@@ -113,8 +116,8 @@ Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 Ranked by how much they would hurt.
 
 1. **The watercolour look does not work in motion.** Mitigation: it is milestone 1 and it has a kill criterion. If it fails, fall back to flat-shaded 3D with ink outlines (the Sable approach) and keep the wash events, which work on any base look.
-2. **Runs are too long.** Nine ages is more than Hades' four. The simulator in `tools/run-sim` put the first draft at 75 minutes per clear; with shorter rooms, shorter bosses, and 36 rooms it is about 49. Mitigation: that tuned set is now the spec. If the alpha 30-run test shows fatigue, merging Wars and Atoms saves about five minutes and cutting to seven ages saves about ten.
-3. **Character art volume.** Six lineages times eight forms is 48 weapon meshes, plus every enemy for nine ages. Mitigation: weapons are socket swaps on one rig, so it is modelling not animation. Enemies share behaviour archetypes across ages and are re-skins of four to five base rigs per archetype. Budget one enemy re-skin at two days.
+2. **Runs are too long.** Resolved by the launch scope. The simulator put the first draft at 75 minutes per clear and the tuned nine-age set at 49. Five ages clears in 36 minutes with a 40% expert clear rate, against 19% at nine. Watch it again as ages are added post-launch.
+3. **Character art volume.** At full scope, six lineages times eight forms is 48 weapon meshes plus every enemy for nine ages. The launch scope cuts that to 15 meshes and 22 enemy re-skins, roughly 67 artist days saved. Mitigation: weapons are socket swaps on one rig, so it is modelling not animation. Enemies share behaviour archetypes across ages and are re-skins of four to five base rigs per archetype. Budget one enemy re-skin at two days.
 4. **Evolution feels like loss.** Mitigation: milestone 3 tests exactly this before anything else is built on it.
 5. **Voice budget.** Roughly 5,500 lines at launch. Mitigation: Alegus's combat barks are the only lines needed for the slice; everything else can be scratch until beta.
 6. **Tone in the Age of Wars.** A warm, funny game walking into the trenches could feel glib. Mitigation: the bible already forbids jokes in that age's intro. Playtest that age's tone specifically at alpha with testers who have opinions about it.
@@ -125,15 +128,21 @@ Ranked by how much they would hurt.
 
 Open decisions, the recommendation, and where the decision is consumed. Update this table when a call is made.
 
-| Decision | Recommendation | Blocks |
+Decided against one criterion, shortest time to a finished game. Reasoning and costs are in `FAST_PATH.md`.
+
+| Decision | Call | Status |
 |---|---|---|
-| Engine | Unity URP | Milestone 1 |
-| Target platforms | PC first, Switch decided at alpha | Milestone 1 performance budget |
-| Age count at launch | Nine, with 7 and 8 short | Alpha scope |
-| Full-clear run length | 45 to 50 minutes, 36 rooms | Alpha 30-run test |
-| Threads at launch | One per age | Alpha scope |
-| Forced evolution | Yes | Milestone 3 |
+| Engine | Unity URP | Decided. Reverses only if the render-stack author already knows Godot |
+| Target platforms | PC only at launch, Steam, Steam Deck verified | Decided. Consoles are a post-launch quote |
+| Age count at launch | Five, plus the Terminus | Decided |
+| Lineages at launch | Three: Blunt, Edge, Sling | Decided |
+| Inventors at launch | Nine. Press, Volt, and Atom fall out with ages 6 and 8 | Decided |
+| Full-clear run length | 36 minutes, 26 rooms | Decided, simulated |
+| Threads at launch | One per age | Decided |
+| Forced evolution | Yes | Confirm at milestone 3 |
 | Protagonist | Alegus, voiced | Decided |
 | Art direction | 3D watercolour | Decided |
+| Boss construction | Five shared systems, not bespoke arenas | Decided, build during the slice |
 | Tone through late ages | Darkens, stays warm | Alpha writing |
-| Alegus's origin | Pre-cultural | Decided in bible, confirm |
+| Alegus's origin | Pre-cultural | Decided |
+| Early Access | Open | Raise at the vertical slice review |

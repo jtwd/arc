@@ -19,10 +19,9 @@ Technical spec for the look described in `GAME_DESIGN.md` section 8. Written for
 |---|---|---|---|
 | PC, mid-range (GTX 1660 class) | 1080p | 60 | 3.5 ms |
 | PC, minimum | 1080p | 60 | 2.5 ms with bleed and wobble off |
-| Switch, docked | 900p internal | 30 | 5 ms |
-| Switch, handheld | 720p | 30 | 4 ms |
+| Steam Deck | 800p | 60 | 3.0 ms |
 
-Switch is provisional pending the platform decision. The stack is designed so that passes can be dropped in order without breaking the look.
+Launch is PC only, so there is no console budget to design against. Steam Deck verification is the low-spec target and needs no certification process. The stack is still designed so that passes can be dropped in order without breaking the look, which keeps a console port open as a post-launch quote rather than a constraint now.
 
 ---
 

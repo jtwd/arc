@@ -15,7 +15,7 @@ This document is the planning baseline. It is deliberately opinionated so there 
 **Pillars:**
 
 1. **Fast, readable, top-down combat.** Attack, special, cast, dash, call. Every hit has weight. Death comes from being outplayed, never from reading failure. The watercolour look must never cost readability.
-2. **Every run is a full arc through history.** Stone Age to the edge of the future in about 45 to 50 minutes. The player always feels the world advancing under their feet.
+2. **Every run is a full arc through history.** Stone Age to gunpowder in about 36 minutes at launch, extending toward the modern day as ages are added. The player always feels the world advancing under their feet.
 3. **Your weapon grows with the world.** The club you start with becomes a mace, then a warhammer, then a trench club. Progression inside a run is visible and physical, not just a stat sheet.
 4. **Death is the story.** Every failed run sends Alegus back to the hub, where the cast reacts to how he died and what he found. Story is delivered in small, frequent doses, fully voiced.
 5. **Builds emerge from Inventions.** The boon system is driven by ideas humanity discovered: Fire, the Wheel, Writing, Gunpowder, the Atom. Combining them is the core creative act of a run.
@@ -71,7 +71,7 @@ Record Alegus in three sessions: combat barks and reactions first (needed for th
 
 A run is a fixed sequence of **Ages** (biomes). Each age has one or more **Threads**: regional variants of that age with their own palette, enemy roster, and boss. On any given run the Cartographer's map shows which thread each age is on. Threads are how the game covers a lot of history without making runs longer.
 
-Room counts are tuned to 36 rooms and a full clear of about 45 to 50 minutes. That is longer than Hades because there are nine bosses instead of four; the simulator in `tools/run-sim` is the source for these numbers and should be re-run whenever room counts or boss timings change.
+At launch the run is ages 1 to 5 plus the Terminus: 26 rooms and a 36 minute full clear. The full nine-age design is 36 rooms and 49 minutes and is the post-launch target. The simulator in `tools/run-sim` is the source for both numbers and should be re-run whenever room counts or boss timings change.
 
 | # | Age | Rooms | Threads (region variants) | Boss per thread |
 |---|---|---|---|---|
@@ -95,9 +95,7 @@ Rules:
 - **Door choice** shows the reward type ahead, exactly as Hades does. This is the main strategic decision loop and should be copied faithfully.
 - **Age transitions** are a short scripted moment: the Loom re-forges Alegus's weapon on screen, the watercolour of the current age runs and bleeds into the palette of the next, the Firekeeper says one line, and Alegus reacts. This is the payoff moment for pillar 3 and should get real animation budget.
 
-**Decision:** Run length. Even with short rooms and short bosses, nine ages puts a full clear near 50 minutes. Merging Wars and Atoms into one age saves about five minutes; cutting to seven ages saves about ten. Recommend shipping nine and revisiting after the alpha 30-run test.
-
-**Decision:** Nine ages with 20-odd threads is a big game. The launch scope recommendation is **one thread per age** (nine bosses), with second and third threads as the post-launch content plan. See section 12.
+**Decided:** ages 1 to 5 plus the Terminus ship at launch, one thread each. That is 26 rooms and a 36 minute full clear, simulated in `tools/run-sim`. Nine ages came to 49 minutes with only a 19% expert clear rate. Ages 6 to 9 are the first post-launch content, and their absence is diegetic: the weave past the Age of Sail is already gone, which is the fraying Alegus is running to stop. Reasoning and costs in `FAST_PATH.md`.
 
 ---
 
@@ -263,7 +261,7 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 This repository is currently an ARc React boilerplate (React, Webpack, Jest, Storybook). It is not a game engine, and a 3D watercolour game will not live here. The engine choice is driven by the render pipeline.
 
-**Recommended: Unity with the Universal Render Pipeline.** The watercolour look is a custom shader and post-process stack, and Unity has the deepest pool of published non-photorealistic rendering techniques, Shader Graph for iteration, and the most reference material for exactly the effects listed in section 8. It handles console ports and has proven Hades-like projects behind it.
+**Decided: Unity with the Universal Render Pipeline.** The watercolour look is a custom shader and post-process stack, and Unity has the deepest pool of published non-photorealistic rendering techniques, Shader Graph for iteration, and the most reference material for exactly the effects listed in section 8. It handles console ports and has proven Hades-like projects behind it.
 
 **Alternative: Godot 4.** Free, capable 3D, a good shader language, and rapidly improving. Choose it if licensing cost or open source matter more than tooling maturity. The watercolour stack is achievable but you will be writing more of it yourself.
 
@@ -283,22 +281,21 @@ Each milestone is playable or viewable and answers one question.
 2. **Combat prototype** (4 weeks). One lineage (Blunt), one room, three enemy types, no Inventions, first Alegus combat barks recorded as scratch audio. Question: does the attack, special, dash loop feel good?
 3. **Evolution prototype** (3 weeks). Stone club to Bronze mace transition, with the re-forge animation, the age-transition wash, and a Rivers room. Question: does mid-run weapon evolution feel like a reward, or like losing a weapon you liked?
 4. **Vertical slice** (10 weeks). Stone Age complete on one thread: 6 rooms, Mammoth Mother boss, four Inventors, Blunt and Edge lineages, a hub with the Firekeeper and Cave Wall, death and restart loop, first Alegus voice session. Question: is one full age fun for ten runs?
-5. **Alpha** (6 months). Ages 1 to 5 on one thread each, all six lineages at base aspect, Inventors through Powder, 12 duos, placeholder ending after the Admiral. Question: does progression across 30 runs hold attention?
-6. **Beta** (5 months). Ages 6 to 9, Terminus fight, Anachronisms, full cast and story, aspects, keepsakes, music, full voice.
-7. **Polish and ship** (3 months).
+5. **Alpha** (4 months). Ages 1 to 4 on one thread each, three lineages at base aspect, Inventors through Salt, 10 duos, placeholder ending after the Hollow Knight. Question: does progression across 30 runs hold attention?
+6. **Beta** (3 months). Age of Sail, Terminus fight, Anachronisms, full cast and story, aspects, keepsakes, music, full voice.
+7. **Polish and ship** (2.5 months).
 
-Total roughly 20 to 22 months for a team of 4 to 6, with a dedicated technical artist from day one. A solo developer should halve the age count and double the timeline.
+Roughly 14 months for a team of 4 to 5, with a dedicated technical artist from day one. That is the launch scope in `FAST_PATH.md`; the full nine-age design is about 21 months. A solo developer should build the Stone Age only and treat it as the whole first release.
 
 ---
 
 ## 11. Open questions
 
-- Nine ages at launch at roughly 50 minutes per clear, or seven at roughly 40?
+The engine, platform, age count, and lineage count are settled in `FAST_PATH.md`. What remains:
+
 - Forced evolution, or let players lock a favourite form?
-- Unity or Godot.
-- Target platform: PC first, or PC and Switch together? Switch affects how heavy the post-process stack can be.
 - Tone: Hades is warm and funny. Alegus as written is warm and curious. Does the game stay light through the Age of Wars, or does the tone darken with the history?
-- Alegus's origin: is he from a specific real culture, or deliberately pre-cultural since he predates all of them? Recommend pre-cultural; it lets every age be equally foreign to him.
+- Early Access from around month ten, or a single finished launch? See `FAST_PATH.md` section 7.
 
 ---
 
