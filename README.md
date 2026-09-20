@@ -14,8 +14,15 @@ This repository holds planning only. The game is built in Unity in its own repos
 |---|---|
 | `docs/` | The design documents. Start at [docs/README.md](docs/README.md) |
 | `tools/run-sim/` | A dependency-free Monte Carlo model of a run |
+| `tools/render-test/` | The interactive art-direction test. Open `index.html` in a browser |
 
 Start with [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) for the design, then [docs/FAST_PATH.md](docs/FAST_PATH.md) for what ships first and why.
+
+## The render test
+
+`tools/render-test/index.html` is a single self-contained page. Open it in any browser, move Alegus with the arrow keys, attack with space, and toggle the render passes.
+
+It is Canvas 2D approximating the look rather than the real shader stack, so treat it as a floor and not a ceiling. It exists to answer the one question a still image cannot: whether the watercolour direction holds up in motion. It did, and the first review cut the ink outline and edge darkening on the strength of it. A paper reserve carries the readability instead.
 
 ## The run simulator
 

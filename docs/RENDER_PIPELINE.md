@@ -31,9 +31,9 @@ Rendered every frame, in this order. Passes marked **(drop)** can be disabled on
 
 1. **Geometry and lighting** into colour, depth, normals, and an object-ID buffer.
 2. **Pigment quantisation** (material stage, not post).
-3. **Ink outline** from the object-ID and depth buffers.
-4. **Edge darkening** (drop, last).
-5. **Bleed and wobble** (drop, first).
+3. **Paper reserve** from the object-ID buffer.
+4. **Bleed and wobble** (drop).
+5. *(ink outline and edge darkening sat here and were cut; see 3.3 and 3.4)*
 6. **Paper composite.**
 7. **Wash events** (age transition and death, only when active).
 8. **UI**, flat, never painted.
@@ -58,18 +58,21 @@ Per-material shader. Three components:
 
 **Palette asset:** one per age, holding the directional light colour, the shadow hue shift, the paper tint, the ink colour, and eight pigment swatches that environment artists must build from. Age transitions blend between two palette assets over the wash.
 
-### 3.3 Ink outline
+### 3.3 Paper reserve
 
-Screen-space outline from discontinuities in object ID and depth. Applied only where the ID buffer says character, enemy, or projectile. Backgrounds never get an outline.
+**Replaces the ink outline, cut at the first art review.** A painter separates a subject from its background by leaving a ring of untouched paper around it, not by drawing a line around it. That is what this pass does, and it is more honest to the medium than ink was.
 
-- Line width 2 pixels at 1080p, scaled with resolution.
-- Line colour from the palette asset's ink colour, usually a very dark warm brown, never pure black.
-- Line has a subtle width variation from a noise texture so it reads as a brush, not a vector.
-- Enemies: standard ink. Elites: gold ink from a second palette slot. Frayed have an additional 1 pixel outer line at 40% opacity that wobbles (see 3.5) to give the unstable edge.
+Dilate the silhouette from the object-ID buffer and fill the resulting ring with the palette's paper colour, beneath the figure itself.
 
-### 3.4 Edge darkening
+- Ring width 3 pixels at 1080p, scaled with resolution, with a soft outer falloff rather than a hard edge.
+- Taken from the **whole figure's silhouette**, never per body part. A per-part reserve cuts paper gaps between an arm and the torso and slices the figure into pieces.
+- Contact shadows draw **over** the reserve and under the figure, so the reserve separates the body from the background without cutting it loose from the ground.
+- Elites take a warm gold-tinted reserve from a second palette slot instead of the paper colour.
+- **The Frayed's reserve wobbles.** Alegus's is steady; theirs drifts with the noise from 3.5. That is the unstable edge, and it now costs nothing extra because the reserve already exists.
 
-Screen-space. For each pixel, sample the ID buffer in a 4 pixel radius. If a shape boundary is within that radius, darken the pixel by up to 15% with a falloff, and increase saturation slightly. This mimics pigment pooling at the edge of a dried wash. Applied to everything, including backgrounds, and it is what makes environments read as painted even without outlines.
+### 3.4 Edge darkening (cut)
+
+Cut at the same review. The pigment banding in 3.2 now carries all the form, so give it more contrast between base and shade than it would otherwise need. Kept in the prototype behind a toggle for comparison only.
 
 ### 3.5 Bleed and wobble
 
@@ -105,7 +108,7 @@ A full-screen effect triggered by gameplay.
 - **Textures:** environments get one painterly albedo per surface, painted with visible brush direction. Characters get a flat colour and an optional low-frequency detail map. No normal maps anywhere.
 - **Colour:** every material's base colour must come from the age's eight-swatch palette. Enforce this with an editor validator that flags materials whose colour is more than a threshold from every swatch.
 - **Enemies:** must have a clear silhouette against the darkest and lightest swatches of their age. Test at 25% screen size in greyscale.
-- **Telegraphs:** hard-edged decals in the ink colour at 60% opacity, drawn to the telegraph ID category so they are exempt from bleed. Never painterly.
+- **Telegraphs:** hard-edged decals in a dark warm brown at 60% opacity, drawn to the telegraph ID category so they are exempt from bleed. Never painterly. Telegraphs are not figures, so the no-ink rule does not reach them: they are the one hard edge left in the game and that is deliberate.
 - **Particles:** fire, dust, and snow are drawn as painted sprites with the quantisation shader, never additive glows.
 
 ---
@@ -125,8 +128,8 @@ Everything above maps to Godot 4 with these substitutions:
 
 Three weeks. Deliverables, in order:
 
-1. **Week 1:** one room (the Kill site layout), grey-box meshes, the quantisation shader and palette asset for the Ice Age, ink outline on a placeholder Alegus capsule. Screenshot review against the reference board.
-2. **Week 2:** edge darkening, bleed and wobble with the exclusion mask, paper composite. Three placeholder enemies moving on patrol paths. Profile on the minimum PC target.
+1. **Week 1:** one room (the Kill site layout), grey-box meshes, the quantisation shader and palette asset for the Ice Age, paper reserve on a placeholder Alegus capsule. Screenshot review against the reference board.
+2. **Week 2:** bleed and wobble with the exclusion mask, paper composite. Three placeholder enemies moving on patrol paths. Profile on the minimum PC target.
 3. **Week 3:** enemy death wash, age transition wash to a second palette (Rivers), one fire light. Play at 60 for ten minutes and note every moment an enemy is hard to see.
 
 **Pass criteria:**

@@ -93,7 +93,7 @@ Beyond difficulty. Several of these are cheap now and expensive later, so they b
 
 | Feature | Note |
 |---|---|
-| Enemy outline colour setting | The game leans hard on per-age palettes. The ink outline is the one thing that must never be ambiguous, so let the player set it |
+| Enemy reserve width and tint | The game leans hard on per-age palettes. The paper reserve is the one thing that must never be ambiguous, so let the player widen or tint it |
 | Subtitle size, background opacity, speaker names | Alegus talks constantly and much of the story is in barks |
 | Global game speed, 50% to 100% | Helps far more players than a damage toggle does, and costs one time scale |
 | Aim assist for Sling, off by default, three strengths | The only lineage with a precision requirement |
@@ -103,8 +103,8 @@ Beyond difficulty. Several of these are cheap now and expensive later, so they b
 
 The palette shifts per age are a core part of the design and cannot be flattened. So the accessibility answer is not a colourblind filter over the whole game, it is guaranteeing that **nothing important is communicated by hue alone**:
 
-- Hostile things have an ink outline. Harmless things never do.
-- Elites are gold outline **and** a visibly different silhouette.
+- Hostile things have a paper reserve. Harmless things never do.
+- Elites take a gold-tinted reserve **and** a visibly different silhouette.
 - Telegraphs are hard-edged shapes, distinguished by shape rather than colour.
 - Hazard floors have a moving pattern, not just a tint.
 

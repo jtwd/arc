@@ -247,15 +247,15 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 1. **Paper.** A global paper-grain texture that everything is composited onto, with slight vignette and warm tint. The paper is the same across all ages; only the pigment changes.
 2. **Pigment.** Flat-shaded base colours with soft, blotchy lighting quantised to two or three tones. Shadow regions get a hue shift toward a complementary colour, as real watercolour does.
-3. **Edge darkening.** A screen-space effect that darkens colour at the boundary of each shape, mimicking pigment pooling at the edge of a wash.
+3. **Paper reserve.** A ring of bare paper left around every figure, taken from the whole silhouette. This is what separates a character from the ground, and it replaces the ink outline an earlier draft used.
 4. **Bleed and wobble.** UV distortion by a low-frequency noise that drifts slowly, so edges never sit perfectly still. Kept subtle in combat, stronger in the hub.
-5. **Ink lines.** Thin outline pass for characters and enemies only, not environments. This is the readability guarantee: every hostile thing has an ink edge, backgrounds do not.
+5. **No ink, no edge darkening.** Both were cut at the first art review. Nothing in the game is outlined. The pigment bands carry the form and the reserve carries the readability.
 6. **Age-transition wash.** At age boundaries, the whole frame runs like a wet painting, pigment drains, and the new age's palette floods in. This same effect at small scale is used for enemy deaths (they dissolve into a wash rather than ragdoll).
 
 **Readability rules that override the look:**
 
-- Enemy attacks telegraph with a hard-edged ink shape on the ground, never a soft wash.
-- Alegus, enemies, and projectiles always get the ink outline. Set dressing never does.
+- Enemy attacks telegraph with a hard-edged dark shape on the ground, never a soft wash. Telegraphs are not figures, so the no-ink rule does not reach them.
+- Alegus, enemies, and projectiles always get the paper reserve. Set dressing never does.
 - Damage numbers and status icons are flat UI, not painted.
 - The bleed effect is disabled on any surface within a fixed radius of Alegus so the play space is crisp.
 

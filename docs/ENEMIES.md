@@ -53,7 +53,7 @@ Palette: white marble, sea blue, terracotta. Frayed are legionaries whose armour
 | Retiarius | Shield | 70 | 14 | No shield. Net throw instead: roots 1.5 s, trident follow-up. Same rig with the block replaced by a net |
 | Gladiator | Brute | 220 | 25 | Grab becomes a shield bash chain. Roar is replaced by a crowd-cheer buff: nearby enemies deal 20% more for 5 s |
 
-Elite modifiers add **Decorated**: a gold outline enemy that buffs the formation it stands in.
+Elite modifiers add **Decorated**: a gold-reserve enemy that buffs the formation it stands in.
 
 ---
 
@@ -141,7 +141,7 @@ Short age, three rooms. Every room has a countdown or objective; enemies are pre
 | Response Team | Formation | 40 | 12 | 4 guards in a diamond that advance on Alegus's console and hold position around it |
 | Hazmat Brute | Brute | 240 | 25 | Grab is a decontamination spray: 2 s stun. Roar sets off the room's klaxon early |
 
-Elite modifiers add **Redacted**: the enemy has no ink outline and must be tracked by its shadow. Used sparingly.
+Elite modifiers add **Redacted**: the enemy has no paper reserve at all and must be tracked by its shadow. Used sparingly, and the one place the readability rule is broken on purpose.
 
 ---
 

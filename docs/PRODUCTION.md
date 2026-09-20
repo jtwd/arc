@@ -30,8 +30,7 @@ Owner: technical artist. Full plan in `RENDER_PIPELINE.md` section 6.
 - [ ] Project created in the chosen engine, source control, build pipeline to a PC executable
 - [ ] Ice Age palette asset
 - [ ] Quantisation shader
-- [ ] Object-ID buffer and ink outline
-- [ ] Edge darkening
+- [ ] Object-ID buffer and paper reserve
 - [ ] Bleed and wobble with exclusion mask
 - [ ] Paper composite
 - [ ] Death wash
@@ -118,7 +117,7 @@ Revised for the launch scope in `FAST_PATH.md`.
 
 Ranked by how much they would hurt.
 
-1. **The watercolour look does not work in motion.** Mitigation: it is milestone 1 and it has a kill criterion. If it fails, fall back to flat-shaded 3D with ink outlines (the Sable approach) and keep the wash events, which work on any base look.
+1. **The watercolour look does not work in motion.** Partly retired: the interactive test in the artifact answered this for the 2D approximation and the direction survived review, losing the ink outline and edge darkening. The real shader stack still has to clear the same bar. If it fails, fall back to flat-shaded rendering and keep the wash events, which work on any base look.
 2. **Runs are too long.** Resolved by the launch scope. The simulator put the first draft at 75 minutes per clear and the tuned nine-age set at 49. Five ages clears in 36 minutes with a 40% expert clear rate, against 19% at nine. Watch it again as ages are added post-launch.
 3. **Character art volume.** At full scope, six lineages times eight forms is 48 weapon meshes plus every enemy for nine ages. The launch scope cuts that to 15 meshes and 22 enemy re-skins, roughly 67 artist days saved. Mitigation: weapons are socket swaps on one rig, so it is modelling not animation. Enemies share behaviour archetypes across ages and are re-skins of four to five base rigs per archetype. Budget one enemy re-skin at two days.
 4. **Evolution feels like loss.** Mitigation: milestone 3 tests exactly this before anything else is built on it.
@@ -144,7 +143,8 @@ Decided against one criterion, shortest time to a finished game. Reasoning and c
 | Threads at launch | One per age | Decided |
 | Forced evolution | No. Players can refuse a re-forge and hold a form, per `GAME_DESIGN.md` 4.4 | Decided by the user. Milestone 3 now tests whether evolution is wanted, not whether it is tolerated |
 | Protagonist | Alegus, voiced | Decided |
-| Art direction | 3D watercolour | Decided |
+| Art direction | Watercolour, no ink outline, no edge darkening | Decided at the first art review, from the interactive test |
+| Figure readability | Paper reserve, taken from the whole silhouette | Replaces the ink outline as the readability guarantee |
 | Boss construction | Five shared systems, not bespoke arenas | Decided, build during the slice |
 | Tone through late ages | Darkens, subtractively. Warmth relocates to the Hearth | Decided by the user. Spec in `TONE.md` |
 | Alegus's origin | Pre-cultural | Decided |

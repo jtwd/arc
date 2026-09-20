@@ -33,7 +33,7 @@ Everything here is the minimum that lets a playtester experience the real loop: 
 
 Enemies are the **Frayed**: echoes of creatures and people that the Terminus has pulled loose from the weave. They are drawn in a looser, wetter watercolour than Alegus and the world, with edges that will not settle. When they die they run like a wet painting and drain into the paper.
 
-This device does three jobs. It lets Alegus fight humans in later ages without it reading as murder. It justifies the watercolour dissolve as the universal death effect. And it gives every enemy one shared visual tell (the unstable edge) that separates hostile from harmless at a glance.
+This device does three jobs. It lets Alegus fight humans in later ages without it reading as murder. It justifies the watercolour dissolve as the universal death effect. And it gives every enemy one shared visual tell that separates hostile from harmless at a glance: Alegus's paper reserve is steady, and theirs will not settle.
 
 ---
 
@@ -48,7 +48,7 @@ Health and damage are relative to Alegus's starting 100 health. Speed is relativ
 | **Frayed Hunter** | 45 | 12 | 0.9 | Keeps range 6 to 8 units, throws a stone every 2.5 s with a visible arc, retreats when approached. Two hunters will alternate throws. | Ranged pressure. Teaches dash-attack and Cast as a gap closer. |
 | **Frayed Cave Bear** | 220 | 25 | 0.7 | Mini-boss. Slow swipes with 0.9 s telegraph, a roar that pushes Alegus back, and a grab that must be dashed out of. Only appears in the elite room. | Big single target. Teaches sustained damage and that heavy hits stagger. |
 
-**Elite modifiers** (one per elite, gold ink outline instead of black):
+**Elite modifiers** (one per elite, a gold-tinted paper reserve instead of the plain one):
 
 - **Hardened:** health doubled, immune to stagger for the first 30% of health.
 - **Swift:** speed times 1.4, all telegraphs 25% shorter.

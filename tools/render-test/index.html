@@ -1,0 +1,924 @@
+<title>Paper Puppet Render Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#E7E0D2; --panel:#F4EFE4; --panel-2:#EAE3D3; --line:#CFC4AE;
+    --text:#2B2318; --text-dim:#6B5F4C; --accent:#A8571F; --accent-soft:#D9B48A;
+    --good:#4E7A45;
+    --stage-frame:#C8BCA4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#17140F; --panel:#211D16; --panel-2:#1B1811; --line:#3A3326;
+      --text:#EDE4D2; --text-dim:#9E927B; --accent:#D9883D; --accent-soft:#7A5B36;
+      --good:#8FB07F; --stage-frame:#3A3326;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#17140F; --panel:#211D16; --panel-2:#1B1811; --line:#3A3326;
+    --text:#EDE4D2; --text-dim:#9E927B; --accent:#D9883D; --accent-soft:#7A5B36;
+    --good:#8FB07F; --stage-frame:#3A3326;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size:15px; line-height:1.55;
+    padding-inline:16px; padding-block:22px 36px;
+  }
+  .shell{max-width:1180px; margin:0 auto; display:flex; flex-direction:column; gap:20px}
+
+  header .eyebrow{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 6px;
+  }
+  header h1{
+    font-family:"Fraunces", Georgia, serif; font-weight:600;
+    font-size:clamp(26px,4.4vw,40px); line-height:1.08; margin:0 0 8px;
+    text-wrap:balance; letter-spacing:-.01em;
+  }
+  header p{margin:0; max-width:62ch; color:var(--text-dim)}
+
+  .rig{display:grid; grid-template-columns:minmax(0,1fr) 288px; gap:18px; align-items:start}
+  @media (max-width:860px){ .rig{grid-template-columns:minmax(0,1fr)} }
+
+  .stage{
+    position:relative; border:1px solid var(--stage-frame); border-radius:3px;
+    overflow:hidden; background:#EDE6D6; line-height:0;
+    box-shadow:0 1px 0 rgba(0,0,0,.06), 0 10px 30px -18px rgba(0,0,0,.5);
+  }
+  canvas{display:block; width:100%; height:auto; max-width:100%; touch-action:none}
+
+  .hud{
+    position:absolute; left:10px; top:10px; display:flex; gap:6px; flex-wrap:wrap;
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:10.5px; line-height:1.9;
+    pointer-events:none;
+  }
+  .chip{
+    background:rgba(34,26,16,.72); color:#F1E7D4; padding:1px 7px; border-radius:2px;
+    letter-spacing:.04em; white-space:nowrap;
+  }
+  .chip b{font-weight:500; color:#F3C182}
+  .chip.act{background:#A8571F; color:#fff}
+
+  .hint{
+    position:absolute; right:10px; bottom:10px;
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:10.5px;
+    background:rgba(34,26,16,.66); color:#E8DCC6; padding:3px 8px; border-radius:2px;
+    letter-spacing:.03em; line-height:1.7; text-align:right; pointer-events:none;
+  }
+
+  .pad{
+    position:absolute; left:0; right:0; bottom:0; display:none;
+    justify-content:space-between; align-items:flex-end; padding:12px; gap:10px;
+  }
+  .pad.on{display:flex}
+  .dpad{display:grid; grid-template-columns:repeat(3,42px); grid-template-rows:repeat(2,38px); gap:4px}
+  .pad button{
+    font-family:"IBM Plex Mono", monospace; font-size:15px; border:0; border-radius:3px;
+    background:rgba(34,26,16,.66); color:#F1E7D4; line-height:1;
+  }
+  .pad button:active{background:var(--accent)}
+  .hit{width:74px; height:74px; border-radius:50%; font-size:11px !important; letter-spacing:.08em}
+
+  aside{
+    background:var(--panel); border:1px solid var(--line); border-radius:3px;
+    display:flex; flex-direction:column;
+  }
+  .grp{padding:13px 14px; border-bottom:1px solid var(--line)}
+  .grp:last-child{border-bottom:0}
+  .grp h2{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--text-dim); margin:0 0 9px; font-weight:500;
+  }
+  .grp .note{font-size:12px; color:var(--text-dim); margin:8px 0 0; line-height:1.5}
+
+  .tog{
+    display:flex; align-items:center; gap:9px; padding:3px 0; cursor:pointer;
+    font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:12px;
+  }
+  .tog input{position:absolute; opacity:0; width:0; height:0}
+  .box{
+    width:15px; height:15px; flex:0 0 15px; border:1.5px solid var(--text-dim);
+    border-radius:2px; display:grid; place-items:center; transition:.12s;
+  }
+  .tog input:checked + .box{background:var(--accent); border-color:var(--accent)}
+  .box::after{content:""; width:7px; height:4px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(-45deg) translateY(-1px); opacity:0}
+  .tog input:checked + .box::after{opacity:1}
+  .tog input:focus-visible + .box{outline:2px solid var(--accent); outline-offset:2px}
+  .tog span{color:var(--text)}
+  .tog .cost{margin-left:auto; color:var(--text-dim); font-size:10.5px}
+
+  label.slab{display:block; font-family:"IBM Plex Mono",monospace; font-size:12px; margin-bottom:5px}
+  label.slab b{float:right; font-weight:500; color:var(--accent); font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%; accent-color:var(--accent)}
+
+  .btns{display:flex; flex-direction:column; gap:6px}
+  button.act{
+    font-family:"IBM Plex Sans",sans-serif; font-size:13px; font-weight:500;
+    padding:8px 10px; border:1px solid var(--line); background:var(--panel-2);
+    color:var(--text); border-radius:3px; cursor:pointer; text-align:left; transition:.12s;
+  }
+  button.act:hover{border-color:var(--accent); color:var(--accent)}
+  button.act.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  button.act.primary:hover{color:#fff; filter:brightness(1.08)}
+  button.act:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .seg{display:flex; border:1px solid var(--line); border-radius:3px; overflow:hidden}
+  .seg button{
+    flex:1; font-family:"IBM Plex Mono",monospace; font-size:11px; padding:7px 4px;
+    border:0; background:var(--panel-2); color:var(--text-dim); cursor:pointer;
+  }
+  .seg button[aria-pressed="true"]{background:var(--accent); color:#fff}
+
+  .read{font-family:"IBM Plex Mono",monospace; font-size:11.5px; display:grid; grid-template-columns:1fr auto; gap:2px 10px}
+  .read dt{color:var(--text-dim)}
+  .read dd{margin:0; text-align:right; font-variant-numeric:tabular-nums}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:14px}
+  .card{border-top:2px solid var(--accent-soft); padding-top:11px}
+  .card h3{font-family:"Fraunces",Georgia,serif; font-size:16px; margin:0 0 5px; font-weight:600}
+  .card p{margin:0; font-size:13px; color:var(--text-dim); line-height:1.5}
+  footer{border-top:1px solid var(--line); padding-top:16px}
+  footer h2{font-family:"Fraunces",Georgia,serif; font-size:19px; margin:0 0 4px; font-weight:600}
+  footer .sub{margin:0 0 14px; color:var(--text-dim); font-size:13.5px; max-width:64ch}
+  @media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+
+<div class="shell">
+  <header>
+    <p class="eyebrow">EPOCH &middot; milestone 1 &middot; art direction test</p>
+    <h1>Painted paper puppets, moving on painted paper</h1>
+    <p>The question milestone&nbsp;1 exists to answer is whether the watercolour look holds up <em>in motion</em>, which a still image cannot tell you. Move Alegus with the arrow keys, swing the club with space, and turn the render passes on and off to see what each one is actually doing.</p>
+  </header>
+
+  <div class="rig">
+    <div class="stage">
+      <canvas id="c" width="960" height="600" aria-label="Interactive render test: a paper-puppet figure in a watercolour Ice Age scene"></canvas>
+      <div class="hud" id="hud"></div>
+      <div class="hint" id="hint">&larr; &rarr; &uarr; &darr; move &middot; space attack</div>
+      <div class="pad" id="pad">
+        <div class="dpad">
+          <button data-k="uk" aria-label="up-left">&#8598;</button>
+          <button data-k="u" aria-label="up">&#8593;</button>
+          <button data-k="ur" aria-label="up-right">&#8599;</button>
+          <button data-k="l" aria-label="left">&#8592;</button>
+          <button data-k="d" aria-label="down">&#8595;</button>
+          <button data-k="r" aria-label="right">&#8594;</button>
+        </div>
+        <button class="hit" data-k="a" aria-label="attack">HIT</button>
+      </div>
+    </div>
+
+    <aside>
+      <div class="grp">
+        <h2>Render passes</h2>
+        <label class="tog"><input type="checkbox" id="p_quant" checked><i class="box"></i><span>Pigment bands</span><i class="cost">3.2</i></label>
+        <label class="tog"><input type="checkbox" id="p_res" checked><i class="box"></i><span>Paper reserve</span><i class="cost">new</i></label>
+        <label class="tog"><input type="checkbox" id="p_wob" checked><i class="box"></i><span>Bleed &amp; wobble</span><i class="cost">3.5</i></label>
+        <label class="tog"><input type="checkbox" id="p_paper" checked><i class="box"></i><span>Paper composite</span><i class="cost">3.6</i></label>
+        <p class="note">Numbers match the pass sections in RENDER_PIPELINE.md. The reserve is the new one: a ring of bare paper left around each figure, doing the job the ink line used to.</p>
+        <h2 style="margin-top:14px">Dropped</h2>
+        <label class="tog"><input type="checkbox" id="p_ink"><i class="box"></i><span>Ink outline</span><i class="cost">3.3</i></label>
+        <label class="tog"><input type="checkbox" id="p_edge"><i class="box"></i><span>Edge darkening</span><i class="cost">3.4</i></label>
+        <p class="note">Both off by direction. Kept here only so the comparison stays available.</p>
+      </div>
+
+      <div class="grp">
+        <h2>Comfort</h2>
+        <label class="slab" for="s_wob">Wobble amplitude <b id="v_wob">1.5 px</b></label>
+        <input type="range" id="s_wob" min="0" max="40" value="15">
+        <label class="slab" for="s_mask">Clear radius around Alegus <b id="v_mask">6.0 u</b></label>
+        <input type="range" id="s_mask" min="0" max="120" value="60">
+        <p class="note">The drift never stops, so some players will need it off. This is the accessibility slider pulled forward into the slice.</p>
+      </div>
+
+      <div class="grp">
+        <h2>Rig</h2>
+        <div class="seg" role="group" aria-label="Rig type">
+          <button id="r_pup" aria-pressed="true">Paper puppet</button>
+          <button id="r_flat" aria-pressed="false">Flat cut-out</button>
+        </div>
+        <p class="note">The same art, jointed versus rigid. Jointed costs a few pivots and no extra drawing.</p>
+      </div>
+
+      <div class="grp">
+        <h2>Scene</h2>
+        <div class="btns">
+          <button class="act primary" id="b_wash">Run the age transition</button>
+          <button class="act" id="b_wolf">Send in more Frayed</button>
+          <button class="act" id="b_reset">Reset to Ice Age</button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <h2>Readout</h2>
+        <dl class="read">
+          <dt>frame</dt><dd id="r_fps">&mdash;</dd>
+          <dt>drawn shapes</dt><dd id="r_shapes">&mdash;</dd>
+          <dt>attack phase</dt><dd id="r_atk">idle</dd>
+          <dt>age</dt><dd id="r_age">Stone</dd>
+        </dl>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <h2>What to judge, and what it costs</h2>
+    <p class="sub">Everything on screen is drawn from flat painted shapes with pivots. No meshes, no rigs, no skinning. That is the entire argument.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Does it read as paint?</h3>
+        <p>Pigment bands, edge darkening and the paper composite are doing that work. Turn all three off to see the flat vector version underneath.</p>
+      </div>
+      <div class="card">
+        <h3>Can you always find Alegus?</h3>
+        <p>No ink, no edge darkening. A ring of bare paper is left around every figure instead, which is how a painter separates a subject from its ground. Turn the reserve off to see what it was holding up.</p>
+      </div>
+      <div class="card">
+        <h3>Is the transition worth it?</h3>
+        <p>The wash is the signature moment of every run and the payoff for the weapon evolving. Run it a few times and decide whether it earns its animation budget.</p>
+      </div>
+      <div class="card">
+        <h3>What this saves</h3>
+        <p>A jointed cut-out replaces a modelled, rigged and skinned character. On the launch scope that is roughly two person-years of 3D work neither of you can do.</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var cv = document.getElementById('c');
+  var ctx = cv.getContext('2d');
+  var W = 960, H = 600;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- palettes ---------- */
+  var AGES = {
+    stone: {
+      name:'Stone',
+      paper:'#EDE6D6', inkc:'#2E2419',
+      sky:'#C6D4DD', skyLo:'#A9BECD', horizon:'#DCE6EA',
+      gnd:'#E2E9EC', gndSh:'#B9CBD6',
+      patch:'#D2E0E6', patchSh:'#A8BFCC',
+      rock:'#93A1AB', rockSh:'#64737F',
+      tuft:'#9DAE9F', tuftSh:'#6E8071',
+      skin:'#C68C5F', skinSh:'#9A6540',
+      hide:'#AC7348', hideSh:'#7C4F2F',
+      hair:'#3B2A1C', hairSh:'#241810',
+      wood:'#8A6440', woodSh:'#5C4026',
+      stoneW:'#9AA3A8', stoneWSh:'#6B757B',
+      foe:'#7F8C97', foeSh:'#54626D',
+      glow:'#E28E3E'
+    },
+    rivers: {
+      name:'Rivers',
+      paper:'#F1E5CB', inkc:'#2E2419',
+      sky:'#E7CC92', skyLo:'#D3AE6B', horizon:'#F0DFB4',
+      gnd:'#E9D6AA', gndSh:'#C7A469',
+      patch:'#DFC894', patchSh:'#B8934F',
+      rock:'#C08A4E', rockSh:'#8A5C30',
+      tuft:'#6FA894', tuftSh:'#437C6A',
+      skin:'#C68C5F', skinSh:'#9A6540',
+      hide:'#AC7348', hideSh:'#7C4F2F',
+      hair:'#3B2A1C', hairSh:'#241810',
+      wood:'#8A6440', woodSh:'#5C4026',
+      stoneW:'#B99A6A', stoneWSh:'#8A6F46',
+      foe:'#A9743F', foeSh:'#6E4622',
+      glow:'#E2A63E'
+    }
+  };
+  var pal = AGES.stone, palFrom = AGES.stone, palTo = AGES.rivers;
+
+  /* ---------- options ---------- */
+  /* Art direction, after the first review: no ink outline, no edge darkening.
+     A paper reserve carries the readability instead — a ring of bare paper left
+     around each figure, which is how a painter separates a subject from its
+     ground without drawing a line. */
+  var opt = { quant:true, ink:false, edge:false, reserve:true, wob:true, paper:true,
+              puppet:true, wobAmp:1.5, maskR:60 };
+
+  /* ---------- noise ---------- */
+  function hash(n){ var s = Math.sin(n*127.1)*43758.5453; return s - Math.floor(s); }
+  function vn(x){ var i=Math.floor(x), f=x-i, u=f*f*(3-2*f); return hash(i)*(1-u)+hash(i+1)*u; }
+  function n11(s,t){ return vn(s + t*0.45)*2-1; }
+
+  /* ---------- geometry helpers ---------- */
+  function centroid(p){ var x=0,y=0; for(var i=0;i<p.length;i++){x+=p[i][0];y+=p[i][1];} return [x/p.length,y/p.length]; }
+  function scaleP(p,c,k){ return p.map(function(q){ return [c[0]+(q[0]-c[0])*k, c[1]+(q[1]-c[1])*k]; }); }
+  function moveP(p,dx,dy){ return p.map(function(q){ return [q[0]+dx,q[1]+dy]; }); }
+
+  var wobT = 0, maskPt = [0,0], maskOn = false;
+  function wobble(p, seed){
+    if(!opt.wob || opt.wobAmp<=0) return p;
+    var a = opt.wobAmp;
+    return p.map(function(q,i){
+      var d = 1;
+      if(maskOn && opt.maskR>0){
+        var dx=q[0]-maskPt[0], dy=q[1]-maskPt[1];
+        var dist = Math.sqrt(dx*dx+dy*dy);
+        d = dist < opt.maskR ? 0 : Math.min(1,(dist-opt.maskR)/70);
+      }
+      if(d<=0) return q;
+      var s = seed + i*3.77;
+      return [ q[0] + n11(s, wobT)*a*d, q[1] + n11(s+41.3, wobT)*a*d ];
+    });
+  }
+
+  var shapeCount = 0;
+  function trace(p){
+    var n=p.length;
+    ctx.beginPath();
+    var mx=(p[0][0]+p[n-1][0])/2, my=(p[0][1]+p[n-1][1])/2;
+    ctx.moveTo(mx,my);
+    for(var i=0;i<n;i++){
+      var c=p[i], nx=p[(i+1)%n];
+      ctx.quadraticCurveTo(c[0],c[1],(c[0]+nx[0])/2,(c[1]+nx[1])/2);
+    }
+    ctx.closePath();
+  }
+
+  /* core paint: one watercolour shape */
+  function paint(pts, base, shade, o){
+    o = o || {};
+    var seed = o.seed || 1;
+    var p = wobble(pts, seed);
+    var c = centroid(p);
+    shapeCount++;
+
+    /* bleed wash: a slightly larger, very light pass, as pigment spreading into damp paper */
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = base;
+    trace(scaleP(p, c, 1.075)); ctx.fill();
+
+    /* body */
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = base;
+    trace(p); ctx.fill();
+
+    /* shading */
+    ctx.save();
+    trace(p); ctx.clip();
+    if(opt.quant){
+      /* two quantised bands, offset away from the light */
+      ctx.globalAlpha = 1; ctx.fillStyle = shade;
+      trace(moveP(scaleP(p,c,1.02), 7, 7)); ctx.fill();
+      ctx.globalAlpha = 0.45;
+      trace(moveP(scaleP(p,c,1.02), 13, 13)); ctx.fill();
+    } else {
+      var g = ctx.createLinearGradient(c[0]-24,c[1]-24,c[0]+24,c[1]+24);
+      g.addColorStop(0, base); g.addColorStop(1, shade);
+      ctx.globalAlpha = 1; ctx.fillStyle = g;
+      trace(p); ctx.fill();
+    }
+    /* edge darkening: pigment pooling where the wash dried against its own edge */
+    if(opt.edge){
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = shade;
+      ctx.lineWidth = (o.edgeW || 5);
+      ctx.lineJoin = 'round';
+      trace(p); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+
+    /* ink outline: characters and hostiles only, never the ground */
+    if(opt.ink && o.ink){
+      ctx.strokeStyle = o.inkColor || pal.inkc;
+      ctx.lineWidth = (o.inkW || 2.2) * (1 + n11(seed*2.1, wobT)*0.18);
+      ctx.lineJoin='round'; ctx.lineCap='round';
+      ctx.globalAlpha = o.inkA || 1;
+      trace(p); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    return p;
+  }
+
+  function blob(cx,cy,rx,ry,n,seed){
+    var p=[];
+    for(var i=0;i<n;i++){
+      var a = i/n*Math.PI*2;
+      var r = 0.82 + vn(seed+i*2.3)*0.36;
+      p.push([cx+Math.cos(a)*rx*r, cy+Math.sin(a)*ry*r]);
+    }
+    return p;
+  }
+  /* tapered limb from origin, pointing down +y */
+  function limb(len,w0,w1){
+    return [[-w0,0],[w0,0],[w1*0.9,len*0.55],[w1,len],[-w1,len],[-w1*0.9,len*0.55]];
+  }
+
+  /* ---------- world ---------- */
+  var GND_TOP = H*0.40;
+  function depth(y){ return 0.78 + 0.34*((y-GND_TOP)/(H-GND_TOP)); }
+
+  var hero = { x:W*0.42, y:H*0.72, face:1, vx:0, vy:0, step:0, atk:-1, atkPhase:'idle' };
+  var foes = [], washes = [], scenery = [];
+
+  function buildScenery(){
+    scenery = [];
+    for(var i=0;i<16;i++){
+      var y = GND_TOP + 18 + hash(i*5.1)*(H-GND_TOP-40);
+      scenery.push({
+        x: 30 + hash(i*3.3)*(W-60), y:y,
+        kind: hash(i*9.7) > 0.52 ? 'rock' : 'tuft',
+        s: 0.6 + hash(i*2.2)*0.8, seed: i*17+3
+      });
+    }
+  }
+  buildScenery();
+
+  function spawnFoe(){
+    var side = Math.random()<0.5 ? -60 : W+60;
+    foes.push({ x:side, y: GND_TOP+40+Math.random()*(H-GND_TOP-70),
+                face: side<0?1:-1, step:Math.random()*10, hp:1,
+                seed: Math.floor(Math.random()*900)+40,
+                wait: Math.random()*1.4 });
+  }
+  for(var q=0;q<3;q++) spawnFoe();
+
+  /* ---------- paper texture ---------- */
+  var paperCv = document.createElement('canvas');
+  paperCv.width = W; paperCv.height = H;
+  (function(){
+    var p = paperCv.getContext('2d');
+    var img = p.createImageData(W,H);
+    var d = img.data;
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var i=(y*W+x)*4;
+        var tooth = (Math.random()*36);
+        var mottle = (vn(x*0.012+7)*0.5+vn(y*0.014+19)*0.5)*40;
+        var v = 200 + tooth + mottle - 26;
+        d[i]=v; d[i+1]=v-3; d[i+2]=v-12; d[i+3]=255;
+      }
+    }
+    p.putImageData(img,0,0);
+  })();
+
+  /* ---------- character buffer + paper reserve ----------
+     Each figure is painted into its own small buffer so the reserve can be taken
+     from the whole silhouette. Per-part haloes would cut paper gaps between an arm
+     and the torso and slice the figure into pieces. */
+  var CB = 360, CBX = 180, CBY = 260, curDpr = 1;
+  var charCv = document.createElement('canvas'), charCtx = charCv.getContext('2d');
+  var haloCv = document.createElement('canvas'), haloCtx = haloCv.getContext('2d');
+
+  function sizeBuffers(dpr){
+    curDpr = dpr;
+    charCv.width = haloCv.width = Math.round(CB*dpr);
+    charCv.height = haloCv.height = Math.round(CB*dpr);
+  }
+
+  function blitChar(wx, wy, shadowFn, bodyFn){
+    charCtx.setTransform(curDpr,0,0,curDpr,0,0);
+    charCtx.clearRect(0,0,CB,CB);
+    var main = ctx;
+    ctx = charCtx;
+    charCtx.save();
+    charCtx.translate(CBX, CBY);
+    bodyFn();
+    charCtx.restore();
+    ctx = main;
+
+    var dx = wx - CBX, dy = wy - CBY;
+
+    if(opt.reserve){
+      haloCtx.setTransform(1,0,0,1,0,0);
+      haloCtx.clearRect(0,0,haloCv.width,haloCv.height);
+      var r = 3.4 * curDpr;
+      for(var a=0;a<12;a++){
+        var ang = a/12*Math.PI*2;
+        haloCtx.drawImage(charCv, Math.cos(ang)*r, Math.sin(ang)*r);
+      }
+      haloCtx.globalCompositeOperation = 'source-in';
+      haloCtx.fillStyle = pal.paper;
+      haloCtx.fillRect(0,0,haloCv.width,haloCv.height);
+      haloCtx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(haloCv, dx, dy, CB, CB);
+    }
+    /* shadow sits over the reserve but under the figure, so the reserve separates
+       the body from the ground without cutting the figure loose from it */
+    if(shadowFn) shadowFn();
+    ctx.drawImage(charCv, dx, dy, CB, CB);
+  }
+
+  /* ---------- wash (age transition) ---------- */
+  var wash = { on:false, t:0, dur:2.6 };
+  function washEdgeY(x, prog){
+    /* a noisy descending front; streaks rather than a flat curtain */
+    var streak = vn(x*0.006+3.1)*0.26 + vn(x*0.021+11.7)*0.12;
+    return (prog*(1+0.38) - 0.19 - streak + 0.19) * (H+160) - 80;
+  }
+
+  /* ---------- drawing ---------- */
+  function drawGround(){
+    var g = ctx.createLinearGradient(0,0,0,GND_TOP+40);
+    g.addColorStop(0, pal.skyLo); g.addColorStop(1, pal.horizon);
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,GND_TOP+42);
+
+    var g2 = ctx.createLinearGradient(0,GND_TOP,0,H);
+    g2.addColorStop(0, pal.gnd); g2.addColorStop(1, pal.gndSh);
+    ctx.fillStyle = g2; ctx.fillRect(0,GND_TOP,W,H-GND_TOP);
+
+    /* painted patches on the ground, no ink */
+    for(var i=0;i<13;i++){
+      var x = ((i*151)%W), y = GND_TOP + 14 + ((i*97)%(H-GND_TOP-24));
+      paint(blob(x,y, 70+hash(i)*70, 16+hash(i*2)*16, 9, i*13+5),
+            pal.patch, pal.patchSh, {seed:i*31+2, ink:false, edgeW:9});
+    }
+    /* horizon smear */
+    ctx.globalAlpha = 0.5;
+    paint(blob(W*0.5, GND_TOP+4, W*0.62, 16, 12, 88), pal.sky, pal.skyLo, {seed:5, ink:false, edgeW:8});
+    ctx.globalAlpha = 1;
+  }
+
+  function drawScenery(s){
+    var d = depth(s.y), k = s.s*d;
+    if(s.kind==='rock'){
+      paint(blob(s.x, s.y, 26*k, 17*k, 8, s.seed), pal.rock, pal.rockSh,
+            {seed:s.seed, ink:false, edgeW:6});
+    } else {
+      for(var b=0;b<3;b++){
+        var ox = (b-1)*8*k;
+        paint([[s.x+ox,s.y],[s.x+ox+3*k,s.y-22*k],[s.x+ox-3*k,s.y-21*k]],
+              pal.tuft, pal.tuftSh, {seed:s.seed+b, ink:false, edgeW:3});
+      }
+    }
+  }
+
+  /* contact shadow: a damp grey wash, never a hard ellipse */
+  function shadow(x,y,r){
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = pal.inkc;
+    trace(wobble(blob(x, y, r, r*0.34, 8, x*0.3), 900));
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawHero(){
+    var d = depth(hero.y), s = 1.08*d;
+    var moving = (Math.abs(hero.vx)+Math.abs(hero.vy)) > 6;
+    var ph = hero.step;
+    var sw = moving ? Math.sin(ph)*0.62 : Math.sin(wobT*1.4)*0.07;
+    var sw2 = moving ? Math.sin(ph+Math.PI)*0.62 : Math.sin(wobT*1.4+1)*0.07;
+    var bob = moving ? Math.abs(Math.cos(ph))*4 : Math.sin(wobT*1.4)*1.6;
+
+    /* attack pose from the real frame data: 12 startup / 6 active / 14 recovery */
+    var armSwing = 0;
+    if(hero.atk >= 0){
+      var f = hero.atk;
+      if(f < 12){ armSwing = -1.5 * (f/12); hero.atkPhase='startup'; }
+      else if(f < 18){ armSwing = -1.5 + 3.2*((f-12)/6); hero.atkPhase='ACTIVE'; }
+      else { armSwing = 1.7 * (1-(f-18)/14); hero.atkPhase='recovery'; }
+    } else hero.atkPhase = 'idle';
+
+    blitChar(hero.x, hero.y, function(){ shadow(hero.x, hero.y+2, 26*s); }, function(){
+    ctx.save();
+    ctx.translate(0, -bob);
+    ctx.scale(hero.face*s, s);
+
+    function part(pts, base, sh, seed, extra){
+      var o = {seed:seed, ink:true, inkW:(extra&&extra.inkW)||2.4, edgeW:5};
+      paint(pts, base, sh, o);
+    }
+    function joint(x,y,ang,fn){
+      ctx.save(); ctx.translate(x,y);
+      if(opt.puppet) ctx.rotate(ang);
+      fn(); ctx.restore();
+    }
+
+    /* far leg */
+    joint(-3,-40, sw2*0.5, function(){
+      part(limb(40,7,5), pal.skinSh, pal.hairSh, 11);
+    });
+    /* far arm */
+    joint(-5,-72, sw*0.7-0.2, function(){
+      part(limb(34,6,4.5), pal.skinSh, pal.hairSh, 12);
+    });
+    /* near leg */
+    joint(4,-40, sw*0.5, function(){
+      part(limb(42,8,5.5), pal.skin, pal.skinSh, 13);
+    });
+    /* torso */
+    part([[-11,-78],[11,-78],[14,-56],[12,-36],[-12,-36],[-14,-56]], pal.hide, pal.hideSh, 14);
+    /* head */
+    part(blob(2,-90,12,13,9,21), pal.skin, pal.skinSh, 15);
+    /* hair */
+    part([[-10,-92],[-6,-103],[6,-104],[12,-96],[10,-88],[-2,-91]], pal.hair, pal.hairSh, 16);
+
+    /* near arm + stone club */
+    joint(6,-74, sw2*0.7 + armSwing, function(){
+      part(limb(32,6.5,5), pal.skin, pal.skinSh, 17);
+      ctx.save(); ctx.translate(0,32);
+      part([[-4,-2],[4,-2],[5,20],[3,26],[-3,26],[-5,20]], pal.wood, pal.woodSh, 18, {inkW:2});
+      part(blob(0,32,10,11,8,44), pal.stoneW, pal.stoneWSh, 19, {inkW:2.6});
+      ctx.restore();
+    });
+    /* ochre handprints: one per age cleared */
+    ctx.globalAlpha = 0.72;
+    paint(blob(-9,-64,4,5,7,51), pal.glow, pal.hideSh, {seed:20, ink:false, edgeW:2});
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    });
+  }
+
+  function drawFoe(f){
+    var d = depth(f.y), s = 0.95*d;
+    var ph = f.step, sw = Math.sin(ph)*0.55, sw2 = Math.sin(ph+Math.PI)*0.55;
+    blitChar(f.x, f.y, function(){ shadow(f.x, f.y+2, 30*s); }, function(){
+    ctx.save();
+    ctx.scale(f.face*s, s);
+
+    /* the Frayed carry a second, looser outer line: the edge that will not settle */
+    var outer = {seed:f.seed, ink:true, inkW:5, inkA:0.22, edgeW:5, inkColor:pal.foeSh};
+    function leg(x,a,base,sh,sd){
+      ctx.save(); ctx.translate(x,-26);
+      if(opt.puppet) ctx.rotate(a);
+      paint(limb(26,5,4), base, sh, {seed:sd, ink:true, inkW:2, edgeW:4});
+      ctx.restore();
+    }
+    leg(-14, sw2*0.8, pal.foeSh, pal.inkc, f.seed+1);
+    leg(12, sw*0.8, pal.foeSh, pal.inkc, f.seed+2);
+    /* body, painted twice: once loose and pale, once solid */
+    paint(blob(0,-38,30,15,10,f.seed), pal.foe, pal.foeSh, outer);
+    paint(blob(0,-38,27,13,10,f.seed), pal.foe, pal.foeSh, {seed:f.seed, ink:true, inkW:2.2, edgeW:5});
+    leg(-8, sw*0.8, pal.foe, pal.foeSh, f.seed+3);
+    leg(18, sw2*0.8, pal.foe, pal.foeSh, f.seed+4);
+    /* tail */
+    ctx.save(); ctx.translate(-27,-40);
+    if(opt.puppet) ctx.rotate(-0.5 + Math.sin(ph*0.7)*0.25);
+    paint(limb(22,4.5,2.5), pal.foe, pal.foeSh, {seed:f.seed+5, ink:true, inkW:2, edgeW:3});
+    ctx.restore();
+    /* head + ears */
+    ctx.save(); ctx.translate(26,-44);
+    if(opt.puppet) ctx.rotate(Math.sin(ph*0.5)*0.08);
+    paint([[-4,-14],[1,-24],[6,-13]], pal.foeSh, pal.inkc, {seed:f.seed+6, ink:true, inkW:1.8, edgeW:2});
+    paint(blob(4,-4,14,10,8,f.seed+7), pal.foe, pal.foeSh, {seed:f.seed+7, ink:true, inkW:2.2, edgeW:4});
+    paint(blob(15,0,7,5,7,f.seed+8), pal.foeSh, pal.inkc, {seed:f.seed+8, ink:true, inkW:1.8, edgeW:3});
+    ctx.restore();
+    ctx.restore();
+    });
+  }
+
+  /* death: the figure runs like a wet painting and drains into the paper */
+  function drawWash(w){
+    var k = w.t/w.dur;
+    var fade = 1-k;
+    ctx.globalAlpha = 0.62*fade;
+    for(var i=0;i<12;i++){
+      var ox = (i-6)*5.5;
+      var len = 26 + vn(w.seed+i*2.1)*120*k*3.1;
+      ctx.fillStyle = i%3===0 ? w.sh : w.base;
+      trace(wobble([[w.x+ox-4,w.y-42],[w.x+ox+4,w.y-42],
+                    [w.x+ox+2.5,w.y-42+len],[w.x+ox-2.5,w.y-42+len]], w.seed+i));
+      ctx.fill();
+    }
+    ctx.globalAlpha = 0.5*fade;
+    trace(wobble(blob(w.x,w.y-38, 26*(1-k*0.4), 13*(1-k*0.6), 9, w.seed), w.seed));
+    ctx.fillStyle = w.base; ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- frame ---------- */
+  var keys = {}, last = performance.now(), fps = 60, acc = 0, frames = 0;
+
+  function step(dt){
+    wobT += dt;
+    /* input */
+    var ax = (keys.r?1:0) - (keys.l?1:0);
+    var ay = (keys.d?1:0) - (keys.u?1:0);
+    var len = Math.hypot(ax,ay) || 1;
+    var spd = (hero.atk>=0) ? 40 : 240;
+    hero.vx = ax/len*spd; hero.vy = ay/len*spd;
+    hero.x = Math.max(28, Math.min(W-28, hero.x + hero.vx*dt));
+    hero.y = Math.max(GND_TOP+24, Math.min(H-16, hero.y + hero.vy*dt));
+    if(ax) hero.face = ax>0?1:-1;
+    if(Math.abs(hero.vx)+Math.abs(hero.vy) > 6) hero.step += dt*9;
+    maskPt = [hero.x, hero.y-50];
+
+    if(hero.atk>=0){
+      hero.atk += dt*60;
+      if(hero.atk>=12 && hero.atk<18){
+        for(var i=foes.length-1;i>=0;i--){
+          var f=foes[i];
+          var dx=f.x-hero.x, dy=(f.y-hero.y)*1.7;
+          if(Math.hypot(dx,dy) < 105 && dx*hero.face > -30){
+            washes.push({x:f.x,y:f.y,t:0,dur:0.75,seed:f.seed,base:pal.foe,sh:pal.foeSh});
+            foes.splice(i,1);
+          }
+        }
+      }
+      if(hero.atk>32) hero.atk = -1;
+    }
+
+    /* foes drift toward Alegus and circle, which is the Pack behaviour in miniature */
+    for(var j=0;j<foes.length;j++){
+      var g=foes[j];
+      g.wait -= dt;
+      var dx2 = hero.x-g.x, dy2 = hero.y-g.y;
+      var dd = Math.hypot(dx2,dy2)||1;
+      var want = 96;
+      var push = (dd>want? 1 : -0.55) * (g.wait>0 ? 0.25 : 1);
+      var tang = g.seed%2 ? 1 : -1;
+      g.x += ((dx2/dd)*push*62 + (-dy2/dd)*tang*30)*dt;
+      g.y += ((dy2/dd)*push*62 + ( dx2/dd)*tang*30)*dt;
+      g.y = Math.max(GND_TOP+20, Math.min(H-12, g.y));
+      g.face = dx2>0?1:-1;
+      g.step += dt*11;
+      if(g.wait<-3) g.wait = 1.2;
+    }
+    if(foes.length===0 && Math.random()<dt*0.6) spawnFoe();
+
+    for(var w=washes.length-1;w>=0;w--){
+      washes[w].t += dt;
+      if(washes[w].t>washes[w].dur) washes.splice(w,1);
+    }
+
+    if(wash.on){
+      wash.t += dt;
+      if(wash.t > wash.dur*0.5 && pal === palFrom){ pal = palTo; }
+      if(wash.t > wash.dur){ wash.on=false; document.getElementById('r_age').textContent = pal.name; }
+    }
+  }
+
+  function render(){
+    shapeCount = 0;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H);
+    /* the clear radius applies to world-space paint only: the ground settles near
+       Alegus so the play space stays crisp, while the figures keep their drift */
+    maskOn = true;
+    drawGround();
+
+    var all = [];
+    for(var i=0;i<scenery.length;i++) all.push({y:scenery[i].y, d:scenery[i], k:'s'});
+    for(var j=0;j<foes.length;j++) all.push({y:foes[j].y, d:foes[j], k:'f'});
+    for(var w=0;w<washes.length;w++) all.push({y:washes[w].y, d:washes[w], k:'w'});
+    all.push({y:hero.y, d:hero, k:'h'});
+    all.sort(function(a,b){ return a.y-b.y; });
+    for(var n=0;n<all.length;n++){
+      if(all[n].k==='s'){ maskOn = true; drawScenery(all[n].d); }
+      else if(all[n].k==='f'){ maskOn = false; drawFoe(all[n].d); }
+      else if(all[n].k==='w'){ maskOn = false; drawWash(all[n].d); }
+      else { maskOn = false; drawHero(); }
+    }
+    maskOn = false;
+
+    /* the age transition: the whole frame runs, drains to bare paper, then the next
+       palette floods in behind it */
+    if(wash.on){
+      var prog = wash.t/wash.dur;
+      var risingBack = prog>0.5;
+      var pr = risingBack ? (1-(prog-0.5)/0.5) : (prog/0.5);
+      ctx.fillStyle = pal.paper;
+      ctx.beginPath();
+      ctx.moveTo(0,-90);
+      for(var x=0;x<=W;x+=12){ ctx.lineTo(x, washEdgeY(x, pr)); }
+      ctx.lineTo(W,-90); ctx.closePath(); ctx.fill();
+      /* streaks running down out of the front */
+      ctx.globalAlpha = 0.5;
+      for(var s2=0;s2<70;s2++){
+        var sx = (s2*13.7)%W;
+        var ey = washEdgeY(sx, pr);
+        var l = 12 + vn(s2*3.1)*90;
+        ctx.fillStyle = s2%2 ? palFrom.gndSh : palFrom.patchSh;
+        ctx.fillRect(sx, ey-l, 3 + vn(s2*1.7)*5, l);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    /* paper composite: fixed to the screen, as if the scene is painted onto the glass */
+    if(opt.paper){
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = 0.34;
+      ctx.drawImage(paperCv,0,0);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      var vg = ctx.createRadialGradient(W/2,H/2,H*0.36,W/2,H/2,H*0.92);
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(52,38,20,0.20)');
+      ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  function loop(now){
+    var dt = Math.min(0.05,(now-last)/1000); last = now;
+    step(dt); render();
+    frames++; acc += dt;
+    if(acc>0.5){ fps = frames/acc; frames=0; acc=0; updateHud(); }
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- hud + controls ---------- */
+  var hudEl = document.getElementById('hud');
+  function updateHud(){
+    document.getElementById('r_fps').textContent = fps.toFixed(0)+' fps';
+    document.getElementById('r_shapes').textContent = shapeCount;
+    var a = document.getElementById('r_atk');
+    a.textContent = hero.atkPhase;
+    a.style.color = hero.atkPhase==='ACTIVE' ? 'var(--accent)' : '';
+    var on = [];
+    if(opt.quant) on.push('bands'); if(opt.reserve) on.push('reserve');
+    if(opt.wob) on.push('wobble'); if(opt.paper) on.push('paper');
+    if(opt.ink) on.push('ink'); if(opt.edge) on.push('edge');
+    hudEl.innerHTML =
+      '<span class="chip">' + pal.name.toUpperCase() + '</span>' +
+      '<span class="chip">passes <b>' + (on.length?on.join(' '):'none') + '</b></span>' +
+      '<span class="chip' + (hero.atkPhase==='ACTIVE'?' act':'') + '">club <b>' +
+        hero.atkPhase + '</b> 12/6/14</span>';
+  }
+
+  function bind(id,key){
+    var el = document.getElementById(id);
+    el.addEventListener('change', function(){
+      opt[key] = el.checked;
+      updateHud();
+    });
+  }
+  bind('p_quant','quant'); bind('p_ink','ink'); bind('p_edge','edge');
+  bind('p_res','reserve'); bind('p_wob','wob'); bind('p_paper','paper');
+
+  var sw1 = document.getElementById('s_wob'), vw1 = document.getElementById('v_wob');
+  sw1.addEventListener('input', function(){
+    opt.wobAmp = sw1.value/10; vw1.textContent = opt.wobAmp.toFixed(1)+' px';
+  });
+  var sw2 = document.getElementById('s_mask'), vw2 = document.getElementById('v_mask');
+  sw2.addEventListener('input', function(){
+    opt.maskR = +sw2.value; vw2.textContent = (opt.maskR/10).toFixed(1)+' u';
+  });
+
+  var rp = document.getElementById('r_pup'), rf = document.getElementById('r_flat');
+  rp.addEventListener('click', function(){ opt.puppet=true; rp.setAttribute('aria-pressed','true'); rf.setAttribute('aria-pressed','false'); });
+  rf.addEventListener('click', function(){ opt.puppet=false; rf.setAttribute('aria-pressed','true'); rp.setAttribute('aria-pressed','false'); });
+
+  document.getElementById('b_wash').addEventListener('click', function(){
+    if(wash.on) return;
+    palFrom = pal; palTo = (pal===AGES.stone) ? AGES.rivers : AGES.stone;
+    wash.on = true; wash.t = 0;
+  });
+  document.getElementById('b_wolf').addEventListener('click', function(){ spawnFoe(); spawnFoe(); });
+  document.getElementById('b_reset').addEventListener('click', function(){
+    pal = AGES.stone; palFrom = AGES.stone; palTo = AGES.rivers;
+    foes = []; washes = []; wash.on=false;
+    hero.x = W*0.42; hero.y = H*0.72; hero.atk=-1;
+    buildScenery(); spawnFoe(); spawnFoe(); spawnFoe();
+    document.getElementById('r_age').textContent = 'Stone';
+  });
+
+  var MAP = {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',
+             a:'l',d:'r',w:'u',s:'d',A:'l',D:'r',W:'u',S:'d'};
+  window.addEventListener('keydown', function(e){
+    if(e.key===' '){ if(hero.atk<0) hero.atk=0; e.preventDefault(); return; }
+    var k = MAP[e.key]; if(k){ keys[k]=1; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', function(e){
+    var k = MAP[e.key]; if(k) keys[k]=0;
+  });
+  /* the canvas is the play surface, so it takes focus for keys without a click */
+  cv.setAttribute('tabindex','0');
+  cv.addEventListener('pointerdown', function(){ cv.focus(); });
+
+  /* touch pad */
+  if(window.matchMedia('(pointer: coarse)').matches){
+    document.getElementById('pad').classList.add('on');
+    document.getElementById('hint').textContent = 'pad to move · HIT to attack';
+    var padEl = document.getElementById('pad');
+    function setk(k,v){
+      if(k==='a'){ if(v && hero.atk<0) hero.atk=0; return; }
+      if(k==='uk'){ keys.u=v; keys.l=v; return; }
+      if(k==='ur'){ keys.u=v; keys.r=v; return; }
+      keys[k]=v;
+    }
+    padEl.querySelectorAll('button').forEach(function(b){
+      var k = b.getAttribute('data-k');
+      b.addEventListener('pointerdown', function(e){ e.preventDefault(); setk(k,1); });
+      ['pointerup','pointerleave','pointercancel'].forEach(function(ev){
+        b.addEventListener(ev, function(){ setk(k,0); });
+      });
+    });
+  }
+
+  /* crisp on high-density displays without changing the drawing code */
+  function fit(){
+    var dpr = Math.min(2, window.devicePixelRatio||1);
+    var cssW = cv.clientWidth || W;
+    cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+    cv.style.height = Math.round(cssW*H/W)+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    sizeBuffers(dpr);
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  if(reduce){ opt.wob = false; document.getElementById('p_wob').checked = false; }
+  updateHud();
+  requestAnimationFrame(loop);
+})();
+</script>
