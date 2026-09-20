@@ -79,6 +79,7 @@ Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 - [ ] Ten room layouts, grey-box then art
 - [ ] Frayed Cave Bear and three elite modifiers
 - [ ] Edge Flint knife moveset with parry
+- [ ] Accessibility items due in the slice, per `DIFFICULTY.md` section 3.1: remapping, hold or toggle, bleed and shake sliders, text size
 - [ ] Mammoth Mother, all three phases, floe system
 
 **Weeks 4 to 6, systems.**
@@ -107,7 +108,7 @@ Revised for the launch scope in `FAST_PATH.md`.
 
 **Alpha (4 months):** ages 2 to 4 on one thread each, three more bosses from `BOSSES.md` built on the five shared systems, the Sling lineage, Inventors through Salt, ten duos, the Cartographer and Archivist, Keys of Ages and Amber, Alegus session 2. Ends with a 30-run external test.
 
-**Beta (3 months):** Age of Sail and the Terminus, Anachronisms, keepsakes, twelve Aspects, Wren, Compass and Powder, fifteen duos, six music arrangements, localisation prep.
+**Beta (3 months):** Age of Sail and the Terminus, the Anachronism system and the Firekeeper's Hand from `DIFFICULTY.md`, keepsakes, twelve Aspects from `WEAPONS.md`, Wren, Compass and Powder, fifteen duos, six music arrangements, localisation prep.
 
 **Polish and ship (2.5 months):** balance, accessibility, Steam achievements, Deck verification submission, store page and trailer, launch. Store page goes up roughly three months before launch so wishlists have lead time.
 

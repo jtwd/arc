@@ -129,7 +129,7 @@ Age 8 forms lean lightly into near-future flavour because Alegus is close to the
 
 ### 4.2 Aspects
 
-As in Hades, each lineage has 4 **Aspects**, unlocked with a rare meta currency. An aspect changes the whole lineage's identity across every age form. Example for Reach: "Aspect of the Hunter" adds a second thrown spear and a recall dash; "Aspect of the Phalanx" makes the special summon a ghost line of spears.
+As in Hades, each lineage has 4 **Aspects**, unlocked with Amber. An Aspect changes the whole lineage's identity across every age form, held or evolved. Example for Edge: "Aspect of the Wound" trades direct damage for a stacking bleed, turning the chain into accumulation; "Aspect of the Mirror" replaces the parry with a counter-stance that replays the absorbed attack. All twelve launch Aspects are in `WEAPONS.md` section 5.
 
 ### 4.3 Unlock order (meta progression)
 
@@ -160,13 +160,13 @@ That is one extra animation and it makes the transition a decision instead of a 
 - **Added moves are forfeited.** Each form adds a move or changes one, so a held Stone club never gains the mace's third-hit stun or the iron mace's shockwave special. That is the real cost, it is self-explanatory, and it needs no artificial penalty on top.
 - **Releasing snaps forward.** Holding can be released at any later age boundary, and the weapon becomes that age's form directly rather than stepping through the ones that were skipped. The Loom catches up in one motion.
 
-**Design rule this creates.** If every evolution only ever adds, holding is never the strong choice and the feature is decorative. So some forms must **trade** rather than add. The Blunt lineage's Gunner's maul already does this: its special becomes a point-blank shot on a single reloading charge, which is stronger but conditional, where the iron mace's ground slam was reliable. Aim for roughly one trade in every lineage, so that holding is sometimes genuinely correct and not only a matter of taste.
+**Design rule this creates.** If every evolution only ever adds, holding is never the strong choice and the feature is decorative. So some forms must **trade** rather than add: give up something reliable for something stronger but conditional. Each launch lineage has exactly one trade, and they sit at different points in the run so holding is a live decision at more than one boundary. Edge trades at the Gladius, Sling at the Crossbow, Blunt at the Gunner's maul. Full tables in `WEAPONS.md`.
 
 **When it unlocks.** The first time Alegus reaches the Age of Empires, so every player has felt two re-forges before they can decline one. The Firekeeper introduces it as a piece of story rather than a purchase: the Loom's hand can be refused, and refusing it is the first thing Alegus does that is entirely his own. It costs no Ochre. It is an alpha feature and is not in the vertical slice, which ends at the first re-forge.
 
 **Wear.** A form held across two or more ages gets a worn material variant: rebound cord, chips, a bronze band added by hand. One variant per form, fifteen at launch scope, which is cheap and tells the story on its own.
 
-**Pact modifiers** for the Anachronism system, when it is written: one that disables holding, and one that forces it at the Stone Age form for a large reward.
+**Pact modifiers.** Heavy Loom disables holding; Stubborn Thread forces the Stone Age form for the whole run at the highest point value in the system. Both are in `DIFFICULTY.md` section 1.
 
 **Achievement:** clear the game having held a Stone Age form the whole way.
 
