@@ -156,9 +156,9 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; rung 2 &middot; does the combat feel good?</p>
-    <h1>Three Frayed, a club and ten frames of mercy</h1>
-    <p>This is the gate. If the fighting is not enjoyable, nothing built on top of it will be. Arrows to move, <b>space</b> to swing, <b>shift</b> to dash. The dash has ten frames where nothing can touch you, and learning to spend them is the whole game.</p>
+    <p class="eyebrow">EPOCH &middot; rung 2 &middot; character design pass</p>
+    <h1>Knees, weight and things that arrive late</h1>
+    <p>Every limb now has two bones and a foot that stays flat on the ground. The wolf trots on diagonal pairs, the boar gallops when it charges, and Alegus's hair is on a spring so it arrives late and overshoots when he stops. Arrows move, <b>space</b> swings, <b>shift</b> dashes. Watch him turn around: he is a paper cut-out, so he flips through his own edge.</p>
   </header>
 
   <div class="rig">
@@ -233,12 +233,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     <p class="sub">Production plan, rung 2. If the combat does not feel good, the project stops or changes here, and that call is Edward's. It is far cheaper to find out now than in a year.</p>
     <div class="cards">
       <div class="card">
-        <h3>Is the boar fair?</h3>
-        <p>It gives you 0.8 seconds of warning, then commits to a direction and charges. Bait it into a wall and it is stunned, and a stunned boar takes triple damage. That is the punish window the whole age teaches.</p>
+        <h3>Do they read as different animals?</h3>
+        <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. If you cannot tell them apart at a glance, the silhouettes are wrong.</p>
       </div>
       <div class="card">
-        <h3>Can you always find Alegus?</h3>
-        <p>No ink, no edge darkening. A ring of bare paper is left around every figure instead, which is how a painter separates a subject from its ground. Turn the reserve off to see what it was holding up.</p>
+        <h3>Does the club land?</h3>
+        <p>A hit now holds the whole frame for a few hundredths of a second and squashes whatever it hit. Nothing else in a melee game buys as much weight for as little work. If it feels mushy, that number is one line.</p>
       </div>
       <div class="card">
         <h3>Can you close on a hunter?</h3>
@@ -346,51 +346,61 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     ctx.closePath();
   }
 
-  /* core paint: one watercolour shape */
+  /* Core paint: one watercolour shape.
+
+     The pigment bands used to be a clipped overdraw, which cost a canvas clip
+     and two extra point arrays on every shape. They are now shrunken, offset
+     copies, which land in the same place on blobby forms and cost two polygons
+     instead. That paid for the character rigs roughly doubling the shape count.
+
+     Small parts skip the wet bleed: at a few pixels across nobody can see it
+     and it is a quarter of the work. */
   function paint(pts, base, shade, o){
     o = o || {};
     var seed = o.seed || 1;
     var p = wobble(pts, seed);
     var c = centroid(p);
+    var r = 0, i;
+    for(i=0;i<p.length;i++) r += Math.hypot(p[i][0]-c[0], p[i][1]-c[1]);
+    r /= p.length || 1;
     shapeCount++;
 
-    /* bleed wash: a slightly larger, very light pass, as pigment spreading into damp paper */
-    ctx.globalAlpha = 0.28;
-    ctx.fillStyle = base;
-    trace(scaleP(p, c, 1.075)); ctx.fill();
+    if(r > 8){
+      ctx.globalAlpha = 0.26;
+      ctx.fillStyle = base;
+      trace(scaleP(p, c, 1.07)); ctx.fill();
+    }
 
-    /* body */
     ctx.globalAlpha = 1;
     ctx.fillStyle = base;
     trace(p); ctx.fill();
 
-    /* shading */
-    ctx.save();
-    trace(p); ctx.clip();
     if(opt.quant){
-      /* two quantised bands, offset away from the light */
-      ctx.globalAlpha = 1; ctx.fillStyle = shade;
-      trace(moveP(scaleP(p,c,1.02), 7, 7)); ctx.fill();
-      ctx.globalAlpha = 0.45;
-      trace(moveP(scaleP(p,c,1.02), 13, 13)); ctx.fill();
+      var off = r * 0.13;
+      ctx.fillStyle = shade;
+      trace(scaleMove(p, c, 0.9, off, off)); ctx.fill();
+      ctx.globalAlpha = 0.5;
+      trace(scaleMove(p, c, 0.72, off*1.9, off*1.9)); ctx.fill();
+      ctx.globalAlpha = 1;
     } else {
       var g = ctx.createLinearGradient(c[0]-24,c[1]-24,c[0]+24,c[1]+24);
       g.addColorStop(0, base); g.addColorStop(1, shade);
-      ctx.globalAlpha = 1; ctx.fillStyle = g;
+      ctx.fillStyle = g;
       trace(p); ctx.fill();
     }
-    /* edge darkening: pigment pooling where the wash dried against its own edge */
+
     if(opt.edge){
+      ctx.save();
+      trace(p); ctx.clip();
       ctx.globalAlpha = 0.5;
       ctx.strokeStyle = shade;
       ctx.lineWidth = (o.edgeW || 5);
       ctx.lineJoin = 'round';
       trace(p); ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = 1;
     }
-    ctx.restore();
-    ctx.globalAlpha = 1;
 
-    /* ink outline: characters and hostiles only, never the ground */
     if(opt.ink && o.ink){
       ctx.strokeStyle = o.inkColor || pal.inkc;
       ctx.lineWidth = (o.inkW || 2.2) * (1 + n11(seed*2.1, wobT)*0.18);
@@ -400,6 +410,15 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ctx.globalAlpha = 1;
     }
     return p;
+  }
+
+  /* scale about a centre and translate in one pass, one array instead of two */
+  function scaleMove(p, c, k, dx, dy){
+    var out = new Array(p.length);
+    for(var i=0;i<p.length;i++){
+      out[i] = [c[0] + (p[i][0]-c[0])*k + dx, c[1] + (p[i][1]-c[1])*k + dy];
+    }
+    return out;
   }
 
   function blob(cx,cy,rx,ry,n,seed){
@@ -426,7 +445,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var hero = { x:W*0.42, y:H*0.72, face:1, vx:0, vy:0, step:0,
                atk:-1, atkPhase:'idle',
                dash:-1, dashX:1, dashY:0,
-               hp:100, maxHp:100, hurt:0, dead:0 };
+               hp:100, maxHp:100, hurt:0, dead:0,
+               /* animation state, all eased rather than snapped. An instant
+                  turn or an instant stop is what makes a puppet read as a
+                  diagram rather than a body. */
+               gait:0, faceVis:1, lean:0, hairA:0, hairV:0, moving:false };
+  var hitStop = 0;
   var foes = [], washes = [], scenery = [], shots = [], tells = [];
   var kills = 0;
 
@@ -457,6 +481,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   function resetRun(){
     hero.hp = hero.maxHp; hero.dead = 0; hero.hurt = 0;
     hero.atk = -1; hero.dash = -1; hero.hitThisSwing = false;
+    hero.gait = 0; hero.hairA = 0; hero.hairV = 0; hero.lean = 0;
+    hitStop = 0;
     hero.x = W*0.42; hero.y = H*0.72;
     foes = []; shots = []; tells = []; kills = 0;
     spawnFoe('wolf'); spawnFoe('wolf'); spawnFoe('boar');
@@ -493,7 +519,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     var k = KINDS[kind];
     foes.push({ kind:kind, x:side, y: GND_TOP+40+Math.random()*(H-GND_TOP-70),
                 face: side<0?1:-1, step:Math.random()*10,
-                hp:k.hp, maxHp:k.hp, flash:0,
+                hp:k.hp, maxHp:k.hp, flash:0, squash:0,
                 seed: Math.floor(Math.random()*900)+40,
                 state:'approach', timer: Math.random()*1.4, cool:0 });
   }
@@ -508,6 +534,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   function stepFoe(g, dt){
     var k = KINDS[g.kind];
     if(g.flash > 0) g.flash -= dt;
+    if(g.squash > 0) g.squash -= dt*6;
     g.step += dt * (g.state === 'charge' ? 26 : 11);
     var dx = hero.x - g.x, dy = hero.y - g.y;
     var dd = Math.hypot(dx, dy) || 1;
@@ -728,158 +755,307 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     ctx.globalAlpha = 1;
   }
 
-  function drawHero(){
-    var d = depth(hero.y), s = 1.08*d;
-    var moving = (Math.abs(hero.vx)+Math.abs(hero.vy)) > 6;
-    var ph = hero.step;
-    var sw = moving ? Math.sin(ph)*0.62 : Math.sin(wobT*1.4)*0.07;
-    var sw2 = moving ? Math.sin(ph+Math.PI)*0.62 : Math.sin(wobT*1.4+1)*0.07;
-    var bob = moving ? Math.abs(Math.cos(ph))*4 : Math.sin(wobT*1.4)*1.6;
+  /* ------------------------------------------------------------------
+     CHARACTER RIGS
 
-    /* attack pose from the real frame data: 12 startup / 6 active / 14 recovery */
-    var armSwing = 0;
-    if(hero.atk >= 0){
-      var f = hero.atk;
-      if(f < 12){ armSwing = -1.5 * (f/12); hero.atkPhase='startup'; }
-      else if(f < 18){ armSwing = -1.5 + 3.2*((f-12)/6); hero.atkPhase='ACTIVE'; }
-      else { armSwing = 1.7 * (1-(f-18)/14); hero.atkPhase='recovery'; }
-    } else hero.atkPhase = 'idle';
+     A puppet is painted shapes on pivots. What separates one that reads as
+     alive from one that reads as a diagram is not detail, it is four things:
 
-    blitChar(hero.x, hero.y, function(){ shadow(hero.x, hero.y+2, 26*s); }, function(){
+       1. Two bones per limb. A knee or an elbow is the difference between a
+          leg and a stick.
+       2. A foot that stays flat. The ankle counter-rotates against the hip
+          and knee so the sole points at the ground, not wherever the leg
+          happens to be swinging.
+       3. Counter-rotation. Shoulders turn against hips, head against body.
+       4. Lag. Hair and tails arrive late and leave late.
+
+     Silhouette does the rest, and it is where each animal earns its name.
+     ------------------------------------------------------------------ */
+
+  function at(x, y, a, fn){
     ctx.save();
-    ctx.translate(0, -bob);
-    ctx.scale(hero.face*s, s);
-
-    function part(pts, base, sh, seed, extra){
-      var o = {seed:seed, ink:true, inkW:(extra&&extra.inkW)||2.4, edgeW:5};
-      paint(pts, base, sh, o);
-    }
-    function joint(x,y,ang,fn){
-      ctx.save(); ctx.translate(x,y);
-      if(opt.puppet) ctx.rotate(ang);
-      fn(); ctx.restore();
-    }
-
-    /* far leg */
-    joint(-3,-40, sw2*0.5, function(){
-      part(limb(40,7,5), pal.skinSh, pal.hairSh, 11);
-    });
-    /* far arm */
-    joint(-5,-72, sw*0.7-0.2, function(){
-      part(limb(34,6,4.5), pal.skinSh, pal.hairSh, 12);
-    });
-    /* near leg */
-    joint(4,-40, sw*0.5, function(){
-      part(limb(42,8,5.5), pal.skin, pal.skinSh, 13);
-    });
-    /* torso */
-    part([[-11,-78],[11,-78],[14,-56],[12,-36],[-12,-36],[-14,-56]], pal.hide, pal.hideSh, 14);
-    /* head */
-    part(blob(2,-90,12,13,9,21), pal.skin, pal.skinSh, 15);
-    /* hair */
-    part([[-10,-92],[-6,-103],[6,-104],[12,-96],[10,-88],[-2,-91]], pal.hair, pal.hairSh, 16);
-
-    /* near arm + stone club */
-    joint(6,-74, sw2*0.7 + armSwing, function(){
-      part(limb(32,6.5,5), pal.skin, pal.skinSh, 17);
-      ctx.save(); ctx.translate(0,32);
-      part([[-4,-2],[4,-2],[5,20],[3,26],[-3,26],[-5,20]], pal.wood, pal.woodSh, 18, {inkW:2});
-      part(blob(0,32,10,11,8,44), pal.stoneW, pal.stoneWSh, 19, {inkW:2.6});
-      ctx.restore();
-    });
-    /* ochre handprints: one per age cleared */
-    ctx.globalAlpha = 0.72;
-    paint(blob(-9,-64,4,5,7,51), pal.glow, pal.hideSh, {seed:20, ink:false, edgeW:2});
-    ctx.globalAlpha = 1;
+    ctx.translate(x, y);
+    if(opt.puppet && a) ctx.rotate(a);
+    fn();
     ctx.restore();
+  }
+
+  /* A two-bone limb with an optional foot. Angles are hip and knee; the foot
+     subtracts both so it stays level with the ground. */
+  function legIK(x, y, hip, knee, ul, ll, w, base, sh, sd, foot){
+    at(x, y, hip, function(){
+      paint(limb(ul, w, w*0.82), base, sh, {seed:sd, ink:false, edgeW:4});
+      at(0, ul, knee, function(){
+        paint(limb(ll, w*0.82, w*0.58), base, sh, {seed:sd+0.6, ink:false, edgeW:3});
+        if(foot) at(0, ll, -hip - knee + 0.06, function(){
+          paint([[-w*0.55,0],[w*0.5,-w*0.2],[w*1.7,w*0.1],[w*1.75,w*0.8],[-w*0.6,w*0.85]],
+            base, sh, {seed:sd+0.9, ink:false, edgeW:3});
+        });
+      });
     });
   }
+
+  /* ---------- Alegus ----------
+     Lean, long-limbed, a runner and not a brawler, per the bible. Narrow
+     waist, high hips, and a club that is slightly too big for him. */
+
+  var A_TORSO = [[-12,-81],[12,-81],[10,-70],[8.5,-62],[10,-54],
+                 [-10,-54],[-8.5,-62],[-10,-70]];
+  /* the hem is ragged because nothing in the Stone Age has a straight edge */
+  var A_TUNIC = [[-13,-76],[13,-76],[15,-60],[13,-45],[7,-49],[1,-44],
+                 [-6,-48],[-13,-44],[-15,-60]];
+  /* stored relative to the head pivot so it is not rebuilt every frame */
+  var A_HAIRCAP = [[-12,-10],[-10,-20],[-1,-24],[9,-20],[12,-10],[7,-5],[-6,-6]];
+  var A_CLUB = [[-4,-2],[4,-2],[5,18],[3.5,25],[-3.5,25],[-5,18]];
+
+  function drawHero(){
+    var d = depth(hero.y), s = 1.12*d;
+    var th = hero.step;
+    var amp = hero.gait;                 /* eased 0..1, so stopping settles */
+    var bob, twist;
+
+    var hipN = 0.60*Math.sin(th)*amp;
+    var hipF = 0.60*Math.sin(th+Math.PI)*amp;
+    var kneeN = Math.max(0, Math.sin(th+0.75))*0.95*amp + 0.07;
+    var kneeF = Math.max(0, Math.sin(th+Math.PI+0.75))*0.95*amp + 0.07;
+    var armN = -0.46*Math.sin(th)*amp;
+    var armF = -0.46*Math.sin(th+Math.PI)*amp;
+    var elbN = 0.30 + Math.max(0,-Math.sin(th))*0.35*amp;
+    var elbF = 0.30 + Math.max(0,-Math.sin(th+Math.PI))*0.35*amp;
+
+    /* two bobs per stride: down at each foot plant, up through the pass */
+    bob = -3.6*Math.cos(2*th)*amp + Math.sin(wobT*1.5)*1.2*(1-amp);
+    twist = -0.11*Math.sin(th)*amp;
+
+    /* the swing: wind back, whip through, settle. The lean sells the weight
+       far more than the arm angle does. */
+    var swing = 0, lean = 0;
+    if(hero.atk >= 0){
+      var f = hero.atk, k;
+      if(f < 12){ k = f/12; swing = -2.05*k; lean = -0.21*k; }
+      else if(f < 18){ k = (f-12)/6; swing = -2.05 + 3.5*k; lean = -0.21 + 0.48*k; }
+      else { k = 1 - (f-18)/14; swing = 1.45*k; lean = 0.27*k; }
+    }
+    if(hero.dash >= 4 && hero.dash < 14) lean += 0.36;
+    lean += hero.lean;
+
+    blitChar(hero.x, hero.y,
+      function(){ shadow(hero.x, hero.y+2, 25*s); },
+      function(){
+      ctx.scale(hero.faceVis*s, s);
+      /* during the invulnerable frames he thins out: a thread the Loom is
+         pulling through, and a readable tell that nothing can touch him */
+      if(hero.dash >= 4 && hero.dash < 14) ctx.globalAlpha = 0.5;
+
+      at(0, -bob, lean, function(){
+        legIK(-3, -54, hipF, kneeF, 24, 22, 7, pal.skinSh, pal.hairSh, 11, true);
+        legIK(3, -54, hipN, kneeN, 24, 22, 7.5, pal.skin, pal.skinSh, 13, true);
+
+        at(-5, -78, armF*0.9, function(){
+          paint(limb(20, 6, 5), pal.skinSh, pal.hairSh, {seed:12, ink:false, edgeW:4});
+          at(0, 20, elbF, function(){
+            paint(limb(18, 5, 4.2), pal.skinSh, pal.hairSh, {seed:12.6, ink:false, edgeW:3});
+          });
+        });
+
+        at(0, 0, twist, function(){
+          paint(A_TORSO, pal.skin, pal.skinSh, {seed:14, ink:false, edgeW:5});
+          paint(A_TUNIC, pal.hide, pal.hideSh, {seed:15, ink:false, edgeW:5});
+          paint([[-5,-88],[5,-88],[6,-78],[-6,-78]], pal.skinSh, pal.hairSh,
+            {seed:16, ink:false, edgeW:3});
+
+          /* head and hair ride a counter-twist and arrive late */
+          at(1, -88, -twist*1.6 + hero.hairA*0.35, function(){
+            paint([[-11,-16],[-4,-22],[6,-21],[11,-13],[9,-3],[0,1],[-9,-4]],
+              pal.skin, pal.skinSh, {seed:17, ink:false, edgeW:4});
+            at(0, 0, hero.hairA, function(){
+              paint([[-12,-10],[-15,2],[-11,12],[-5,6],[-7,-6]],
+                pal.hair, pal.hairSh, {seed:18, ink:false, edgeW:4});
+            });
+            paint(A_HAIRCAP, pal.hair, pal.hairSh, {seed:19, ink:false, edgeW:4});
+          });
+
+          /* one ochre handprint per age cleared: his arms are the run log */
+          var glow = pal.glow;
+          paint(blob(-8,-66,4,5,7,51), glow, pal.hideSh, {seed:20, ink:false, edgeW:2});
+        });
+
+        /* the club rides the near arm, so a new weapon form is one polygon */
+        at(6, -78, armN*0.9 + swing, function(){
+          paint(limb(20, 6.5, 5.4), pal.skin, pal.skinSh, {seed:21, ink:false, edgeW:4});
+          at(0, 20, elbN*0.7, function(){
+            paint(limb(18, 5.4, 4.4), pal.skin, pal.skinSh, {seed:22, ink:false, edgeW:3});
+            at(0, 18, 0, function(){
+              paint(blob(0,2,5.5,5,7,23), pal.skin, pal.skinSh, {seed:23, ink:false, edgeW:3});
+              paint(A_CLUB, pal.wood, pal.woodSh, {seed:24, ink:false, edgeW:3});
+              paint(blob(0,30,10,11,8,44), pal.stoneW, pal.stoneWSh, {seed:25, ink:false, edgeW:4});
+            });
+          });
+        });
+      });
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  /* ---------- the Frayed ---------- */
+
+  function foeInk(f, c){ return f.flash > 0 ? '#F6ECD8' : c; }
 
   function drawFoe(f){
-    var big = f.kind === 'boar';
-    var d = depth(f.y), s = (big ? 1.18 : f.kind === 'hunter' ? 1.02 : 0.95) * d;
-    blitChar(f.x, f.y, function(){ shadow(f.x, f.y+2, (big?38:30)*s); }, function(){
-      ctx.save();
-      ctx.scale(f.face*s, s);
-      if(f.kind === 'hunter') hunterBody(f);
-      else quadBody(f, big);
-      ctx.restore();
+    var d = depth(f.y);
+    var s = (f.kind === 'boar' ? 1.16 : f.kind === 'hunter' ? 1.04 : 0.98) * d;
+    var sq = f.squash > 0 ? f.squash : 0;
+    blitChar(f.x, f.y,
+      function(){ shadow(f.x, f.y+2, (f.kind==='boar'?38:30)*s); },
+      function(){
+        ctx.scale(f.face*s*(1+sq*0.16), s*(1-sq*0.2));
+        if(f.kind === 'hunter') hunterBody(f);
+        else if(f.kind === 'boar') boarBody(f);
+        else wolfBody(f);
+      });
+  }
+
+  /* ---------- wolf ----------
+     Deep chest carried forward, tucked belly, long legs, head level with the
+     spine. It trots, which means diagonal pairs, not four legs on one sine. */
+  function wolfBody(f){
+    var th = f.step, body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+    var pA = Math.sin(th), pB = Math.sin(th + Math.PI);
+    var kA = Math.max(0, Math.sin(th+0.8))*0.8, kB = Math.max(0, Math.sin(th+Math.PI+0.8))*0.8;
+    var pitch = 0.035*Math.sin(2*th);
+
+    at(0, 0, pitch, function(){
+      /* far diagonal pair, painted darker to sit behind the barrel */
+      legIK(17, -35, pA*0.75, kA+0.15, 18, 17, 5, sh, pal.inkc, 31, true);
+      legIK(-15, -34, pB*0.65, kB+0.25, 19, 17, 5.5, sh, pal.inkc, 32, true);
+
+      at(-30, -46, -0.55 + Math.sin(th*0.7)*0.3, function(){
+        paint(limb(20, 5.5, 3.5), body, sh, {seed:33, ink:false, edgeW:3});
+        at(0, 20, 0.3 + Math.sin(th*0.7+0.6)*0.3, function(){
+          paint(limb(16, 4.5, 2.2), body, sh, {seed:34, ink:false, edgeW:3});
+        });
+      });
+
+      paint(blob(-15, -44, 17, 15, 9, f.seed+2), body, sh, {seed:f.seed+2, ink:false, edgeW:5});
+      paint([[-20,-52],[16,-54],[22,-46],[14,-34],[-14,-33]], body, sh,
+        {seed:f.seed+3, ink:false, edgeW:5});
+      paint(blob(13, -46, 19, 14, 9, f.seed), body, sh, {seed:f.seed, ink:false, edgeW:5});
+
+      legIK(19, -36, pB*0.75, kB+0.15, 18, 17, 5.4, body, sh, 35, true);
+      legIK(-13, -35, pA*0.65, kA+0.25, 19, 17, 5.8, body, sh, 36, true);
+
+      at(24, -50, 0.5 + pitch*2, function(){
+        paint(limb(16, 8, 7), body, sh, {seed:37, ink:false, edgeW:4});
+        at(0, 15, -0.75 - pitch*2 + Math.sin(th*0.5)*0.06, function(){
+          paint([[-9,-16],[-4,-24],[-1,-15]], sh, pal.inkc, {seed:38, ink:false, edgeW:2});
+          paint([[3,-15],[8,-23],[9,-14]], sh, pal.inkc, {seed:39, ink:false, edgeW:2});
+          paint(blob(0,-6,10,9,8,f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:4});
+          paint([[4,-10],[18,-6],[20,0],[16,4],[3,3]], sh, pal.inkc,
+            {seed:f.seed+8, ink:false, edgeW:3});
+        });
+      });
     });
   }
 
-  /* A hit reads as the paint blanching for a moment. No flash frame, no tint
-     layer: the same shapes, painted paler. */
-  function foeInk(f, c){
-    return f.flash > 0 ? '#F6ECD8' : c;
+  /* ---------- boar ----------
+     The opposite shape to the wolf and it must read that way at a glance:
+     a huge shoulder hump, the head carried low, tiny hindquarters, short
+     thick legs, and a bristle ridge that spikes the silhouette. It walks in
+     four beats and gallops when it charges. */
+  function boarBody(f){
+    var th = f.step, body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+    var charging = f.state === 'charge';
+    var pf, pr;
+    if(charging){ pf = Math.sin(th); pr = Math.sin(th - 1.9); }
+    else { pf = Math.sin(th); pr = Math.sin(th + Math.PI); }
+    var kf = Math.max(0, Math.sin(th+0.7))*0.7, kr = Math.max(0, Math.sin(th+2.4))*0.7;
+    var pitch = charging ? 0.1 : (f.state === 'wind' ? -0.14 : (f.state === 'stun' ? 0.26 : 0));
+    pitch += 0.03*Math.sin(2*th);
+
+    at(0, 0, pitch, function(){
+      legIK(13, -26, pf*0.5, kf+0.2, 13, 12, 6, sh, pal.inkc, 41, true);
+      legIK(-17, -24, pr*0.5, kr+0.2, 12, 11, 5.5, sh, pal.inkc, 42, true);
+
+      paint(blob(-20, -33, 15, 12, 8, f.seed+2), body, sh, {seed:f.seed+2, ink:false, edgeW:5});
+      paint([[-24,-40],[2,-56],[20,-50],[22,-34],[-4,-26],[-22,-26]], body, sh,
+        {seed:f.seed+3, ink:false, edgeW:5});
+      paint(blob(7, -45, 24, 20, 10, f.seed), body, sh, {seed:f.seed, ink:false, edgeW:6});
+
+      /* the ridge is what makes the shape unmistakable at 25% size */
+      for(var i=0;i<6;i++){
+        var t = i/5;
+        var bx = -16 + t*32, by = -42 - t*t*16 - t*4;
+        paint([[bx-3,by],[bx+0.5,by-9-Math.sin(i)*2],[bx+3,by]], sh, pal.inkc,
+          {seed:60+i, ink:false, edgeW:2});
+      }
+
+      legIK(16, -27, pr*0.5, kr+0.2, 13, 12, 6.2, body, sh, 43, true);
+      legIK(-14, -25, pf*0.5, kf+0.2, 12, 11, 5.8, body, sh, 44, true);
+
+      at(-26, -38, -0.3, function(){
+        paint(limb(9, 3, 1.6), body, sh, {seed:45, ink:false, edgeW:2});
+      });
+
+      /* head low and forward, snout down, tusks up */
+      at(22, -38, 0.42, function(){
+        paint(blob(3, 6, 14, 12, 8, f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:5});
+        paint([[6,-2],[24,4],[26,13],[19,18],[5,15]], sh, pal.inkc,
+          {seed:f.seed+8, ink:false, edgeW:4});
+        paint([[-6,-4],[-1,-13],[4,-3]], sh, pal.inkc, {seed:f.seed+9, ink:false, edgeW:2});
+        paint([[19,6],[27,-6],[31,-3],[25,10]], pal.stoneW, pal.stoneWSh,
+          {seed:f.seed+10, ink:false, edgeW:2});
+        paint([[17,13],[26,4],[29,7],[22,16]], pal.stoneW, pal.stoneWSh,
+          {seed:f.seed+11, ink:false, edgeW:2});
+      });
+    });
   }
 
+  /* ---------- hunter ----------
+     A crouched biped with a hood, so it never reads as Alegus. The throwing
+     arm is the entire tell: back on the aim, through on the release, slow to
+     come home, and that recovery is the window to close on it. */
   function hunterBody(f){
-    var ph = f.step, sw = Math.sin(ph)*0.5, sw2 = Math.sin(ph+Math.PI)*0.5;
-    var body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
-    /* the throwing arm is the whole tell: back during the aim, through on the
-       release, and slow to come home, which is the window to close */
-    var arm = f.state === 'aim' ? -2.1 : (f.state === 'throw' ? 1.5 : sw*0.6);
+    var th = f.step, body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+    var aiming = f.state === 'aim', throwing = f.state === 'throw';
+    var amp = (aiming || throwing) ? 0.25 : 1;
+    var hipN = 0.5*Math.sin(th)*amp, hipF = 0.5*Math.sin(th+Math.PI)*amp;
+    var kneeN = Math.max(0, Math.sin(th+0.8))*0.7*amp + 0.4;
+    var kneeF = Math.max(0, Math.sin(th+Math.PI+0.8))*0.7*amp + 0.4;
+    var arm = aiming ? -2.25 : (throwing ? 1.5 : -0.3 + Math.sin(th)*0.3*amp);
+    var lean = aiming ? -0.16 : (throwing ? 0.2 : 0.07);
 
-    function leg(x, a){
-      ctx.save(); ctx.translate(x,-34);
-      if(opt.puppet) ctx.rotate(a);
-      paint(limb(34,6,4.5), sh, pal.inkc, {seed:f.seed+1, ink:false, edgeW:4});
-      ctx.restore();
-    }
-    leg(-4, sw2*0.5);
-    leg(4, sw*0.5);
-    paint([[-9,-66],[9,-66],[11,-48],[9,-32],[-9,-32],[-11,-48]], body, sh,
-      {seed:f.seed+2, ink:false, edgeW:5});
-    paint(blob(1,-76,10,11,9,f.seed+3), sh, pal.inkc, {seed:f.seed+3, ink:false, edgeW:4});
-    ctx.save(); ctx.translate(5,-62);
-    if(opt.puppet) ctx.rotate(arm);
-    paint(limb(28,5.5,4), body, sh, {seed:f.seed+4, ink:false, edgeW:4});
-    /* sling: a cord and a stone, so the threat is legible before it is thrown */
-    paint(blob(0,34,6,6,7,f.seed+5), pal.stoneW, pal.stoneWSh, {seed:f.seed+5, ink:false, edgeW:3});
-    ctx.restore();
-  }
+    at(0, -Math.abs(Math.cos(th))*2*amp, lean, function(){
+      legIK(-3, -44, hipF, kneeF, 22, 20, 6, sh, pal.inkc, 51, true);
+      legIK(3, -44, hipN, kneeN, 22, 20, 6.4, body, sh, 52, true);
 
-  function quadBody(f, big){
-    var ph = f.step, sw = Math.sin(ph)*0.55, sw2 = Math.sin(ph+Math.PI)*0.55;
-    var body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
-    var lean = 0;
-    if(f.kind === 'boar'){
-      /* it rocks back to wind up and pitches forward on the charge */
-      if(f.state === 'wind') lean = -0.18;
-      else if(f.state === 'charge') lean = 0.16;
-      else if(f.state === 'stun') lean = 0.3;
-    }
-    ctx.save();
-    if(opt.puppet) ctx.rotate(lean);
+      at(-5, -66, -arm*0.35, function(){
+        paint(limb(22, 5.5, 4.4), sh, pal.inkc, {seed:53, ink:false, edgeW:3});
+        at(0, 22, 0.5, function(){
+          paint(limb(20, 4.4, 3.6), sh, pal.inkc, {seed:54, ink:false, edgeW:3});
+        });
+      });
 
-    var W1 = big ? 1.34 : 1, LEG = big ? 30 : 26;
-    function leg(x,a,base,shc,sd){
-      ctx.save(); ctx.translate(x*W1,-26*W1);
-      if(opt.puppet) ctx.rotate(a);
-      paint(limb(LEG,5.5*W1,4), base, shc, {seed:sd, ink:false, edgeW:4});
-      ctx.restore();
-    }
-    leg(-14, sw2*0.8, sh, pal.inkc, f.seed+1);
-    leg(12, sw*0.8, sh, pal.inkc, f.seed+2);
-    paint(blob(0,-38*W1,30*W1,15*W1,10,f.seed), body, sh, {seed:f.seed, ink:false, edgeW:5});
-    leg(-8, sw*0.8, body, sh, f.seed+3);
-    leg(18, sw2*0.8, body, sh, f.seed+4);
-    ctx.save(); ctx.translate(-27*W1,-40*W1);
-    if(opt.puppet) ctx.rotate(-0.5 + Math.sin(ph*0.7)*0.25);
-    paint(limb(big?12:22,4.5,2.5), body, sh, {seed:f.seed+5, ink:false, edgeW:3});
-    ctx.restore();
-    ctx.save(); ctx.translate(26*W1,-44*W1);
-    if(opt.puppet) ctx.rotate(Math.sin(ph*0.5)*0.08);
-    if(!big) paint([[-4,-14],[1,-24],[6,-13]], sh, pal.inkc, {seed:f.seed+6, ink:false, edgeW:2});
-    paint(blob(4,-4,14*W1,10*W1,8,f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:4});
-    paint(blob(15*W1,0,7*W1,5*W1,7,f.seed+8), sh, pal.inkc, {seed:f.seed+8, ink:false, edgeW:3});
-    /* tusks say charger before it ever charges */
-    if(big){
-      paint([[16,2],[26,-6],[19,6]], pal.stoneW, pal.stoneWSh, {seed:f.seed+9, ink:false, edgeW:2});
-      paint([[14,8],[24,2],[17,11]], pal.stoneW, pal.stoneWSh, {seed:f.seed+10, ink:false, edgeW:2});
-    }
-    ctx.restore();
-    ctx.restore();
+      paint([[-10,-69],[10,-69],[12,-56],[10,-42],[-10,-42],[-12,-56]], body, sh,
+        {seed:55, ink:false, edgeW:5});
+      /* the hood: a peak and a shoulder cape, nothing like his hair */
+      paint([[-12,-74],[-4,-90],[8,-88],[13,-74],[10,-64],[-9,-65]], sh, pal.inkc,
+        {seed:56, ink:false, edgeW:5});
+      paint(blob(3, -76, 8, 8, 8, f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:3});
+
+      at(5, -66, arm, function(){
+        paint(limb(22, 6, 4.6), body, sh, {seed:57, ink:false, edgeW:4});
+        at(0, 22, throwing ? -0.2 : 0.55, function(){
+          paint(limb(20, 4.6, 3.6), body, sh, {seed:58, ink:false, edgeW:3});
+          /* the sling and its stone, so the threat is legible before it flies */
+          at(0, 20, 0, function(){
+            paint([[-1,0],[1,0],[2,13],[-2,13]], pal.woodSh, pal.inkc,
+              {seed:59, ink:false, edgeW:2});
+            paint(blob(0, 16, 6, 5.5, 7, f.seed+5), pal.stoneW, pal.stoneWSh,
+              {seed:f.seed+5, ink:false, edgeW:3});
+          });
+        });
+      });
+    });
   }
 
   /* death: the figure runs like a wet painting and drains into the paper */
@@ -1014,7 +1190,22 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.x = Math.max(28, Math.min(W-28, hero.x + hero.vx*dt));
     hero.y = Math.max(GND_TOP+24, Math.min(H-16, hero.y + hero.vy*dt));
     if(ax) hero.face = ax>0?1:-1;
-    if(Math.abs(hero.vx)+Math.abs(hero.vy) > 6) hero.step += dt*9;
+    hero.moving = (Math.abs(hero.vx)+Math.abs(hero.vy)) > 6;
+    if(hero.moving) hero.step += dt*9;
+
+    /* the gait eases in and out, so he settles into a stand instead of
+       freezing mid-stride */
+    hero.gait += ((hero.moving ? 1 : 0) - hero.gait) * Math.min(1, dt*9);
+    /* turning takes a moment; an instant mirror-flip reads as a glitch */
+    hero.faceVis += (hero.face - hero.faceVis) * Math.min(1, dt*15);
+    /* lean into the run */
+    var wantLean = (hero.vx * hero.faceVis) * 0.00055;
+    hero.lean += (wantLean - hero.lean) * Math.min(1, dt*7);
+    /* hair on a spring, so it arrives late and overshoots on a stop */
+    var hairT = -(hero.vx * hero.faceVis) * 0.0017 + Math.sin(wobT*1.1)*0.05;
+    hero.hairV += ((hairT - hero.hairA)*90 - hero.hairV*13) * dt;
+    hero.hairA = Math.max(-0.9, Math.min(0.9, hero.hairA + hero.hairV*dt));
+
     maskPt = [hero.x, hero.y-50];
 
     if(hero.atk>=0){
@@ -1028,7 +1219,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
             /* a stunned boar takes the bonus, which is the whole point of
                baiting the charge into a wall */
             var dmg = (f.kind==='boar' && f.state==='stun') ? 60 : 20;
-            f.hp -= dmg; f.flash = 0.18;
+            f.hp -= dmg; f.flash = 0.18; f.squash = 1;
+            /* a few frames of held time on contact. Nothing else in a melee
+               game buys as much weight for as little work. */
+            hitStop = dmg > 40 ? 0.11 : 0.06;
             if(f.hp <= 0){
               washes.push({x:f.x,y:f.y,t:0,dur:0.75,seed:f.seed,base:pal.foe,sh:pal.foeSh});
               foes.splice(i,1); kills++;
@@ -1150,6 +1344,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   function loop(now){
     var dt = Math.min(0.05,(now-last)/1000); last = now;
+    if(hitStop > 0){ hitStop -= dt; dt *= 0.14; }
     step(dt); render();
     frames++; acc += dt;
     if(acc>0.5){ fps = frames/acc; frames=0; acc=0; updateHud(); }

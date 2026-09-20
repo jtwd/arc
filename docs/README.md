@@ -25,6 +25,7 @@ Read in this order:
 18. [WREN_DIALOGUE.md](WREN_DIALOGUE.md), her ten beats and in-run lines, drafted ahead of the recording order.
 
 18. [SESSION_LOG.md](SESSION_LOG.md), what Edward said in each session and what it changed.
+19. [CHARACTER_RIGS.md](CHARACTER_RIGS.md), how a puppet is built and why each rule is there.
 
 The game itself is in [`game/`](../game), a Godot 4 project. `game/README.md` says how to run it.
 

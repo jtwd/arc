@@ -112,4 +112,20 @@ good, the project stops or changes here, and that the call is Edward's.
 **Wanted, and not "it is fine":** which enemy he hated and whether that was a
 good hate or a bad one, and whether he ever died feeling it was not his fault.
 
+**Reported:** the boar, the wolves and Alegus all needed to look better, and
+the movement needed real work.
+
+**Fair.** The first pass was placeholder shapes with one sine wave per limb. The
+rebuild is in `CHARACTER_RIGS.md`: two bones and a flat foot on every limb,
+counter-rotating shoulders and head, hair on a spring, per-creature gaits (the
+wolf trots on diagonal pairs, the boar gallops when charging), and silhouettes
+built from mass distribution rather than scale. The boar had been a bigger wolf
+with tusks, which is why it did not read.
+
+Also added hit-stop and squash on contact, eased turning and gait, and a
+half-opacity tell during the dash's invulnerable frames.
+
+Paid for by removing a canvas clip from the paint routine and skipping the wet
+bleed on parts too small to show it.
+
 **Edward's call:** *(to fill in)*
