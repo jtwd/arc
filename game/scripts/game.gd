@@ -6,6 +6,10 @@ extends Node2D
 ##   world  ->  paper reserve  ->  contact shadows  ->  figures  ->  wash  ->  paper
 ## Figures render into their own SubViewport so the reserve can be taken from
 ## the finished silhouette rather than from each body part.
+##
+## The world renders into a SubViewport too, but for a different reason: it is
+## 82% of the frame's geometry work and it is static apart from a slow drift,
+## so it is baked a few times a second instead of sixty.
 
 const W := 960
 const H := 600
@@ -15,6 +19,8 @@ var pal: Palette
 var pal_next: Palette
 
 var world: World
+var world_vp: SubViewport
+var world_rect: TextureRect
 var figures_vp: SubViewport
 var alegus: Alegus
 var reserve_rect: TextureRect
@@ -30,7 +36,17 @@ var wob_t: float = 0.0
 var wob_amp: float = 1.5
 var wash_t: float = -1.0
 var wash_swapped: bool = false
-var fps_label: Label
+
+## The render spec drifts the wobble at 0.15 Hz, so ten bakes a second is
+## already far more than the eye can follow.
+var bake_hz: float = 10.0
+var _bake_accum: float = 0.0
+var _bakes_this_second: int = 0
+var _bake_rate: int = 0
+var _second_accum: float = 0.0
+
+var stats: Label
+var _last_paints: int = 0
 
 
 func _ready() -> void:
@@ -38,22 +54,18 @@ func _ready() -> void:
 	pal_next = Palette.rivers()
 	RenderingServer.set_default_clear_color(pal.paper)
 
+	world_vp = _make_viewport(false)
+	add_child(world_vp)
 	world = World.new()
-	world.z_index = 0
-	add_child(world)
+	world_vp.add_child(world)
 
-	# figures live off-screen so the reserve sees one silhouette, not ten parts
-	figures_vp = SubViewport.new()
-	figures_vp.size = Vector2i(W, H)
-	figures_vp.transparent_bg = true
-	figures_vp.disable_3d = true
-	figures_vp.gui_disable_input = true
-	figures_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	world_rect = _full_rect_texture(world_vp.get_texture(), 0)
+	add_child(world_rect)
+
+	figures_vp = _make_viewport(true)
 	add_child(figures_vp)
-
 	var figure_root := Node2D.new()
 	figures_vp.add_child(figure_root)
-
 	alegus = Alegus.new()
 	figure_root.add_child(alegus)
 
@@ -85,12 +97,41 @@ func _ready() -> void:
 	paper_rect = _full_rect_color(50)
 	paper_mat = ShaderMaterial.new()
 	paper_mat.shader = load("res://shaders/paper.gdshader")
+	paper_mat.set_shader_parameter("paper_tex", _make_paper_texture())
 	paper_rect.material = paper_mat
 	add_child(paper_rect)
 
 	_build_ui()
 	_apply_palette(pal)
 	world.build()
+	_bake_world()
+
+
+func _make_viewport(transparent: bool) -> SubViewport:
+	var vp := SubViewport.new()
+	vp.size = Vector2i(W, H)
+	vp.transparent_bg = transparent
+	vp.disable_3d = true
+	vp.gui_disable_input = true
+	if transparent:
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	else:
+		# the world is baked on demand, not every frame
+		vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	return vp
+
+
+## Paper tooth, baked once into a small tiling texture. Built through a byte
+## array rather than set_pixel, which would take the best part of a second.
+func _make_paper_texture(size: int = 256) -> ImageTexture:
+	var data := PackedByteArray()
+	data.resize(size * size)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1337
+	for i in data.size():
+		data[i] = 150 + int(rng.randf() * 90.0)
+	var img := Image.create_from_data(size, size, false, Image.FORMAT_L8, data)
+	return ImageTexture.create_from_image(img)
 
 
 func _full_rect_texture(tex: Texture2D, z: int) -> TextureRect:
@@ -115,6 +156,14 @@ func _full_rect_color(z: int) -> ColorRect:
 	return r
 
 
+func _bake_world() -> void:
+	world.wob_t = wob_t
+	world.wob_amp = wob_amp
+	world.queue_redraw()
+	world_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	_bakes_this_second += 1
+
+
 func _apply_palette(p: Palette) -> void:
 	pal = p
 	RenderingServer.set_default_clear_color(p.paper)
@@ -124,11 +173,16 @@ func _apply_palette(p: Palette) -> void:
 	reserve_mat.set_shader_parameter("paper_color", p.paper)
 	wash_mat.set_shader_parameter("paper_color", p.paper)
 	paper_mat.set_shader_parameter("paper_tint", p.paper.darkened(0.2))
-	world.queue_redraw()
 	alegus.queue_redraw()
+	_bake_world()
 
 
 func _process(delta: float) -> void:
+	# counters hold last frame's totals, because drawing happens after _process
+	_last_paints = Painter.paint_calls
+	Painter.paint_calls = 0
+	Painter.polys = 0
+
 	wob_t += delta
 
 	var dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -136,17 +190,23 @@ func _process(delta: float) -> void:
 	alegus.wob_amp = wob_amp
 	alegus.advance(delta, dir)
 
-	world.wob_t = wob_t
-	world.wob_amp = wob_amp
-	world.queue_redraw()
-
 	shadows.set("wob_t", wob_t)
 	shadows.queue_redraw()
+
+	_bake_accum += delta
+	if _bake_accum >= 1.0 / bake_hz:
+		_bake_accum = 0.0
+		_bake_world()
+
+	_second_accum += delta
+	if _second_accum >= 1.0:
+		_second_accum = 0.0
+		_bake_rate = _bakes_this_second
+		_bakes_this_second = 0
 
 	if wash_t >= 0.0:
 		wash_t += delta
 		var k := wash_t / WASH_DUR
-		# the front descends to bare paper, then recedes with the next age behind it
 		var pr := (k / 0.5) if k < 0.5 else (1.0 - (k - 0.5) / 0.5)
 		wash_mat.set_shader_parameter("progress", clampf(pr, 0.0, 1.0))
 		# swap exactly once, at the moment the frame is bare paper
@@ -159,8 +219,21 @@ func _process(delta: float) -> void:
 			wash_t = -1.0
 			wash_mat.set_shader_parameter("progress", 0.0)
 
-	if fps_label:
-		fps_label.text = "%d fps" % Engine.get_frames_per_second()
+	_update_stats()
+
+
+func _update_stats() -> void:
+	if stats == null:
+		return
+	var proc_ms := Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	stats.text = "%d fps\nprocess %.2f ms\nworld   %.2f ms @ %d/s\nfigures %.2f ms\npaints  %d" % [
+		Engine.get_frames_per_second(),
+		proc_ms,
+		world.last_draw_usec / 1000.0,
+		_bake_rate,
+		alegus.last_draw_usec / 1000.0,
+		_last_paints,
+	]
 
 
 func start_wash() -> void:
@@ -182,13 +255,13 @@ func _build_ui() -> void:
 	add_child(layer)
 
 	var box := VBoxContainer.new()
-	box.position = Vector2(W - 196, 12)
-	box.custom_minimum_size = Vector2(184, 0)
-	box.add_theme_constant_override("separation", 4)
+	box.position = Vector2(W - 210, 10)
+	box.custom_minimum_size = Vector2(200, 0)
+	box.add_theme_constant_override("separation", 3)
 	layer.add_child(box)
 
-	fps_label = Label.new()
-	box.add_child(fps_label)
+	stats = Label.new()
+	box.add_child(stats)
 
 	_check(box, "Pigment bands", true, _on_bands)
 	_check(box, "Paper reserve", true, _on_reserve)
@@ -196,14 +269,12 @@ func _build_ui() -> void:
 	_check(box, "Paper composite", true, _on_paper)
 	_check(box, "Jointed", true, _on_jointed)
 
-	var slider := HSlider.new()
-	slider.min_value = 0.0
-	slider.max_value = 4.0
-	slider.step = 0.1
-	slider.value = wob_amp
-	slider.custom_minimum_size = Vector2(184, 16)
-	slider.value_changed.connect(_on_amp)
-	box.add_child(slider)
+	# bisect switches: turn a whole layer off to find where the time goes
+	_check(box, "Layer: world", true, _on_layer_world)
+	_check(box, "Layer: figures", true, _on_layer_figures)
+
+	_slider(box, "wobble", 0.0, 4.0, 0.1, wob_amp, _on_amp)
+	_slider(box, "bake Hz", 1.0, 60.0, 1.0, bake_hz, _on_bake_hz)
 
 	var b := Button.new()
 	b.text = "Age transition  (space)"
@@ -219,9 +290,25 @@ func _check(parent: Node, text: String, on: bool, cb: Callable) -> void:
 	parent.add_child(c)
 
 
+func _slider(parent: Node, text: String, lo: float, hi: float, step: float,
+		value: float, cb: Callable) -> void:
+	var l := Label.new()
+	l.text = text
+	parent.add_child(l)
+	var s := HSlider.new()
+	s.min_value = lo
+	s.max_value = hi
+	s.step = step
+	s.value = value
+	s.custom_minimum_size = Vector2(200, 16)
+	s.value_changed.connect(cb)
+	parent.add_child(s)
+
+
 func _on_bands(v: bool) -> void:
 	world.bands = v
 	alegus.bands = v
+	_bake_world()
 
 
 func _on_reserve(v: bool) -> void:
@@ -240,5 +327,19 @@ func _on_jointed(v: bool) -> void:
 	alegus.jointed = v
 
 
+func _on_layer_world(v: bool) -> void:
+	world_rect.visible = v
+
+
+func _on_layer_figures(v: bool) -> void:
+	reserve_rect.visible = v
+	figure_rect.visible = v
+	shadows.visible = v
+
+
 func _on_amp(v: float) -> void:
 	wob_amp = v
+
+
+func _on_bake_hz(v: float) -> void:
+	bake_hz = maxf(v, 1.0)

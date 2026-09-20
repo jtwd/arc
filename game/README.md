@@ -30,6 +30,36 @@ built on top of it.
 - **The frame counter.** It should sit at 60. If it does not, say so and I will
   cut the cost before we build anything else on this.
 
+## If it still is not 60
+
+The first build was not, so the frame is now instrumented rather than guessed
+at. The readout top right says where the time goes:
+
+```
+58 fps
+process 12.40 ms     <- everything Claude's code does per frame
+world    9.10 ms @ 10/s   <- one world bake, and how often they happen
+figures  1.20 ms     <- Alegus
+paints     56        <- watercolour shapes drawn last frame
+```
+
+**Read `process` first.** At 60 frames a second the whole frame has 16.6 ms, and
+the renderer needs some of it, so anything over about 8 ms of script is the
+problem.
+
+Then bisect with the two **Layer** switches, which turn a whole layer off:
+
+| What happens | Means |
+|---|---|
+| `world` is large and turning the world layer off fixes it | Still CPU geometry. Drop **bake Hz**; ten is already generous, four is fine |
+| `process` is small but the frame rate is still low | It is the GPU, not the script. Untick **Paper composite**, then **Paper reserve**, and tell me which one moved it |
+| Turning **Bleed and wobble** off fixes it | The noise is the cost. It can be precomputed per shape instead of per frame |
+| Nothing moves it | Something outside this code. Check the renderer is GL Compatibility in Project Settings |
+
+Tell me the four numbers and which switch moved them and I will cut the right
+thing. Please do not just lower the resolution: this has to be fast honestly,
+because rung 2 adds enemies on top of it.
+
 ## I could not run this
 
 Godot is not installed in the container I work in, so this is the first code on
@@ -43,6 +73,8 @@ I will correct it.
 | The whole screen goes black or white | `blend_mul` on the paper pass not behaving under the GL compatibility renderer | Untick **Paper composite** to confirm, then tell me and I will move it to a `SCREEN_TEXTURE` read |
 | Shapes with pinched or crossed fills | A polygon went concave and the triangulation fanned it badly | Tell me which shape; the fix is a tighter radius range in `Painter.blob` |
 | The figure layer never appears | SubViewport not updating | Check `render_target_update_mode` is `UPDATE_ALWAYS` in `game.gd` |
+| The world is blank or black | The world viewport never baked | `_bake_world()` sets `UPDATE_ONCE`; check it runs in `_ready` |
+| The world visibly steps or stutters | Bake rate too low for the drift | Raise **bake Hz**. It is a straight trade against frame time |
 | A parse error on launch | A Godot 4 API difference I guessed wrong | Paste the line and the message |
 
 ## How it is put together

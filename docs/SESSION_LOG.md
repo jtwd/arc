@@ -42,4 +42,24 @@ transition, toggle each pass.
 4. Anything on the failure list in `game/README.md`, which is the part Claude
    could not verify.
 
-**Edward's call:** *(to fill in)*
+**Reported:** it does not hold 60 frames per second.
+
+**Diagnosed before changing anything.** Counting the per-frame work showed the
+world was 82% of the geometry cost and was being fully re-tessellated sixty
+times a second, while the render spec only drifts the wobble at 0.15 Hz. That
+is roughly a sixfold waste on the largest item in the frame.
+
+**Cut.** The world now renders into its own SubViewport and is baked ten times
+a second instead of sixty. Subdivision scales with shape size rather than
+sitting at five for everything. The pigment bands allocate one point array
+instead of two. Centre and radius come from the control points rather than the
+smoothed outline. The paper grain is baked into a tiling texture once at
+startup instead of being hashed per pixel per frame, and the reserve takes
+eight samples instead of twelve. Together that is about a 3.2x cut in CPU
+geometry before the shader savings.
+
+**Instrumented,** so the next report is diagnostic rather than binary: the
+readout gives frame time, script time, world bake time and rate, figure time
+and shape count, and there are switches to turn each layer off and bisect.
+
+**Still open:** whether that was enough. Claude still cannot run it.

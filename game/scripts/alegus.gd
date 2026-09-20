@@ -23,6 +23,9 @@ var stride: float = 0.0
 var moving: bool = false
 var jointed: bool = true          ## false draws the same art rigid, for comparison
 
+## Wall time of the last draw, read by the debug panel.
+var last_draw_usec: int = 0
+
 
 func _ready() -> void:
 	position = Vector2(400.0, 430.0)
@@ -48,6 +51,7 @@ func depth_scale() -> float:
 func _draw() -> void:
 	if pal == null:
 		return
+	var t0 := Time.get_ticks_usec()
 
 	var s := 1.08 * depth_scale()
 	var sw := 0.0
@@ -104,6 +108,7 @@ func _draw() -> void:
 	var glow := pal.glow
 	glow.a = 0.72
 	Painter.paint(self, Painter.blob(Vector2(-9, -64), Vector2(4, 5), 7, 51.0),
-		glow, pal.hide_shade, 20.0, wob_t, wob_amp, false)
+		glow, pal.hide_shade, 20.0, wob_t, wob_amp, false, 2)
 
 	begin()
+	last_draw_usec = Time.get_ticks_usec() - t0

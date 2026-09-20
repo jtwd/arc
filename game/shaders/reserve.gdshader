@@ -22,10 +22,12 @@ void fragment() {
 		COLOR = vec4(0.0);
 	} else {
 		vec4 fig = texture(TEXTURE, UV);
+		// eight taps, not twelve: at a three pixel radius the ring is identical
+		// and it is a third less sampling over the whole frame
 		vec2 px = TEXTURE_PIXEL_SIZE * radius;
 		float near = fig.a;
-		for (int i = 0; i < 12; i++) {
-			float a = float(i) * 0.5235988;
+		for (int i = 0; i < 8; i++) {
+			float a = float(i) * 0.7853982;
 			near = max(near, texture(TEXTURE, UV + vec2(cos(a), sin(a)) * px).a);
 		}
 		float ring = near * (1.0 - fig.a);
