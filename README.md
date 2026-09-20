@@ -15,7 +15,7 @@ This repository holds planning only. The game is built in Unity in its own repos
 | `game/` | The Godot 4 project. See [game/README.md](game/README.md) |
 | `docs/` | The design documents. Start at [docs/README.md](docs/README.md) |
 | `tools/run-sim/` | A dependency-free Monte Carlo model of a run |
-| `tools/render-test/` | The interactive art-direction test. Open `index.html` in a browser |
+| `tools/render-test/` | **The playable build.** One self-contained file: download `index.html` and double-click it. See its README for how to share it |
 
 Start with [docs/GAME_DESIGN.md](docs/GAME_DESIGN.md) for the design, then [docs/FAST_PATH.md](docs/FAST_PATH.md) for what ships first and why.
 
