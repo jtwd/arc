@@ -66,8 +66,9 @@ Owner: character artist and gameplay programmer together.
 - [ ] Age transition wash wired to the re-forge
 - [ ] One Rivers room with the Rivers palette and two re-skinned enemies
 - [ ] Play test: five people play Stone Age to the transition, then answer one question, "did you want to keep the club?"
+- [ ] Prototype the refusal prompt inside the re-forge scene, with the pull-back animation
 
-If more than two of five wanted to keep the club, the evolution design needs work before the slice. Options in order: make the new form more visibly powerful, give the player a preview of the next form during the age, or allow locking a form as a Cave Wall unlock.
+Holding a form is now a shipped feature, so this test is no longer about whether players can opt out. It is about whether evolution is attractive enough that most of them will not. If more than two of five would have held the club, the new forms are not reading as rewards: make the added move more visible in the re-forge scene, or preview the next form during the age. The fix is never to remove the option.
 
 ## 5. Milestone 4: vertical slice (10 weeks)
 
@@ -140,10 +141,10 @@ Decided against one criterion, shortest time to a finished game. Reasoning and c
 | Inventors at launch | Nine. Press, Volt, and Atom fall out with ages 6 and 8 | Decided |
 | Full-clear run length | 36 minutes, 26 rooms | Decided, simulated |
 | Threads at launch | One per age | Decided |
-| Forced evolution | Yes | Confirm at milestone 3 |
+| Forced evolution | No. Players can refuse a re-forge and hold a form, per `GAME_DESIGN.md` 4.4 | Decided by the user. Milestone 3 now tests whether evolution is wanted, not whether it is tolerated |
 | Protagonist | Alegus, voiced | Decided |
 | Art direction | 3D watercolour | Decided |
 | Boss construction | Five shared systems, not bespoke arenas | Decided, build during the slice |
 | Tone through late ages | Darkens, stays warm | Alpha writing |
 | Alegus's origin | Pre-cultural | Decided |
-| Early Access | Open | Raise at the vertical slice review |
+| Early Access | Open, deliberately deferred | The user has parked it. Raise again at the vertical slice review, when there is something to judge |

@@ -31,7 +31,7 @@ Costs are per rank and are cumulative within a position.
 | 11 | **Fray's Edge.** Enemies below 15% health die instantly, +3% per rank | **Loom's Mercy.** Death Defiance restores 60% health instead of 50%, +5% per rank | 5 / 4 | 150 each / 200 each | Key of Ages, first Age 7 clear |
 | 12 | **Handprint.** +2% damage per age cleared this run, per rank | **Thread.** Your weapon evolves one age early | 5 / 1 | 250 each / 2,000 | Key of Ages, first Terminus clear |
 
-Row 12 right is the one deliberately controversial choice: it lets a player skip an age's weapon form. It exists to give players who dislike a particular form some agency without breaking the forced-evolution rule for everyone. It costs enough that it is a late decision.
+Row 12 right runs the timeline forward; holding a form, in `GAME_DESIGN.md` 4.4, refuses to. They are the two ways to take the Loom's hand off the weapon and they pair deliberately. Holding is free and unlocked through the story, so this row is the paid, opposite half of that idea and is priced as a late decision.
 
 **Total Ochre to max the wall:** roughly 21,000. Hades' Mirror costs about 27,000 darkness. This is intentionally lower because the game also has Keys, Amber, and Charts competing for attention.
 

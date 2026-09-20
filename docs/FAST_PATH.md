@@ -176,7 +176,7 @@ If "fast" means time until people are playing rather than time until the game is
 
 It buys revenue during development, real balance data instead of the simulator's guesses, and a community before launch. It costs a permanent obligation to ship updates on a visible cadence, and a rougher public first impression.
 
-Not decided here. Raise it at the vertical slice review, when there is something to judge.
+Deliberately parked. Raise it at the vertical slice review, when there is something to judge. Nothing before that milestone depends on the answer, except that a Steam Playtest branch exists from the slice either way, which is most of the setup an Early Access launch would need.
 
 ---
 

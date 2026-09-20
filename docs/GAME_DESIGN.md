@@ -16,7 +16,7 @@ This document is the planning baseline. It is deliberately opinionated so there 
 
 1. **Fast, readable, top-down combat.** Attack, special, cast, dash, call. Every hit has weight. Death comes from being outplayed, never from reading failure. The watercolour look must never cost readability.
 2. **Every run is a full arc through history.** Stone Age to gunpowder in about 36 minutes at launch, extending toward the modern day as ages are added. The player always feels the world advancing under their feet.
-3. **Your weapon grows with the world.** The club you start with becomes a mace, then a warhammer, then a trench club. Progression inside a run is visible and physical, not just a stat sheet.
+3. **Your weapon grows with the world, unless you refuse.** The club you start with becomes a mace, then a warhammer, then a trench club. Progression inside a run is visible and physical, not just a stat sheet. Alegus can also refuse the re-forge and keep the form he has, which is a decision made inside the scene rather than in a menu. See 4.4.
 4. **Death is the story.** Every failed run sends Alegus back to the hub, where the cast reacts to how he died and what he found. Story is delivered in small, frequent doses, fully voiced.
 5. **Builds emerge from Inventions.** The boon system is driven by ideas humanity discovered: Fire, the Wheel, Writing, Gunpowder, the Atom. Combining them is the core creative act of a run.
 
@@ -144,7 +144,31 @@ Blunt is free. The others unlock with **Keys of Ages** earned mostly from first-
 
 This gives the "unlock newer and better weapons" fantasy at two speeds: inside a run (evolution) and across runs (lineages and aspects).
 
-**Decision:** Do you want a lineage to skip evolution steps? A player who dislikes the Musket form of Sling might want to lock it at Crossbow. Recommend no for the first version; forced evolution keeps runs feeling like history moving on.
+**Decided:** players can refuse an evolution and hold the form they have. The design is in 4.4. It deliberately keeps the re-forge scene, because the refusal happens inside it.
+
+### 4.4 Holding a form
+
+A player who likes the Stone club should be able to carry the Stone club. The problem is that the re-forge at each age boundary is the signature moment of the run, and a menu toggle that skips it would trade the best scene in the game for a preference setting. So the refusal happens inside the scene.
+
+**How it plays.** At the age boundary the re-forge begins exactly as it always does. The Loom reaches for the weapon. A prompt appears for about two seconds, and pressing it makes Alegus pull the weapon back. The Loom's light recoils and withdraws. The player keeps the form they had.
+
+That is one extra animation and it makes the transition a decision instead of a cutscene, which is stronger than either alternative. Nothing is hidden in a menu.
+
+**What holding costs and does not cost.**
+
+- **Power is unaffected.** A held form gains the new age's damage scaling. Holding never makes Alegus weaker in raw numbers, because when players say they wanted to keep the club they mean they liked how it felt, not that they wanted to be punished for saying so.
+- **Added moves are forfeited.** Each form adds a move or changes one, so a held Stone club never gains the mace's third-hit stun or the iron mace's shockwave special. That is the real cost, it is self-explanatory, and it needs no artificial penalty on top.
+- **Releasing snaps forward.** Holding can be released at any later age boundary, and the weapon becomes that age's form directly rather than stepping through the ones that were skipped. The Loom catches up in one motion.
+
+**Design rule this creates.** If every evolution only ever adds, holding is never the strong choice and the feature is decorative. So some forms must **trade** rather than add. The Blunt lineage's Gunner's maul already does this: its special becomes a point-blank shot on a single reloading charge, which is stronger but conditional, where the iron mace's ground slam was reliable. Aim for roughly one trade in every lineage, so that holding is sometimes genuinely correct and not only a matter of taste.
+
+**When it unlocks.** The first time Alegus reaches the Age of Empires, so every player has felt two re-forges before they can decline one. The Firekeeper introduces it as a piece of story rather than a purchase: the Loom's hand can be refused, and refusing it is the first thing Alegus does that is entirely his own. It costs no Ochre. It is an alpha feature and is not in the vertical slice, which ends at the first re-forge.
+
+**Wear.** A form held across two or more ages gets a worn material variant: rebound cord, chips, a bronze band added by hand. One variant per form, fifteen at launch scope, which is cheap and tells the story on its own.
+
+**Pact modifiers** for the Anachronism system, when it is written: one that disables holding, and one that forces it at the Stone Age form for a large reward.
+
+**Achievement:** clear the game having held a Stone Age form the whole way.
 
 ---
 
@@ -293,9 +317,8 @@ Roughly 14 months for a team of 4 to 5, with a dedicated technical artist from d
 
 The engine, platform, age count, and lineage count are settled in `FAST_PATH.md`. What remains:
 
-- Forced evolution, or let players lock a favourite form?
 - Tone: Hades is warm and funny. Alegus as written is warm and curious. Does the game stay light through the Age of Wars, or does the tone darken with the history?
-- Early Access from around month ten, or a single finished launch? See `FAST_PATH.md` section 7.
+- Early Access from around month ten, or a single finished launch? Deferred by choice until the vertical slice review. See `FAST_PATH.md` section 7.
 
 ---
 
