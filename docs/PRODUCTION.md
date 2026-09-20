@@ -126,6 +126,29 @@ Keep a single running note of what Edward said in each session. Taste judgements
 
 ---
 
+## 7a. The hardware constraint
+
+The development machine is a **Chromebook**. Claude recommended Godot without
+asking, which was a mistake, and it changes two things.
+
+**Godot will run**, through the ChromeOS Linux environment, on most devices from
+2019 onward. But it runs inside a container with software-assisted graphics, so
+a frame rate measured there says nothing about a Windows target, and the whole
+point of rung 1 was to measure a frame rate.
+
+**A Steam build cannot be produced or tested on it at all.** Not exported, not
+run, not verified on Deck. That is not a Godot limitation; it is true of any
+engine. Shipping to Steam needs a Windows, macOS or Linux machine at some point,
+even if only near the end.
+
+So the real options are in the chat, and the decision is James and Edward's:
+build in the browser and defer the platform question, get a second machine, or
+change the target to a browser release. The browser prototype already runs on
+the Chromebook and now carries the same optimisations and benchmark as the
+Godot port, so rung 1's question can be answered today either way.
+
+---
+
 ## 8. Decisions log
 
 | Decision | Call | Status |
@@ -134,7 +157,7 @@ Keep a single running note of what Edward said in each session. Taste judgements
 | Art production | Authored as code, no image assets. Claude writes it | Decided, and proven by the render test |
 | Art direction | Watercolour, paper puppets, no ink outline, no edge darkening | Decided by Edward from the interactive test |
 | Figure readability | Paper reserve taken from the whole silhouette | Replaces the ink outline |
-| Engine | **Godot 4**, reversing the earlier Unity call | Decided. Premises for Unity both changed |
+| Engine | **Reopened.** Godot was chosen before Claude knew the development machine is a Chromebook | Open. See the hardware note below |
 | Prototyping | Browser sandbox in `tools/render-test`, Godot for real | Decided |
 | Platform | Steam, Windows build, Deck Verified | Confirmed earlier, unchanged |
 | First release scope | The Stone Age alone | Decided |

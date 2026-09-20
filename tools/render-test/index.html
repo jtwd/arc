@@ -137,6 +137,13 @@
   .read dt{color:var(--text-dim)}
   .read dd{margin:0; text-align:right; font-variant-numeric:tabular-nums}
 
+  .bench{
+    margin:0; font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:12px;
+    line-height:1.65; background:var(--panel); border:1px solid var(--line);
+    border-radius:3px; padding:12px 14px; overflow-x:auto; color:var(--text);
+    -webkit-user-select:text; user-select:text; white-space:pre;
+  }
+  .bench b{color:var(--accent); font-weight:500}
   .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:14px}
   .card{border-top:2px solid var(--accent-soft); padding-top:11px}
   .card h3{font-family:"Fraunces",Georgia,serif; font-size:16px; margin:0 0 5px; font-weight:600}
@@ -198,6 +205,7 @@
         <div class="btns">
           <button class="act primary" id="b_wash">Run the age transition</button>
           <button class="act" id="b_wolf">Send in more Frayed</button>
+          <button class="act" id="b_bench">Run benchmark  (B)</button>
           <button class="act" id="b_reset">Reset to Ice Age</button>
         </div>
       </div>
@@ -208,11 +216,15 @@
           <dt>frame</dt><dd id="r_fps">&mdash;</dd>
           <dt>drawn shapes</dt><dd id="r_shapes">&mdash;</dd>
           <dt>attack phase</dt><dd id="r_atk">idle</dd>
+          <dt>world bake</dt><dd id="r_bake">&mdash;</dd>
           <dt>age</dt><dd id="r_age">Stone</dd>
         </dl>
       </div>
     </aside>
   </div>
+
+  <pre class="bench" id="bench">Press B, or the button, to measure where the frame time goes.
+It takes about 15 seconds, then prints a block to send back.</pre>
 
   <footer>
     <h2>What to judge, and what it costs</h2>
@@ -290,6 +302,7 @@
      ground without drawing a line. */
   var opt = { quant:true, ink:false, edge:false, reserve:true, wob:true, paper:true,
               puppet:true, wobAmp:1.5, maskR:60 };
+  var worldOn = true, figuresOn = true;
 
   /* ---------- noise ---------- */
   function hash(n){ var s = Math.sin(n*127.1)*43758.5453; return s - Math.floor(s); }
@@ -457,10 +470,34 @@
   var charCv = document.createElement('canvas'), charCtx = charCv.getContext('2d');
   var haloCv = document.createElement('canvas'), haloCtx = haloCv.getContext('2d');
 
+  /* The world is 80% of the frame's shape work and it is static apart from a
+     slow drift, so it is baked to its own canvas a few times a second rather
+     than rebuilt sixty times. The wobble noise moves at well under 1 Hz, so ten
+     bakes a second is already more than the eye can follow. */
+  var worldCv = document.createElement('canvas'), worldCtx = worldCv.getContext('2d');
+  var bakeHz = 10, bakeAccum = 0, bakes = 0, bakeRate = 0, secAccum = 0, bakeMs = 0;
+
   function sizeBuffers(dpr){
     curDpr = dpr;
     charCv.width = haloCv.width = Math.round(CB*dpr);
     charCv.height = haloCv.height = Math.round(CB*dpr);
+    worldCv.width = Math.round(W*dpr); worldCv.height = Math.round(H*dpr);
+    bakeWorld();
+  }
+
+  function bakeWorld(){
+    var t0 = performance.now();
+    var main = ctx;
+    ctx = worldCtx;
+    worldCtx.setTransform(curDpr,0,0,curDpr,0,0);
+    ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H);
+    maskOn = true;
+    drawGround();
+    for(var i=0;i<scenery.length;i++) drawScenery(scenery[i]);
+    maskOn = false;
+    ctx = main;
+    bakeMs = performance.now() - t0;
+    bakes++;
   }
 
   function blitChar(wx, wy, shadowFn, bodyFn){
@@ -682,10 +719,18 @@
   var touchUI = false, hitPulse = 0;
 
   function step(dt){
+    if(benchI >= 0) benchTick(dt);
     wobT += dt;
+    bakeAccum += dt;
+    if(bakeAccum >= 1/bakeHz){ bakeAccum = 0; bakeWorld(); }
+    secAccum += dt;
+    if(secAccum >= 1){ secAccum = 0; bakeRate = bakes; bakes = 0; }
     /* input */
     var ax = 0, ay = 0;
-    if(stick.on){
+    if(benchI >= 0){
+      /* walk him in a circle so the measurement is of a moving scene */
+      ax = Math.cos(wobT*2); ay = Math.sin(wobT*2);
+    } else if(stick.on){
       var m = Math.hypot(stick.x, stick.y);
       if(m > 0.16){ ax = stick.x/m; ay = stick.y/m; }
     } else {
@@ -751,25 +796,21 @@
   function render(){
     shapeCount = 0;
     ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H);
-    /* the clear radius applies to world-space paint only: the ground settles near
-       Alegus so the play space stays crisp, while the figures keep their drift */
-    maskOn = true;
-    drawGround();
+    if(worldOn) ctx.drawImage(worldCv, 0, 0, W, H);
+    else { ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H); }
 
     var all = [];
-    for(var i=0;i<scenery.length;i++) all.push({y:scenery[i].y, d:scenery[i], k:'s'});
     for(var j=0;j<foes.length;j++) all.push({y:foes[j].y, d:foes[j], k:'f'});
     for(var w=0;w<washes.length;w++) all.push({y:washes[w].y, d:washes[w], k:'w'});
     all.push({y:hero.y, d:hero, k:'h'});
     all.sort(function(a,b){ return a.y-b.y; });
-    for(var n=0;n<all.length;n++){
-      if(all[n].k==='s'){ maskOn = true; drawScenery(all[n].d); }
-      else if(all[n].k==='f'){ maskOn = false; drawFoe(all[n].d); }
-      else if(all[n].k==='w'){ maskOn = false; drawWash(all[n].d); }
-      else { maskOn = false; drawHero(); }
+    if(figuresOn){
+      for(var n=0;n<all.length;n++){
+        if(all[n].k==='f') drawFoe(all[n].d);
+        else if(all[n].k==='w') drawWash(all[n].d);
+        else drawHero();
+      }
     }
-    maskOn = false;
 
     /* the age transition: the whole frame runs, drains to bare paper, then the next
        palette floods in behind it */
@@ -834,10 +875,72 @@
     requestAnimationFrame(loop);
   }
 
+  /* ---------- automatic bisect ----------
+     Turning six switches on and off by hand and writing down numbers is not a
+     reasonable thing to ask of anyone. This does the whole sweep and prints one
+     block to paste back. */
+  var BENCH = [
+    {n:'baseline',    world:1, fig:1, paper:1, res:1, wob:1, quant:1},
+    {n:'world off',   world:0, fig:1, paper:1, res:1, wob:1, quant:1},
+    {n:'figures off', world:1, fig:0, paper:1, res:1, wob:1, quant:1},
+    {n:'paper off',   world:1, fig:1, paper:0, res:1, wob:1, quant:1},
+    {n:'reserve off', world:1, fig:1, paper:1, res:0, wob:1, quant:1},
+    {n:'wobble off',  world:1, fig:1, paper:1, res:1, wob:0, quant:1},
+    {n:'bands off',   world:1, fig:1, paper:1, res:1, wob:1, quant:0},
+    {n:'all off',     world:0, fig:0, paper:0, res:0, wob:0, quant:0}
+  ];
+  var BHOLD = 1.8, BWARM = 0.5;
+  var benchI = -1, benchT = 0, benchF = 0, benchLines = [];
+  var benchEl = document.getElementById('bench');
+
+  function benchApply(c){
+    worldOn = !!c.world; figuresOn = !!c.fig;
+    opt.paper = !!c.paper; opt.reserve = !!c.res; opt.quant = !!c.quant;
+    opt.wob = !!c.wob; opt.wobAmp = c.wob ? 1.5 : 0;
+    bakeWorld();
+  }
+
+  function startBench(){
+    if(benchI >= 0) return;
+    benchLines = []; benchI = 0; benchT = 0; benchF = 0;
+    benchApply(BENCH[0]);
+    benchEl.textContent = 'measuring, about 15 seconds...';
+  }
+
+  function benchTick(dt){
+    benchT += dt;
+    if(benchT > BWARM) benchF++;
+    if(benchT < BHOLD) return;
+    var fps = benchF / (BHOLD - BWARM);
+    var pad = BENCH[benchI].n + '            '.slice(BENCH[benchI].n.length);
+    benchLines.push(pad + ('     ' + fps.toFixed(1)).slice(-6) + ' fps');
+    benchI++; benchT = 0; benchF = 0;
+    if(benchI >= BENCH.length) benchFinish();
+    else benchApply(BENCH[benchI]);
+  }
+
+  function benchFinish(){
+    benchI = -1;
+    benchApply(BENCH[0]);
+    syncControls();
+    var head = 'EPOCH bench  ' + W + 'x' + H + '  dpr ' + curDpr.toFixed(1) +
+               '  bake ' + bakeHz + '/s\n' + navigator.userAgent;
+    benchEl.textContent = head + '\n\n' + benchLines.join('\n');
+  }
+
+  /* put the checkboxes back where the sweep left them */
+  function syncControls(){
+    document.getElementById('p_quant').checked = opt.quant;
+    document.getElementById('p_res').checked = opt.reserve;
+    document.getElementById('p_wob').checked = opt.wob;
+    document.getElementById('p_paper').checked = opt.paper;
+  }
+
   /* ---------- hud + controls ---------- */
   var hudEl = document.getElementById('hud');
   function updateHud(){
     document.getElementById('r_fps').textContent = fps.toFixed(0)+' fps';
+    document.getElementById('r_bake').textContent = bakeMs.toFixed(1)+' ms @ '+bakeRate+'/s';
     document.getElementById('r_shapes').textContent = shapeCount;
     var a = document.getElementById('r_atk');
     a.textContent = hero.atkPhase;
@@ -881,6 +984,7 @@
     palFrom = pal; palTo = (pal===AGES.stone) ? AGES.rivers : AGES.stone;
     wash.on = true; wash.t = 0;
   });
+  document.getElementById('b_bench').addEventListener('click', startBench);
   document.getElementById('b_wolf').addEventListener('click', function(){ spawnFoe(); spawnFoe(); });
   document.getElementById('b_reset').addEventListener('click', function(){
     pal = AGES.stone; palFrom = AGES.stone; palTo = AGES.rivers;
@@ -893,6 +997,7 @@
   var MAP = {ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',
              a:'l',d:'r',w:'u',s:'d',A:'l',D:'r',W:'u',S:'d'};
   window.addEventListener('keydown', function(e){
+    if(e.key==='b' || e.key==='B'){ startBench(); return; }
     if(e.key===' '){ if(hero.atk<0) hero.atk=0; e.preventDefault(); return; }
     var k = MAP[e.key]; if(k){ keys[k]=1; e.preventDefault(); }
   });

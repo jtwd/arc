@@ -72,3 +72,16 @@ prints one block to paste back.
 
 Worth keeping as a rule: when Claude needs information from a human, it should
 cost them one action, not a procedure.
+
+**Second correction.** James is on a **Chromebook**, which Claude never asked
+about before recommending Godot and an engine download. That reopens the engine
+and platform decision, recorded as open in `PRODUCTION.md`.
+
+It also means the "does not hold 60" report was almost certainly about the
+**browser prototype**, since Godot was never installed. The same flaw was in
+both copies, so the world baking, the benchmark and the cheaper geometry are now
+in the browser build as well. The browser build can answer rung 1's question on
+the actual hardware today, with nothing to install.
+
+A rule worth keeping alongside the first: **ask what the machine is before
+recommending a toolchain.**
