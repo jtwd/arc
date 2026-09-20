@@ -113,7 +113,7 @@ Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 Ranked by how much they would hurt.
 
 1. **The watercolour look does not work in motion.** Mitigation: it is milestone 1 and it has a kill criterion. If it fails, fall back to flat-shaded 3D with ink outlines (the Sable approach) and keep the wash events, which work on any base look.
-2. **Runs are too long.** Nine ages is more than Hades' four. Mitigation: room counts are already tuned to 40 total; ages 7 and 8 are three rooms each. If alpha testing shows fatigue, merge Wars and Atoms into one short age.
+2. **Runs are too long.** Nine ages is more than Hades' four. The simulator in `tools/run-sim` put the first draft at 75 minutes per clear; with shorter rooms, shorter bosses, and 36 rooms it is about 49. Mitigation: that tuned set is now the spec. If the alpha 30-run test shows fatigue, merging Wars and Atoms saves about five minutes and cutting to seven ages saves about ten.
 3. **Character art volume.** Six lineages times eight forms is 48 weapon meshes, plus every enemy for nine ages. Mitigation: weapons are socket swaps on one rig, so it is modelling not animation. Enemies share behaviour archetypes across ages and are re-skins of four to five base rigs per archetype. Budget one enemy re-skin at two days.
 4. **Evolution feels like loss.** Mitigation: milestone 3 tests exactly this before anything else is built on it.
 5. **Voice budget.** Roughly 5,500 lines at launch. Mitigation: Alegus's combat barks are the only lines needed for the slice; everything else can be scratch until beta.
@@ -130,6 +130,7 @@ Open decisions, the recommendation, and where the decision is consumed. Update t
 | Engine | Unity URP | Milestone 1 |
 | Target platforms | PC first, Switch decided at alpha | Milestone 1 performance budget |
 | Age count at launch | Nine, with 7 and 8 short | Alpha scope |
+| Full-clear run length | 45 to 50 minutes, 36 rooms | Alpha 30-run test |
 | Threads at launch | One per age | Alpha scope |
 | Forced evolution | Yes | Milestone 3 |
 | Protagonist | Alegus, voiced | Decided |

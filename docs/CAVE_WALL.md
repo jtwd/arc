@@ -50,7 +50,7 @@ Ochre comes from rooms, bosses, and story rooms. Base values before the Red Eart
 | Boss repeat kill | 20 per age | Every time |
 | Run end (death or clear) | 5 per room cleared | Consolation, always |
 
-A typical full run that reaches the Terminus and picks Ochre at roughly a third of doors earns about 500 to 600 Ochre. A slice run that dies at the Mammoth Mother earns about 60 to 90.
+Simulated in `tools/run-sim`: a full clear that picks Ochre at roughly a third of doors earns about 700 to 850 Ochre with repeat boss kills, and about 4,800 if every boss is a first kill. A slice run earns about 40 to 70 whether it dies at the Mammoth Mother or clears, plus 100 on the first kill.
 
 ---
 
@@ -60,21 +60,21 @@ Target: the player should always be able to buy something after a run for the fi
 
 | Runs | Cumulative Ochre (typical) | What is affordable |
 |---|---|---|
-| 1 | 70 | Row 1 rank 1 |
-| 3 | 250 | Rows 1 to 3, one rank each, plus a second rank somewhere |
-| 5 (first boss kill, slice) | 550 | Row 1 full, row 2 dash, row 3 started |
-| 10 | 1,300 | Rows 1 to 5 in progress |
-| 20 | 3,500 | Rows 1 to 6 mostly done; first Key rows opening |
-| 30 | 6,500 | Rows 7 to 9 in progress |
-| 50 | 13,000 | Row 10 and 11 |
-| 80 | 21,000 | Everything |
+| 1 | 45 | Row 1 rank 1 |
+| 3 | 150 | Rows 1 to 3, one rank each |
+| 5 (first boss kill, slice) | 400 | Row 1 full, row 2 dash, row 3 started |
+| 10 | 1,000 | Rows 1 to 5 in progress |
+| 20 | 2,800 | Rows 1 to 6 mostly done; first Key rows opening |
+| 30 | 5,000 | Rows 7 to 9 in progress |
+| 50 | 10,500 | Row 10 and 11 |
+| 80 | 19,000 | Everything but the last ranks of row 12 |
 
-Eighty runs to max the wall is in line with Hades. Anachronism bonuses (not in the slice) add 20 to 50% Ochre per run for players who take them, so a skilled player finishes in roughly 55 runs.
+The curve is built from the simulator's mid and expert profiles, with first-kill bonuses added as ages unlock. Anachronism bonuses (not in the slice) add 20 to 50% Ochre per run for players who take them, so a skilled player maxes the wall in roughly 65 to 80 runs, in line with Hades.
 
 ---
 
 ## 5. Slice tuning
 
-The slice has rows 1 to 3 and a run income of 60 to 90 Ochre. Over ten runs a tester earns roughly 800 and can fill row 1, buy the second dash, and put three ranks into row 3. That is enough to feel progression every run and to make the second dash a visible milestone around run four.
+The slice has rows 1 to 3 and a run income of 40 to 70 Ochre. Over ten runs a tester earns roughly 600 including the first-kill bonus and can fill row 1, buy the second dash, and put several ranks into row 3. That is enough to feel progression every run and to make the second dash a visible milestone around run four.
 
 If testers are maxing all three rows before run eight, halve the elite bonus. If they are not filling row 1 by run four, raise the death consolation to 8 per room.

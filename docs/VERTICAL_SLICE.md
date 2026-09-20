@@ -182,13 +182,13 @@ Alegus adds a handprint to his arm on the first Mammoth Mother kill. This is scr
 
 | Segment | Target time |
 |---|---|
-| Hearth visit | 45 s to 2 min |
-| Rooms 1 to 5 | 7 to 9 min |
-| Mammoth Mother | 3 to 4 min |
-| Re-forge preview and return | 30 s |
-| **Total per run** | **11 to 15 min** |
+| Hearth visit | 45 s to 75 s |
+| Rooms 1 to 5 | 4 to 6 min |
+| Mammoth Mother | 2 to 3 min |
+| Re-forge preview and return | 20 s |
+| **Total per run** | **7 to 9 min** |
 
-Ten runs is roughly two hours. That is the playtest session length.
+These come from `tools/run-sim` with the tight scenario. Ten runs is roughly 75 to 90 minutes. That is the playtest session length.
 
 ---
 

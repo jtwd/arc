@@ -15,7 +15,7 @@ This document is the planning baseline. It is deliberately opinionated so there 
 **Pillars:**
 
 1. **Fast, readable, top-down combat.** Attack, special, cast, dash, call. Every hit has weight. Death comes from being outplayed, never from reading failure. The watercolour look must never cost readability.
-2. **Every run is a full arc through history.** Stone Age to the edge of the future in 30 to 40 minutes. The player always feels the world advancing under their feet.
+2. **Every run is a full arc through history.** Stone Age to the edge of the future in about 45 to 50 minutes. The player always feels the world advancing under their feet.
 3. **Your weapon grows with the world.** The club you start with becomes a mace, then a warhammer, then a trench club. Progression inside a run is visible and physical, not just a stat sheet.
 4. **Death is the story.** Every failed run sends Alegus back to the hub, where the cast reacts to how he died and what he found. Story is delivered in small, frequent doses, fully voiced.
 5. **Builds emerge from Inventions.** The boon system is driven by ideas humanity discovered: Fire, the Wheel, Writing, Gunpowder, the Atom. Combining them is the core creative act of a run.
@@ -71,16 +71,16 @@ Record Alegus in three sessions: combat barks and reactions first (needed for th
 
 A run is a fixed sequence of **Ages** (biomes). Each age has one or more **Threads**: regional variants of that age with their own palette, enemy roster, and boss. On any given run the Cartographer's map shows which thread each age is on. Threads are how the game covers a lot of history without making runs longer.
 
-Room counts are tuned so a full run is about 40 rooms, in line with Hades.
+Room counts are tuned to 36 rooms and a full clear of about 45 to 50 minutes. That is longer than Hades because there are nine bosses instead of four; the simulator in `tools/run-sim` is the source for these numbers and should be re-run whenever room counts or boss timings change.
 
 | # | Age | Rooms | Threads (region variants) | Boss per thread |
 |---|---|---|---|---|
 | 1 | **Stone Age** | 6 | Ice Age tundra; First villages (Çatalhöyük-style) | The Mammoth Mother; The Harvest Idol |
-| 2 | **Age of Rivers** (Bronze) | 6 | Egypt; Mesopotamia; Indus | The Sphinx of Sand; The Bull of Heaven; The Unnamed King |
-| 3 | **Age of Empires** (Iron and Classical) | 6 | Greece; Rome; Han China; Persia | The Strategos; The Legate; The Jade General; The Immortal |
-| 4 | **Age of Faith and Steel** (Medieval) | 6 | Crusader Europe; Viking North; Mongol Steppe; Sengoku Japan | The Hollow Knight; The Draugr Jarl; The Khan's Shadow; The Masterless |
-| 5 | **Age of Sail** (Renaissance, Exploration, Gunpowder) | 5 | Venice; Caribbean; Ottoman siege | The Doge's Automaton; The Admiral; The Bombard |
-| 6 | **Age of Revolution** (Enlightenment, Napoleonic, Industrial) | 5 | Paris barricades; Foundry city; American frontier | The Marshal; The Furnace; The Marshal of Iron Rails |
+| 2 | **Age of Rivers** (Bronze) | 5 | Egypt; Mesopotamia; Indus | The Sphinx of Sand; The Bull of Heaven; The Unnamed King |
+| 3 | **Age of Empires** (Iron and Classical) | 5 | Greece; Rome; Han China; Persia | The Strategos; The Legate; The Jade General; The Immortal |
+| 4 | **Age of Faith and Steel** (Medieval) | 5 | Crusader Europe; Viking North; Mongol Steppe; Sengoku Japan | The Hollow Knight; The Draugr Jarl; The Khan's Shadow; The Masterless |
+| 5 | **Age of Sail** (Renaissance, Exploration, Gunpowder) | 4 | Venice; Caribbean; Ottoman siege | The Doge's Automaton; The Admiral; The Bombard |
+| 6 | **Age of Revolution** (Enlightenment, Napoleonic, Industrial) | 4 | Paris barricades; Foundry city; American frontier | The Marshal; The Furnace; The Marshal of Iron Rails |
 | 7 | **Age of Wars** (1914 to 1945) | 3 | Trenches; Bombed city | The Landship (tank); The Siren (air raid gauntlet) |
 | 8 | **Age of Atoms and Stars** (Cold War, space, digital) | 3 | Silo; Launch pad; Server hall | Countdown gauntlet, no single boss |
 | 9 | **Terminus** | 1 | A white room with every age layered on top of each other | The Terminus, three-phase final boss |
@@ -94,6 +94,8 @@ Rules:
 - **Room types**, shared across ages and re-skinned: combat, elite combat, mini-boss, shop, Invention altar, fountain (heal), a story room with a cast member, and a challenge room (survive, escort, break the objects).
 - **Door choice** shows the reward type ahead, exactly as Hades does. This is the main strategic decision loop and should be copied faithfully.
 - **Age transitions** are a short scripted moment: the Loom re-forges Alegus's weapon on screen, the watercolour of the current age runs and bleeds into the palette of the next, the Firekeeper says one line, and Alegus reacts. This is the payoff moment for pillar 3 and should get real animation budget.
+
+**Decision:** Run length. Even with short rooms and short bosses, nine ages puts a full clear near 50 minutes. Merging Wars and Atoms into one age saves about five minutes; cutting to seven ages saves about ten. Recommend shipping nine and revisiting after the alpha 30-run test.
 
 **Decision:** Nine ages with 20-odd threads is a big game. The launch scope recommendation is **one thread per age** (nine bosses), with second and third threads as the post-launch content plan. See section 12.
 
@@ -291,7 +293,7 @@ Total roughly 20 to 22 months for a team of 4 to 6, with a dedicated technical a
 
 ## 11. Open questions
 
-- Nine ages at launch, or ship with seven (drop Wars and Atoms into a single short gauntlet) and add them later?
+- Nine ages at launch at roughly 50 minutes per clear, or seven at roughly 40?
 - Forced evolution, or let players lock a favourite form?
 - Unity or Godot.
 - Target platform: PC first, or PC and Switch together? Switch affects how heavy the post-process stack can be.
