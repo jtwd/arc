@@ -166,16 +166,16 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; rung 2 &middot; character design pass</p>
-    <h1>Faces, and what the Frayed lost</h1>
-    <p>Alegus has a brow, an eye that blinks, a nose and a mouth, and they change with what he is doing. The Frayed do not: an eye is a hole where an eye was and a mouth is the shape of one, which is the bible rather than a shortcut. Arrows move, <b>space</b> swings, <b>shift</b> dashes. The model sheet below the play area shows all four at nearly twice game size.</p>
+    <p class="eyebrow">EPOCH &middot; rung 3 &middot; a run</p>
+    <h1>Six rooms, and a choice at every door</h1>
+    <p>Clear a room and two or three doors rise, each showing what is behind it before you commit. That choice is the strategic loop of the whole game. Five layouts rotate and each changes how the fight works rather than how it looks: a crevasse that costs you fifteen health, tar that slows everything in it, ice that makes the dash overshoot, pillars that a charging boar will knock itself out on.</p>
   </header>
 
   <div class="rig">
     <div class="stage">
       <canvas id="c" width="960" height="600" aria-label="Interactive render test: a paper-puppet figure in a watercolour Ice Age scene"></canvas>
       <div class="hud" id="hud"></div>
-      <div class="hint" id="hint">arrows move &middot; space attack &middot; shift dash</div>
+      <div class="hint" id="hint">arrows move &middot; space attack &middot; shift dash &middot; walk into a door</div>
     </div>
 
     <aside>
@@ -219,7 +219,8 @@
         <button class="act" id="b_boar">Send a boar</button>
         <button class="act" id="b_hunter">Send a hunter</button>
           <button class="act" id="b_bench">Run benchmark  (B)</button>
-          <button class="act" id="b_reset">Reset to Ice Age</button>
+          <button class="act" id="b_skip">Clear the room</button>
+        <button class="act" id="b_reset">Start a new run</button>
         </div>
       </div>
 
@@ -230,6 +231,7 @@
           <dt>drawn shapes</dt><dd id="r_shapes">&mdash;</dd>
           <dt>attack phase</dt><dd id="r_atk">idle</dd>
           <dt>world bake</dt><dd id="r_bake">&mdash;</dd>
+          <dt>room</dt><dd id="r_room">&mdash;</dd>
           <dt>age</dt><dd id="r_age">Stone</dd>
         </dl>
       </div>
@@ -258,8 +260,12 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. If you cannot tell them apart at a glance, the silhouettes are wrong.</p>
       </div>
       <div class="card">
-        <h3>Does the club land?</h3>
-        <p>A hit now holds the whole frame for a few hundredths of a second and squashes whatever it hit. Nothing else in a melee game buys as much weight for as little work. If it feels mushy, that number is one line.</p>
+        <h3>Do the rooms play differently?</h3>
+        <p>If you fight the same way in the tar pit as on the ice shelf, the layouts are decoration and I will make them sharper. Bait a charging boar into a pillar and see whether that reads as your idea or as luck.</p>
+      </div>
+      <div class="card">
+        <h3>Is the door choice interesting?</h3>
+        <p>Right now it is ochre, a heal, or an idea that does not exist yet. Even so: do you ever want both doors? If the choice is obvious every time, the rewards need to be less comparable.</p>
       </div>
       <div class="card">
         <h3>Can you close on a hunter?</h3>
@@ -515,10 +521,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.hp = hero.maxHp; hero.dead = 0; hero.hurt = 0;
     hero.atk = -1; hero.dash = -1; hero.hitThisSwing = false;
     hero.gait = 0; hero.hairA = 0; hero.hairV = 0; hero.lean = 0;
-    hitStop = 0;
-    hero.x = W*0.42; hero.y = H*0.72;
-    foes = []; shots = []; tells = []; kills = 0;
-    spawnFoe('wolf'); spawnFoe('wolf'); spawnFoe('boar');
+    hitStop = 0; kills = 0;
+    run.ochre = 0; run.over = 0; run.layout = null;
+    floats = []; roomWash.on = false;
+    enterRoom(1);
   }
 
   function buildScenery(){
@@ -556,7 +562,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
                 seed: Math.floor(Math.random()*900)+40,
                 state:'approach', timer: Math.random()*1.4, cool:0 });
   }
-  spawnFoe('wolf'); spawnFoe('wolf'); spawnFoe('boar');
+
 
   /* Each kind teaches one thing, and the behaviour is the lesson.
      Wolf: flanks, so keep moving and use knockback to reset the pack.
@@ -566,6 +572,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
            so it has to be closed on. */
   function stepFoe(g, dt){
     var k = KINDS[g.kind];
+    /* tar slows them as readily as it slows you, which is the whole point of
+       having it in the room */
+    var slow = zoneAt(g.x, g.y, 'tar') ? 0.45 : 1;
     if(g.flash > 0) g.flash -= dt;
     if(g.squash > 0) g.squash -= dt*6;
     g.step += dt * (g.state === 'charge' ? 26 : 11);
@@ -579,15 +588,15 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       var want = 96;
       var push = (dd > want ? 1 : -0.55) * (g.timer > 0 ? 0.25 : 1);
       var tang = g.seed % 2 ? 1 : -1;
-      g.x += ((dx/dd)*push*k.speed + (-dy/dd)*tang*30) * dt;
-      g.y += ((dy/dd)*push*k.speed + ( dx/dd)*tang*30) * dt;
+      g.x += ((dx/dd)*push*k.speed*slow + (-dy/dd)*tang*30*slow) * dt;
+      g.y += ((dy/dd)*push*k.speed*slow + ( dx/dd)*tang*30*slow) * dt;
       if(g.timer < -3) g.timer = 1.2;
       if(dd < k.reach + 24 && g.cool <= 0){ hurtHero(k.dmg); g.cool = 1.1; }
 
     } else if(g.kind === 'boar'){
       if(g.state === 'approach'){
-        g.x += (dx/dd) * k.speed * dt;
-        g.y += (dy/dd) * k.speed * dt;
+        g.x += (dx/dd) * k.speed * slow * dt;
+        g.y += (dy/dd) * k.speed * slow * dt;
         if(dd < 300 && g.cool <= 0){
           g.state = 'wind'; g.timer = 0.8;
           g.aimX = dx/dd; g.aimY = dy/dd;
@@ -601,9 +610,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         if(g.timer <= 0){ g.state = 'charge'; g.timer = 1.1; }
       } else if(g.state === 'charge'){
         g.timer -= dt;
-        var nx = g.x + g.aimX * 560 * dt;
-        var ny = g.y + g.aimY * 560 * dt;
+        var nx = g.x + g.aimX * 560 * slow * dt;
+        var ny = g.y + g.aimY * 560 * slow * dt;
         var wall = nx < 40 || nx > W-40 || ny < GND_TOP+24 || ny > H-16;
+        /* a pillar works exactly like the arena wall, so a room with cover
+           hands you the punish window rather than hiding it */
+        for(var ob=0; ob<obstacles.length; ob++){
+          if(obstacles[ob].k === 'rock' && inZone(
+              {x:obstacles[ob].x, y:obstacles[ob].y,
+               rx:obstacles[ob].rx+16, ry:obstacles[ob].ry+16}, nx, ny)) wall = true;
+        }
         g.x = Math.max(40, Math.min(W-40, nx));
         g.y = Math.max(GND_TOP+24, Math.min(H-16, ny));
         if(dd < k.reach + 26 && g.cool <= 0){ hurtHero(k.dmg); g.cool = 0.8; }
@@ -617,8 +633,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       /* hunter: hold 150 to 230, retreat when crowded, throw on a timer */
       var band = dd < 150 ? -1 : (dd > 230 ? 1 : 0);
       if(g.state !== 'throw'){
-        g.x += (dx/dd) * band * k.speed * dt;
-        g.y += (dy/dd) * band * k.speed * dt;
+        g.x += (dx/dd) * band * k.speed * slow * dt;
+        g.y += (dy/dd) * band * k.speed * slow * dt;
         if(g.cool <= 0 && dd < 420){
           g.state = 'aim'; g.timer = 0.55;
           tell('mark', hero.x, hero.y, 0, 34, 0.55);
@@ -642,6 +658,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     g.x = Math.max(24, Math.min(W-24, g.x));
     g.y = Math.max(GND_TOP+20, Math.min(H-12, g.y));
+    if(g.state !== 'charge') pushOutOfRocks(g, 15);
   }
 
 
@@ -760,6 +777,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     maskOn = true;
     drawGround();
     for(var i=0;i<scenery.length;i++) drawScenery(scenery[i]);
+    drawObstacles();
     maskOn = false;
     ctx = main;
     bakeMs = performance.now() - t0;
@@ -1264,6 +1282,90 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     ctx.globalAlpha = 1;
   }
 
+
+  /* Obstacles are baked into the world with the ground, because they do not
+     move. A rock is cover, tar is a slow, ice overshoots a dash and a crevasse
+     costs fifteen health. Each is painted so you can tell which is which
+     without a legend. */
+  function drawObstacles(){
+    for(var i=0;i<obstacles.length;i++){
+      var o = obstacles[i];
+      if(o.k === 'rock'){
+        ctx.globalAlpha = 0.14; ctx.fillStyle = pal.inkc;
+        trace(blob(o.x, o.y + o.ry*0.55, o.rx*1.02, o.ry*0.42, 9, o.x)); ctx.fill();
+        ctx.globalAlpha = 1;
+        paint(blob(o.x, o.y, o.rx, o.ry, 10, o.x*1.3), pal.rock, pal.rockSh,
+          {seed:o.x+1, ink:false, edgeW:7});
+      } else if(o.k === 'tar'){
+        paint(blob(o.x, o.y, o.rx, o.ry, 13, o.x), '#3B3228', '#221A12',
+          {seed:o.x, ink:false, edgeW:10});
+      } else if(o.k === 'ice'){
+        paint(blob(o.x, o.y, o.rx, o.ry, 13, o.x), '#E3EEF4', '#BCD4E2',
+          {seed:o.x, ink:false, edgeW:10});
+      } else if(o.k === 'gap'){
+        paint(blob(o.x, o.y, o.rx, o.ry, 15, o.x), '#4E5E6B', '#26313A',
+          {seed:o.x, ink:false, edgeW:10});
+      }
+    }
+  }
+
+  /* Standing stones. You always see the reward before you commit, which is the
+     strategic loop of the whole game. */
+  function doorSymbol(kind, k){
+    if(kind === 'ochre'){
+      paint(blob(0,0,9,9,8,3), pal.glow, pal.hideSh, {seed:3, ink:false, edgeW:3});
+    } else if(kind === 'heal'){
+      paint([[0,-11],[7,1],[3,8],[-3,8],[-7,1]], '#6FA894', '#3F7463',
+        {seed:4, ink:false, edgeW:3});
+    } else if(kind === 'idea'){
+      paint(blob(0,0,10,10,9,5), '#D9883D', '#8A4F1E', {seed:5, ink:false, edgeW:3});
+      paintFine(blob(0,0,4.5,4.5,8,6), pal.paper, 6, 0.9);
+      paintFine(blob(3,-1,2,2,7,7), '#8A4F1E', 7, 0.9);
+    } else {
+      paint([[-9,4],[0,-9],[9,4],[3,4],[3,10],[-3,10],[-3,4]], pal.stoneW, pal.stoneWSh,
+        {seed:8, ink:false, edgeW:3});
+    }
+  }
+
+  function drawDoors(){
+    for(var i=0;i<run.doors.length;i++){
+      var d = run.doors[i];
+      var k = d.t, lift = (1-k)*16;
+      ctx.save();
+      ctx.globalAlpha = k;
+      ctx.translate(d.x, d.y + lift);
+      ctx.globalAlpha = k*0.3; ctx.fillStyle = pal.inkc;
+      trace(blob(0, 4, 34, 9, 9, i)); ctx.fill();
+      ctx.globalAlpha = k;
+      paint([[-13,-52],[-27,-56],[-30,2],[-16,2]], pal.rock, pal.rockSh,
+        {seed:i*7+1, ink:false, edgeW:6});
+      paint([[13,-54],[27,-58],[30,2],[16,2]], pal.rock, pal.rockSh,
+        {seed:i*7+2, ink:false, edgeW:6});
+      paint([[-31,-54],[31,-56],[29,-70],[-29,-68]], pal.rock, pal.rockSh,
+        {seed:i*7+3, ink:false, edgeW:6});
+      ctx.globalAlpha = k*0.55; ctx.fillStyle = pal.inkc;
+      trace(blob(0, -26, 12, 26, 9, i+40)); ctx.fill();
+      ctx.globalAlpha = k;
+      ctx.translate(0, -92 - Math.sin(wobT*1.8 + i)*3);
+      doorSymbol(d.kind, k);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawFloats(){
+    ctx.textAlign = 'center';
+    for(var i=0;i<floats.length;i++){
+      var f = floats[i], k = f.t/1.6;
+      ctx.globalAlpha = Math.min(1, (1-k)*2.2);
+      ctx.fillStyle = f.col;
+      ctx.font = '600 19px Fraunces, Georgia, serif';
+      ctx.fillText(f.txt, f.x, f.y - k*26);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+  }
+
   /* A telegraph is the promise the game makes before it hits you. Hard edges,
      no wobble, no paint: the one place in the whole look that is allowed to be
      a flat graphic, because a telegraph you have to squint at is a cheat. */
@@ -1308,6 +1410,36 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ctx.fillRect(0, 0, W, H);
       ctx.globalAlpha = 1;
     }
+    ctx.fillStyle = pal.inkc;
+    ctx.globalAlpha = 0.62;
+    ctx.font = '500 12px "IBM Plex Mono", monospace';
+    ctx.fillText('room ' + run.room + ' / ' + run.rooms +
+      (run.layout ? '   ' + run.layout.name.toLowerCase() : ''), 14, 40);
+    ctx.fillText('ochre ' + run.ochre, 14, 56);
+    ctx.globalAlpha = 1;
+
+    if(run.state === 'cleared' && run.clearT < 1.6){
+      ctx.globalAlpha = Math.min(1, run.clearT*3) * Math.max(0, 1-(run.clearT-1.1)/0.5);
+      ctx.fillStyle = pal.inkc;
+      ctx.textAlign = 'center';
+      ctx.font = '600 22px Fraunces, Georgia, serif';
+      ctx.fillText(run.room >= run.rooms ? 'The way out' : 'Choose a door', W/2, GND_TOP - 18);
+      ctx.textAlign = 'left';
+      ctx.globalAlpha = 1;
+    }
+
+    if(run.state === 'done'){
+      ctx.globalAlpha = 0.68; ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha = 1; ctx.fillStyle = pal.inkc;
+      ctx.textAlign = 'center';
+      ctx.font = '600 38px Fraunces, Georgia, serif';
+      ctx.fillText('Six rooms. Out the other side.', W/2, H/2 - 6);
+      ctx.font = '400 15px "IBM Plex Mono", monospace';
+      ctx.globalAlpha = 0.6;
+      ctx.fillText(kills + ' Frayed  ·  ' + run.ochre + ' ochre', W/2, H/2 + 26);
+      ctx.globalAlpha = 1; ctx.textAlign = 'left';
+    }
+
     if(hero.dead > 0){
       ctx.globalAlpha = 0.62; ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H);
       ctx.globalAlpha = 1; ctx.fillStyle = pal.inkc;
@@ -1316,7 +1448,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ctx.fillText('Oh. Again, then.', W/2, H/2 - 6);
       ctx.font = '400 15px "IBM Plex Mono", monospace';
       ctx.globalAlpha = 0.6;
-      ctx.fillText(kills + ' Frayed', W/2, H/2 + 26);
+      ctx.fillText('room ' + run.room + '  ·  ' + kills + ' Frayed  ·  ' +
+        run.ochre + ' ochre', W/2, H/2 + 26);
       ctx.globalAlpha = 1;
       ctx.textAlign = 'left';
     }
@@ -1365,17 +1498,27 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(hero.dash >= 0){
       hero.dash += dt*60;
       if(hero.dash >= 4 && hero.dash < 14){
-        hero.x += hero.dashX * 640 * dt;
-        hero.y += hero.dashY * 640 * dt;
+        /* ice is the one place the dash overshoots, which is the room's lesson */
+        var ds = zoneAt(hero.x, hero.y, 'ice') ? 980 : 640;
+        hero.x += hero.dashX * ds * dt;
+        hero.y += hero.dashY * ds * dt;
       }
       if(hero.dash > 20) hero.dash = -1;
       ax = 0; ay = 0;
     }
 
     var spd = (hero.atk>=0) ? 40 : 240;
+    if(zoneAt(hero.x, hero.y, 'tar')) spd *= 0.45;
     hero.vx = ax*spd; hero.vy = ay*spd;
     hero.x = Math.max(28, Math.min(W-28, hero.x + hero.vx*dt));
     hero.y = Math.max(GND_TOP+24, Math.min(H-16, hero.y + hero.vy*dt));
+    pushOutOfRocks(hero, 13);
+    /* the crevasse costs health and puts you back on the edge you came from */
+    var gap = zoneAt(hero.x, hero.y, 'gap');
+    if(gap && hero.dash < 0 && hero.dead <= 0){
+      hurtHero(15);
+      hero.y = hero.y < gap.y ? gap.y - gap.ry - 14 : gap.y + gap.ry + 14;
+    }
     if(ax) hero.face = ax>0?1:-1;
     hero.moving = (Math.abs(hero.vx)+Math.abs(hero.vy)) > 6;
     if(hero.moving) hero.step += dt*9;
@@ -1434,7 +1577,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     }
 
     for(var j=0;j<foes.length;j++) stepFoe(foes[j], dt);
-    if(foes.length < 2 && Math.random() < dt*0.5) spawnFoe();
+    stepRun(dt);
 
     for(var s=shots.length-1;s>=0;s--){
       var sh=shots[s];
@@ -1467,6 +1610,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(worldOn) ctx.drawImage(worldCv, 0, 0, W, H);
     else { ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H); }
 
+    if(run.state === 'cleared') drawDoors();
     drawTells();
 
     var all = [];
@@ -1483,6 +1627,18 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     }
 
     if(figuresOn) drawShots();
+    drawFloats();
+
+    /* the same wash as the age transition, run short. A door is a small
+       version of the thing the whole run is built around. */
+    if(roomWash.on){
+      var rp = roomWash.t/roomWash.dur;
+      var rk = rp < 0.5 ? rp/0.5 : 1 - (rp-0.5)/0.5;
+      ctx.fillStyle = pal.paper;
+      ctx.beginPath(); ctx.moveTo(0,-90);
+      for(var rx=0; rx<=W; rx+=12) ctx.lineTo(rx, washEdgeY(rx, rk));
+      ctx.lineTo(W,-90); ctx.closePath(); ctx.fill();
+    }
 
     /* the age transition: the whole frame runs, drains to bare paper, then the next
        palette floods in behind it */
@@ -1556,6 +1712,202 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     requestAnimationFrame(loop);
   }
 
+
+  /* ------------------------------------------------------------------
+     THE RUN
+
+     Six rooms, then out. A room is a layout, a roster and a door choice, and
+     the door choice is the strategic loop of the whole game: you always see
+     what is behind a door before you commit, per GAME_DESIGN.md section 3.
+
+     Layouts are from VERTICAL_SLICE.md section 4 and each one changes how the
+     fight works rather than how it looks. A room that is only a repaint is not
+     a room.
+     ------------------------------------------------------------------ */
+
+  var run = {
+    room: 1, rooms: 6, state: 'fight', clearT: 0,
+    ochre: 0, layout: null, doors: [], over: 0
+  };
+  var obstacles = [];
+  var floats = [];
+  var roomWash = { on:false, t:0, dur:0.95, half:false };
+
+  var LAYOUTS = [
+    { id:'kill',   name:'Kill site',
+      note:'open, one piece of cover',
+      build:function(){
+        obstacles.push({k:'rock', x:W*0.5, y:H*0.68, rx:78, ry:30});
+      } },
+    { id:'shelf',  name:'Ice shelf',
+      note:'a crevasse down one side',
+      build:function(){
+        obstacles.push({k:'gap', x:W*0.5, y:H*0.52, rx:330, ry:26});
+      } },
+    { id:'hollow', name:'Snow hollow',
+      note:'three pillars break every sightline',
+      build:function(){
+        obstacles.push({k:'rock', x:W*0.30, y:H*0.60, rx:34, ry:24});
+        obstacles.push({k:'rock', x:W*0.58, y:H*0.80, rx:36, ry:26});
+        obstacles.push({k:'rock', x:W*0.76, y:H*0.55, rx:32, ry:22});
+      } },
+    { id:'river',  name:'Frozen river',
+      note:'the dash carries much further on ice',
+      build:function(){
+        obstacles.push({k:'ice', x:W*0.5, y:H*0.72, rx:300, ry:78});
+      } },
+    { id:'tar',    name:'Tar pit',
+      note:'anything in the tar is slowed, including them',
+      build:function(){
+        obstacles.push({k:'tar', x:W*0.5, y:H*0.70, rx:120, ry:52});
+      } }
+  ];
+
+  var REWARDS = {
+    ochre: { label:'ochre',   sym:'dot'   },
+    heal:  { label:'spring',  sym:'drop'  },
+    idea:  { label:'an idea', sym:'spiral'}
+  };
+
+  function inZone(o, x, y){
+    var dx = (x-o.x)/o.rx, dy = (y-o.y)/o.ry;
+    return dx*dx + dy*dy < 1;
+  }
+
+  function zoneAt(x, y, kind){
+    for(var i=0;i<obstacles.length;i++){
+      if(obstacles[i].k === kind && inZone(obstacles[i], x, y)) return obstacles[i];
+    }
+    return null;
+  }
+
+  /* rocks are solid for everything, so they are cover for you and for them */
+  function pushOutOfRocks(e, pad){
+    for(var i=0;i<obstacles.length;i++){
+      var o = obstacles[i];
+      if(o.k !== 'rock') continue;
+      var rx = o.rx + pad, ry = o.ry + pad;
+      var dx = (e.x-o.x)/rx, dy = (e.y-o.y)/ry;
+      var d = Math.hypot(dx, dy);
+      if(d < 1 && d > 0.0001){
+        e.x = o.x + (dx/d)*rx;
+        e.y = o.y + (dy/d)*ry;
+      }
+    }
+  }
+
+  function floatText(x, y, txt, col){
+    floats.push({x:x, y:y, t:0, txt:txt, col:col || pal.inkc});
+  }
+
+  function enterRoom(n){
+    run.room = n;
+    run.state = 'fight';
+    run.clearT = 0;
+    run.doors = [];
+    obstacles = [];
+    foes = []; shots = []; tells = []; washes = [];
+
+    /* never the same layout twice running, so a run never feels like a corridor */
+    var pick;
+    do { pick = LAYOUTS[Math.floor(Math.random()*LAYOUTS.length)]; }
+    while(run.layout && pick.id === run.layout.id && LAYOUTS.length > 1);
+    run.layout = pick;
+    pick.build();
+
+    buildScenery();
+    bakeWorld();
+
+    hero.x = W*0.5; hero.y = H*0.88;
+
+    /* the roster thickens as the run goes on */
+    var budget = 2 + Math.floor(n*0.9);
+    while(budget > 0){
+      var r = Math.random();
+      if(budget >= 3 && r < 0.35){ spawnFoe('boar'); budget -= 3; }
+      else if(budget >= 2 && r < 0.62){ spawnFoe('hunter'); budget -= 2; }
+      else { spawnFoe('wolf'); budget -= 1; }
+    }
+    floatText(W*0.5, H*0.46, pick.name, pal.inkc);
+  }
+
+  function makeDoors(){
+    var kinds = ['ochre','heal','idea'];
+    var n = run.room >= run.rooms ? 1 : (Math.random() < 0.35 ? 3 : 2);
+    var xs = n === 1 ? [W*0.5] : (n === 2 ? [W*0.34, W*0.66] : [W*0.24, W*0.5, W*0.76]);
+    run.doors = [];
+    for(var i=0;i<n;i++){
+      run.doors.push({
+        x: xs[i], y: GND_TOP + 34,
+        kind: run.room >= run.rooms ? 'out' : kinds[Math.floor(Math.random()*kinds.length)],
+        t: 0
+      });
+    }
+  }
+
+  function takeDoor(d){
+    if(run.state !== 'cleared') return;
+    run.state = 'leaving';
+    roomWash.on = true; roomWash.t = 0; roomWash.half = false;
+    run.pending = d.kind;
+  }
+
+  function applyReward(kind){
+    if(kind === 'ochre'){
+      var amt = 14 + Math.floor(Math.random()*12) + run.room*2;
+      run.ochre += amt;
+      floatText(hero.x, hero.y-70, '+' + amt + ' ochre', pal.glow);
+    } else if(kind === 'heal'){
+      var h = Math.min(hero.maxHp - hero.hp, Math.round(hero.maxHp*0.3));
+      hero.hp += h;
+      floatText(hero.x, hero.y-70, '+' + h, '#4E7A45');
+    } else if(kind === 'idea'){
+      floatText(hero.x, hero.y-70, 'an idea, not yet', pal.inkc);
+    }
+  }
+
+  function stepRun(dt){
+    for(var i=floats.length-1;i>=0;i--){
+      floats[i].t += dt;
+      if(floats[i].t > 1.6) floats.splice(i,1);
+    }
+
+    if(run.over > 0){
+      run.over -= dt;
+      if(run.over <= 0) resetRun();
+      return;
+    }
+
+    if(run.state === 'fight' && foes.length === 0 && hero.dead <= 0){
+      run.state = 'cleared';
+      run.clearT = 0;
+      makeDoors();
+    }
+    if(run.state === 'cleared'){
+      run.clearT += dt;
+      for(var d=0;d<run.doors.length;d++){
+        var dr = run.doors[d];
+        dr.t = Math.min(1, dr.t + dt*2.4);
+        if(run.clearT > 0.5 &&
+           Math.hypot(hero.x-dr.x, (hero.y-dr.y)*1.5) < 46) takeDoor(dr);
+      }
+    }
+    if(roomWash.on){
+      roomWash.t += dt;
+      if(roomWash.t > roomWash.dur*0.5 && !roomWash.half){
+        roomWash.half = true;
+        if(run.pending === 'out'){
+          run.over = 3.0;
+          run.state = 'done';
+        } else {
+          enterRoom(run.room + 1);
+          applyReward(run.pending);
+        }
+      }
+      if(roomWash.t > roomWash.dur) roomWash.on = false;
+    }
+  }
+
   /* ---------- automatic bisect ----------
      Turning six switches on and off by hand and writing down numbers is not a
      reasonable thing to ask of anyone. This does the whole sweep and prints one
@@ -1622,6 +1974,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   function updateHud(){
     document.getElementById('r_fps').textContent = fps.toFixed(0)+' fps';
     document.getElementById('r_bake').textContent = bakeMs.toFixed(1)+' ms @ '+bakeRate+'/s';
+    document.getElementById('r_room').textContent = run.room + '/' + run.rooms +
+      (run.layout ? ' ' + run.layout.id : '');
     document.getElementById('r_shapes').textContent = shapeCount;
     var a = document.getElementById('r_atk');
     a.textContent = hero.atkPhase;
@@ -1675,13 +2029,20 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     wash.on = true; wash.t = 0;
   });
   document.getElementById('b_bench').addEventListener('click', startBench);
+  document.getElementById('b_skip').addEventListener('click', function(){
+    for(var i=foes.length-1;i>=0;i--){
+      washes.push({x:foes[i].x, y:foes[i].y, t:0, dur:0.75,
+                   seed:foes[i].seed, base:pal.foe, sh:pal.foeSh});
+    }
+    foes = [];
+  });
   document.getElementById('b_wolf').addEventListener('click', function(){ spawnFoe('wolf'); spawnFoe('wolf'); });
   document.getElementById('b_boar').addEventListener('click', function(){ spawnFoe('boar'); });
   document.getElementById('b_hunter').addEventListener('click', function(){ spawnFoe('hunter'); });
   document.getElementById('b_reset').addEventListener('click', function(){
     pal = AGES.stone; palFrom = AGES.stone; palTo = AGES.rivers;
-    washes = []; wash.on = false;
-    buildScenery(); bakeWorld(); resetRun();
+    wash.on = false;
+    resetRun();
     document.getElementById('r_age').textContent = 'Stone';
   });
 
@@ -1768,6 +2129,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   fit();
 
   if(reduce){ opt.wob = false; document.getElementById('p_wob').checked = false; }
+  enterRoom(1);
   updateHud();
   requestAnimationFrame(loop);
 })();

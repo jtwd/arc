@@ -142,3 +142,32 @@ area so the design can be judged at all, and noted that a 1920 by 1080 shipping
 resolution doubles every face.
 
 **Edward's call:** *(to fill in)*
+
+---
+
+## Rung 3, a run
+
+**Built:** six rooms, a door choice after each, and five layouts on rotation.
+
+The door choice is the strategic loop of the whole game, so it is built the way
+`GAME_DESIGN.md` section 3 specifies: two or three doors rise when a room
+clears, each showing what is behind it before you commit. Ochre, a heal, or an
+idea, which does nothing yet because Inventions are rung 4 and it says so.
+
+**Layouts change how the fight works, not how it looks**, which is the test of
+whether a room is a room or a repaint:
+
+| Layout | What it does |
+|---|---|
+| Kill site | One piece of cover in the open |
+| Ice shelf | A crevasse costing 15 health and putting you back on the edge |
+| Snow hollow | Three pillars, and a charging boar knocks itself out on them |
+| Frozen river | The dash overshoots badly on ice |
+| Tar pit | Everything inside is slowed, them included |
+
+The boar knocking itself out on a pillar was worth the wiring: it means a room
+with cover hands you the punish window rather than hiding it.
+
+**Wanted:** whether the rooms genuinely play differently, and whether the door
+choice is ever hard. If it is obvious every time, the rewards are too
+comparable and need changing.
