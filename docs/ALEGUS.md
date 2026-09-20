@@ -56,7 +56,7 @@ The ending is quiet. No throne, no reunion. He gets what he wanted in run one, t
 - Combat barks are breath-first: grunts, exhales, and half-words before full lines.
 - Never shouts a full sentence. If a line needs volume, it is a single word.
 
-**Session plan:**
+**Session plan.** Two sessions at launch scope rather than three; the line counts in the table above are for the full nine-age design and the launch figures are in `CAST.md` section 5.
 
 | Session | Content | Needed by |
 |---|---|---|

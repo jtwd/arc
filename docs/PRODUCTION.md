@@ -15,7 +15,7 @@ Minimum team to hit the launch scope in `FAST_PATH.md` in roughly 14 months:
 | Systems programmer | 1 | Hub, meta progression, save, UI, platform. Can be shared with gameplay until alpha. |
 | 3D artist | 1 | Environments and props. Concept work up front, then production. |
 | Character artist and animator | 1 | Alegus, three lineages at five forms, all enemies and bosses. The largest single content load; see risk 3. |
-| Designer and writer | 1 | Levels, encounter tuning, all dialogue, boss design. The role that owns `ALEGUS.md`. |
+| Designer and writer | 1 | Levels, encounter tuning, all dialogue, boss design. Owns `ALEGUS.md`, `CAST.md`, `TONE.md` and `ROOMS.md`. Roughly 4,400 lines at launch, and Wren should be written early even though she records late. |
 | Composer and sound | contract | The single motif and its six launch arrangements, plus a sound library. |
 | Voice | contract | Alegus is the anchor casting. Two sessions at launch scope; `ALEGUS.md` plans three across the full design. |
 
@@ -74,7 +74,7 @@ Holding a form is now a shipped feature, so this test is no longer about whether
 
 Owner: whole team. Full spec in `VERTICAL_SLICE.md`.
 
-**Weeks 1 to 3, content.**
+**Weeks 1 to 3, content.** Room layouts for later ages are in `ROOMS.md`; the slice uses the Stone Age pool only.
 - [ ] The five shared boss systems from `FAST_PATH.md` section 5, built before the Mammoth Mother
 - [ ] Ten room layouts, grey-box then art
 - [ ] Frayed Cave Bear and three elite modifiers

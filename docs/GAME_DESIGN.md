@@ -197,7 +197,7 @@ Boons are **Inventions**, granted at altars by **Inventors**: mythologised spiri
 
 **Age gating** means late altars matter more than early ones and rewards pushing deep. It also naturally teaches new players fewer systems up front.
 
-**Keepsakes** from cast members work as in Hades: a small passive that you can swap at each age boundary.
+**Keepsakes** from cast members work as in Hades: a small passive swapped at each age boundary, inside the re-forge scene alongside the hold decision. Fourteen at launch, five from the cast and nine from the Inventors. See `CAST.md` section 4.
 
 ---
 
@@ -235,7 +235,7 @@ Direct copy of the Hades verb set, since it is proven and the theme does not nee
 
 **The Cave Wall** has two columns per row like the Mirror, with a toggle between them. Examples: extra death defiance versus bonus damage on first hit; dash i-frame length versus dash count; Ochre gain versus Flint gain.
 
-**Story unlocks** are tied to gifts, run counts, and specific events (first death to each boss, first clear with each lineage, first duo Invention). Aim for the Hades rhythm: something new in the hub after nearly every run for the first 30 runs.
+**Story unlocks** are tied to gifts, run counts, and specific events (first death to each boss, first clear with each lineage, first duo Invention). Aim for the Hades rhythm: something new in the hub after nearly every run for the first 30 runs. The full schedule, with the gate on each beat, is in `STORY_SCHEDULE.md`.
 
 ---
 
