@@ -156,16 +156,16 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; milestone 1 &middot; art direction test</p>
-    <h1>Painted paper puppets, moving on painted paper</h1>
-    <p>The question milestone&nbsp;1 exists to answer is whether the watercolour look holds up <em>in motion</em>, which a still image cannot tell you. Move Alegus with the arrow keys, swing the club with space, and turn the render passes on and off to see what each one is actually doing.</p>
+    <p class="eyebrow">EPOCH &middot; rung 2 &middot; does the combat feel good?</p>
+    <h1>Three Frayed, a club and ten frames of mercy</h1>
+    <p>This is the gate. If the fighting is not enjoyable, nothing built on top of it will be. Arrows to move, <b>space</b> to swing, <b>shift</b> to dash. The dash has ten frames where nothing can touch you, and learning to spend them is the whole game.</p>
   </header>
 
   <div class="rig">
     <div class="stage">
       <canvas id="c" width="960" height="600" aria-label="Interactive render test: a paper-puppet figure in a watercolour Ice Age scene"></canvas>
       <div class="hud" id="hud"></div>
-      <div class="hint" id="hint">&larr; &rarr; &uarr; &darr; move &middot; space attack</div>
+      <div class="hint" id="hint">arrows move &middot; space attack &middot; shift dash</div>
     </div>
 
     <aside>
@@ -205,6 +205,8 @@
         <div class="btns">
           <button class="act primary" id="b_wash">Run the age transition</button>
           <button class="act" id="b_wolf">Send in more Frayed</button>
+        <button class="act" id="b_boar">Send a boar</button>
+        <button class="act" id="b_hunter">Send a hunter</button>
           <button class="act" id="b_bench">Run benchmark  (B)</button>
           <button class="act" id="b_reset">Reset to Ice Age</button>
         </div>
@@ -227,24 +229,24 @@
 It takes about 15 seconds, then prints a block to send back.</pre>
 
   <footer>
-    <h2>What to judge, and what it costs</h2>
-    <p class="sub">Everything on screen is drawn from flat painted shapes with pivots. No meshes, no rigs, no skinning. That is the entire argument.</p>
+    <h2>The gate</h2>
+    <p class="sub">Production plan, rung 2. If the combat does not feel good, the project stops or changes here, and that call is Edward's. It is far cheaper to find out now than in a year.</p>
     <div class="cards">
       <div class="card">
-        <h3>Does it read as paint?</h3>
-        <p>Pigment bands, edge darkening and the paper composite are doing that work. Turn all three off to see the flat vector version underneath.</p>
+        <h3>Is the boar fair?</h3>
+        <p>It gives you 0.8 seconds of warning, then commits to a direction and charges. Bait it into a wall and it is stunned, and a stunned boar takes triple damage. That is the punish window the whole age teaches.</p>
       </div>
       <div class="card">
         <h3>Can you always find Alegus?</h3>
         <p>No ink, no edge darkening. A ring of bare paper is left around every figure instead, which is how a painter separates a subject from its ground. Turn the reserve off to see what it was holding up.</p>
       </div>
       <div class="card">
-        <h3>Is the transition worth it?</h3>
-        <p>The wash is the signature moment of every run and the payoff for the weapon evolving. Run it a few times and decide whether it earns its animation budget.</p>
+        <h3>Can you close on a hunter?</h3>
+        <p>It holds range and backs away, and is only open during the long recovery after a throw. If closing on one is frustrating rather than satisfying, its numbers are wrong and I will change them.</p>
       </div>
       <div class="card">
-        <h3>What this saves</h3>
-        <p>A jointed cut-out replaces a modelled, rigged and skinned character. On the launch scope that is roughly two person-years of 3D work neither of you can do.</p>
+        <h3>What to tell me</h3>
+        <p>Not "it is fine". Which enemy you hated, whether that was a good hate or a bad one, and whether you ever died feeling it was not your fault. Numbers are easy to change; the feel is the thing.</p>
       </div>
     </div>
   </footer>
@@ -418,8 +420,47 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var GND_TOP = H*0.40;
   function depth(y){ return 0.78 + 0.34*((y-GND_TOP)/(H-GND_TOP)); }
 
-  var hero = { x:W*0.42, y:H*0.72, face:1, vx:0, vy:0, step:0, atk:-1, atkPhase:'idle' };
-  var foes = [], washes = [], scenery = [];
+  /* Frame data from VERTICAL_SLICE.md section 6, at 60fps.
+     Attack  12 startup /  6 active / 14 recovery
+     Dash     4 startup / 10 invulnerable / 6 recovery */
+  var hero = { x:W*0.42, y:H*0.72, face:1, vx:0, vy:0, step:0,
+               atk:-1, atkPhase:'idle',
+               dash:-1, dashX:1, dashY:0,
+               hp:100, maxHp:100, hurt:0, dead:0 };
+  var foes = [], washes = [], scenery = [], shots = [], tells = [];
+  var kills = 0;
+
+  function heroInvulnerable(){
+    return (hero.dash >= 4 && hero.dash < 14) || hero.hurt > 0.4;
+  }
+
+  function hurtHero(dmg){
+    if(hero.dead > 0 || heroInvulnerable()) return;
+    hero.hp -= dmg;
+    hero.hurt = 0.6;
+    if(hero.hp <= 0){ hero.hp = 0; hero.dead = 2.2; }
+  }
+
+  /* a telegraph is a hard-edged dark shape on the ground. Never a soft wash:
+     a telegraph you cannot read at a glance is a hit you could not avoid. */
+  function tell(kind, x, y, a, len, dur){
+    tells.push({kind:kind, x:x, y:y, a:a, len:len, t:0, dur:dur});
+  }
+
+  function startDash(ax, ay){
+    if(hero.dash >= 0 || hero.dead > 0) return;
+    if(!ax && !ay){ ax = hero.face; ay = 0; }
+    var l = Math.hypot(ax, ay) || 1;
+    hero.dashX = ax/l; hero.dashY = ay/l; hero.dash = 0;
+  }
+
+  function resetRun(){
+    hero.hp = hero.maxHp; hero.dead = 0; hero.hurt = 0;
+    hero.atk = -1; hero.dash = -1; hero.hitThisSwing = false;
+    hero.x = W*0.42; hero.y = H*0.72;
+    foes = []; shots = []; tells = []; kills = 0;
+    spawnFoe('wolf'); spawnFoe('wolf'); spawnFoe('boar');
+  }
 
   function buildScenery(){
     scenery = [];
@@ -434,14 +475,115 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
   buildScenery();
 
-  function spawnFoe(){
+  /* Stats from VERTICAL_SLICE.md section 3, relative to Alegus's 100 health.
+     Each one exists to teach one thing: the wolf teaches flanking, the boar
+     teaches punish windows, the hunter teaches closing distance. */
+  var KINDS = {
+    wolf:   {hp:30,  dmg:8,  speed:62,  reach:34},
+    boar:   {hp:90,  dmg:18, speed:52,  reach:42},
+    hunter: {hp:45,  dmg:12, speed:56,  reach:30}
+  };
+
+  function spawnFoe(kind){
+    if(!kind){
+      var r = Math.random();
+      kind = r < 0.5 ? 'wolf' : (r < 0.78 ? 'boar' : 'hunter');
+    }
     var side = Math.random()<0.5 ? -60 : W+60;
-    foes.push({ x:side, y: GND_TOP+40+Math.random()*(H-GND_TOP-70),
-                face: side<0?1:-1, step:Math.random()*10, hp:1,
+    var k = KINDS[kind];
+    foes.push({ kind:kind, x:side, y: GND_TOP+40+Math.random()*(H-GND_TOP-70),
+                face: side<0?1:-1, step:Math.random()*10,
+                hp:k.hp, maxHp:k.hp, flash:0,
                 seed: Math.floor(Math.random()*900)+40,
-                wait: Math.random()*1.4 });
+                state:'approach', timer: Math.random()*1.4, cool:0 });
   }
-  for(var q=0;q<3;q++) spawnFoe();
+  spawnFoe('wolf'); spawnFoe('wolf'); spawnFoe('boar');
+
+  /* Each kind teaches one thing, and the behaviour is the lesson.
+     Wolf: flanks, so keep moving and use knockback to reset the pack.
+     Boar: telegraphs, charges, and is helpless afterwards. Patience beats
+           aggression, and a wall turns its charge into your best window.
+     Hunter: holds range and is only vulnerable during its throw recovery,
+           so it has to be closed on. */
+  function stepFoe(g, dt){
+    var k = KINDS[g.kind];
+    if(g.flash > 0) g.flash -= dt;
+    g.step += dt * (g.state === 'charge' ? 26 : 11);
+    var dx = hero.x - g.x, dy = hero.y - g.y;
+    var dd = Math.hypot(dx, dy) || 1;
+    if(g.state !== 'charge' && g.state !== 'stun') g.face = dx > 0 ? 1 : -1;
+    g.cool -= dt;
+
+    if(g.kind === 'wolf'){
+      g.timer -= dt;
+      var want = 96;
+      var push = (dd > want ? 1 : -0.55) * (g.timer > 0 ? 0.25 : 1);
+      var tang = g.seed % 2 ? 1 : -1;
+      g.x += ((dx/dd)*push*k.speed + (-dy/dd)*tang*30) * dt;
+      g.y += ((dy/dd)*push*k.speed + ( dx/dd)*tang*30) * dt;
+      if(g.timer < -3) g.timer = 1.2;
+      if(dd < k.reach + 24 && g.cool <= 0){ hurtHero(k.dmg); g.cool = 1.1; }
+
+    } else if(g.kind === 'boar'){
+      if(g.state === 'approach'){
+        g.x += (dx/dd) * k.speed * dt;
+        g.y += (dy/dd) * k.speed * dt;
+        if(dd < 300 && g.cool <= 0){
+          g.state = 'wind'; g.timer = 0.8;
+          g.aimX = dx/dd; g.aimY = dy/dd;
+          /* 0.8s of warning, and the line is where it will actually go */
+          tell('line', g.x, g.y, Math.atan2(g.aimY, g.aimX), 380, 0.8);
+        }
+      } else if(g.state === 'wind'){
+        g.timer -= dt;
+        /* it commits to the direction at the end of the wind-up, not the start,
+           so sidestepping early does not work and sidestepping late does */
+        if(g.timer <= 0){ g.state = 'charge'; g.timer = 1.1; }
+      } else if(g.state === 'charge'){
+        g.timer -= dt;
+        var nx = g.x + g.aimX * 560 * dt;
+        var ny = g.y + g.aimY * 560 * dt;
+        var wall = nx < 40 || nx > W-40 || ny < GND_TOP+24 || ny > H-16;
+        g.x = Math.max(40, Math.min(W-40, nx));
+        g.y = Math.max(GND_TOP+24, Math.min(H-16, ny));
+        if(dd < k.reach + 26 && g.cool <= 0){ hurtHero(k.dmg); g.cool = 0.8; }
+        if(wall || g.timer <= 0){ g.state = 'stun'; g.timer = wall ? 1.1 : 0.6; }
+      } else {
+        g.timer -= dt;
+        if(g.timer <= 0){ g.state = 'approach'; g.cool = 1.4; }
+      }
+
+    } else {
+      /* hunter: hold 150 to 230, retreat when crowded, throw on a timer */
+      var band = dd < 150 ? -1 : (dd > 230 ? 1 : 0);
+      if(g.state !== 'throw'){
+        g.x += (dx/dd) * band * k.speed * dt;
+        g.y += (dy/dd) * band * k.speed * dt;
+        if(g.cool <= 0 && dd < 420){
+          g.state = 'aim'; g.timer = 0.55;
+          tell('mark', hero.x, hero.y, 0, 34, 0.55);
+          g.cool = 2.5;
+        }
+      }
+      if(g.state === 'aim'){
+        g.timer -= dt;
+        if(g.timer <= 0){
+          g.state = 'throw'; g.timer = 0.45;
+          var a = Math.atan2((hero.y-50) - (g.y-46), hero.x - g.x);
+          shots.push({x:g.x + Math.cos(a)*18, y:g.y-46 + Math.sin(a)*18,
+                      vx:Math.cos(a)*430, vy:Math.sin(a)*430,
+                      life:1.6, dmg:k.dmg, seed:g.seed});
+        }
+      } else if(g.state === 'throw'){
+        g.timer -= dt;
+        if(g.timer <= 0) g.state = 'hold';
+      }
+    }
+
+    g.x = Math.max(24, Math.min(W-24, g.x));
+    g.y = Math.max(GND_TOP+20, Math.min(H-12, g.y));
+  }
+
 
   /* ---------- paper texture ---------- */
   var paperCv = document.createElement('canvas');
@@ -654,41 +796,90 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
 
   function drawFoe(f){
-    var d = depth(f.y), s = 0.95*d;
-    var ph = f.step, sw = Math.sin(ph)*0.55, sw2 = Math.sin(ph+Math.PI)*0.55;
-    blitChar(f.x, f.y, function(){ shadow(f.x, f.y+2, 30*s); }, function(){
-    ctx.save();
-    ctx.scale(f.face*s, s);
+    var big = f.kind === 'boar';
+    var d = depth(f.y), s = (big ? 1.18 : f.kind === 'hunter' ? 1.02 : 0.95) * d;
+    blitChar(f.x, f.y, function(){ shadow(f.x, f.y+2, (big?38:30)*s); }, function(){
+      ctx.save();
+      ctx.scale(f.face*s, s);
+      if(f.kind === 'hunter') hunterBody(f);
+      else quadBody(f, big);
+      ctx.restore();
+    });
+  }
 
-    /* the Frayed carry a second, looser outer line: the edge that will not settle */
-    var outer = {seed:f.seed, ink:true, inkW:5, inkA:0.22, edgeW:5, inkColor:pal.foeSh};
-    function leg(x,a,base,sh,sd){
-      ctx.save(); ctx.translate(x,-26);
+  /* A hit reads as the paint blanching for a moment. No flash frame, no tint
+     layer: the same shapes, painted paler. */
+  function foeInk(f, c){
+    return f.flash > 0 ? '#F6ECD8' : c;
+  }
+
+  function hunterBody(f){
+    var ph = f.step, sw = Math.sin(ph)*0.5, sw2 = Math.sin(ph+Math.PI)*0.5;
+    var body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+    /* the throwing arm is the whole tell: back during the aim, through on the
+       release, and slow to come home, which is the window to close */
+    var arm = f.state === 'aim' ? -2.1 : (f.state === 'throw' ? 1.5 : sw*0.6);
+
+    function leg(x, a){
+      ctx.save(); ctx.translate(x,-34);
       if(opt.puppet) ctx.rotate(a);
-      paint(limb(26,5,4), base, sh, {seed:sd, ink:true, inkW:2, edgeW:4});
+      paint(limb(34,6,4.5), sh, pal.inkc, {seed:f.seed+1, ink:false, edgeW:4});
       ctx.restore();
     }
-    leg(-14, sw2*0.8, pal.foeSh, pal.inkc, f.seed+1);
-    leg(12, sw*0.8, pal.foeSh, pal.inkc, f.seed+2);
-    /* body, painted twice: once loose and pale, once solid */
-    paint(blob(0,-38,30,15,10,f.seed), pal.foe, pal.foeSh, outer);
-    paint(blob(0,-38,27,13,10,f.seed), pal.foe, pal.foeSh, {seed:f.seed, ink:true, inkW:2.2, edgeW:5});
-    leg(-8, sw*0.8, pal.foe, pal.foeSh, f.seed+3);
-    leg(18, sw2*0.8, pal.foe, pal.foeSh, f.seed+4);
-    /* tail */
-    ctx.save(); ctx.translate(-27,-40);
+    leg(-4, sw2*0.5);
+    leg(4, sw*0.5);
+    paint([[-9,-66],[9,-66],[11,-48],[9,-32],[-9,-32],[-11,-48]], body, sh,
+      {seed:f.seed+2, ink:false, edgeW:5});
+    paint(blob(1,-76,10,11,9,f.seed+3), sh, pal.inkc, {seed:f.seed+3, ink:false, edgeW:4});
+    ctx.save(); ctx.translate(5,-62);
+    if(opt.puppet) ctx.rotate(arm);
+    paint(limb(28,5.5,4), body, sh, {seed:f.seed+4, ink:false, edgeW:4});
+    /* sling: a cord and a stone, so the threat is legible before it is thrown */
+    paint(blob(0,34,6,6,7,f.seed+5), pal.stoneW, pal.stoneWSh, {seed:f.seed+5, ink:false, edgeW:3});
+    ctx.restore();
+  }
+
+  function quadBody(f, big){
+    var ph = f.step, sw = Math.sin(ph)*0.55, sw2 = Math.sin(ph+Math.PI)*0.55;
+    var body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+    var lean = 0;
+    if(f.kind === 'boar'){
+      /* it rocks back to wind up and pitches forward on the charge */
+      if(f.state === 'wind') lean = -0.18;
+      else if(f.state === 'charge') lean = 0.16;
+      else if(f.state === 'stun') lean = 0.3;
+    }
+    ctx.save();
+    if(opt.puppet) ctx.rotate(lean);
+
+    var W1 = big ? 1.34 : 1, LEG = big ? 30 : 26;
+    function leg(x,a,base,shc,sd){
+      ctx.save(); ctx.translate(x*W1,-26*W1);
+      if(opt.puppet) ctx.rotate(a);
+      paint(limb(LEG,5.5*W1,4), base, shc, {seed:sd, ink:false, edgeW:4});
+      ctx.restore();
+    }
+    leg(-14, sw2*0.8, sh, pal.inkc, f.seed+1);
+    leg(12, sw*0.8, sh, pal.inkc, f.seed+2);
+    paint(blob(0,-38*W1,30*W1,15*W1,10,f.seed), body, sh, {seed:f.seed, ink:false, edgeW:5});
+    leg(-8, sw*0.8, body, sh, f.seed+3);
+    leg(18, sw2*0.8, body, sh, f.seed+4);
+    ctx.save(); ctx.translate(-27*W1,-40*W1);
     if(opt.puppet) ctx.rotate(-0.5 + Math.sin(ph*0.7)*0.25);
-    paint(limb(22,4.5,2.5), pal.foe, pal.foeSh, {seed:f.seed+5, ink:true, inkW:2, edgeW:3});
+    paint(limb(big?12:22,4.5,2.5), body, sh, {seed:f.seed+5, ink:false, edgeW:3});
     ctx.restore();
-    /* head + ears */
-    ctx.save(); ctx.translate(26,-44);
+    ctx.save(); ctx.translate(26*W1,-44*W1);
     if(opt.puppet) ctx.rotate(Math.sin(ph*0.5)*0.08);
-    paint([[-4,-14],[1,-24],[6,-13]], pal.foeSh, pal.inkc, {seed:f.seed+6, ink:true, inkW:1.8, edgeW:2});
-    paint(blob(4,-4,14,10,8,f.seed+7), pal.foe, pal.foeSh, {seed:f.seed+7, ink:true, inkW:2.2, edgeW:4});
-    paint(blob(15,0,7,5,7,f.seed+8), pal.foeSh, pal.inkc, {seed:f.seed+8, ink:true, inkW:1.8, edgeW:3});
+    if(!big) paint([[-4,-14],[1,-24],[6,-13]], sh, pal.inkc, {seed:f.seed+6, ink:false, edgeW:2});
+    paint(blob(4,-4,14*W1,10*W1,8,f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:4});
+    paint(blob(15*W1,0,7*W1,5*W1,7,f.seed+8), sh, pal.inkc, {seed:f.seed+8, ink:false, edgeW:3});
+    /* tusks say charger before it ever charges */
+    if(big){
+      paint([[16,2],[26,-6],[19,6]], pal.stoneW, pal.stoneWSh, {seed:f.seed+9, ink:false, edgeW:2});
+      paint([[14,8],[24,2],[17,11]], pal.stoneW, pal.stoneWSh, {seed:f.seed+10, ink:false, edgeW:2});
+    }
     ctx.restore();
     ctx.restore();
-    });
   }
 
   /* death: the figure runs like a wet painting and drains into the paper */
@@ -708,6 +899,64 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     trace(wobble(blob(w.x,w.y-38, 26*(1-k*0.4), 13*(1-k*0.6), 9, w.seed), w.seed));
     ctx.fillStyle = w.base; ctx.fill();
     ctx.globalAlpha = 1;
+  }
+
+  /* A telegraph is the promise the game makes before it hits you. Hard edges,
+     no wobble, no paint: the one place in the whole look that is allowed to be
+     a flat graphic, because a telegraph you have to squint at is a cheat. */
+  function drawTells(){
+    for(var i=0;i<tells.length;i++){
+      var t = tells[i], k = t.t/t.dur;
+      ctx.save();
+      ctx.globalAlpha = 0.14 + k*0.28;
+      ctx.fillStyle = pal.inkc;
+      if(t.kind === 'line'){
+        ctx.translate(t.x, t.y); ctx.rotate(t.a);
+        ctx.fillRect(0, -18, t.len*(0.4 + k*0.6), 36);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(t.x, t.y, t.len*(1.6-k*0.6), t.len*(0.62-k*0.22), 0, 0, 6.2832);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawShots(){
+    for(var i=0;i<shots.length;i++){
+      var s = shots[i];
+      paint(blob(s.x, s.y, 7, 6, 7, s.seed), pal.stoneW, pal.stoneWSh,
+            {seed:s.seed, ink:false, edgeW:3});
+    }
+  }
+
+  /* Flat, never painted, per the pipeline's UI rule. */
+  function drawHud(){
+    var x=14, y=14, w=190, h=9;
+    ctx.globalAlpha = 0.14; ctx.fillStyle = pal.inkc;
+    ctx.fillRect(x-2, y-2, w+4, h+4);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = hero.hp > 30 ? '#A2622F' : '#AE3A28';
+    ctx.fillRect(x, y, w*Math.max(0, hero.hp/hero.maxHp), h);
+    if(hero.hurt > 0){
+      ctx.globalAlpha = Math.max(0, hero.hurt)*0.5;
+      ctx.fillStyle = '#AE3A28';
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 1;
+    }
+    if(hero.dead > 0){
+      ctx.globalAlpha = 0.62; ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H);
+      ctx.globalAlpha = 1; ctx.fillStyle = pal.inkc;
+      ctx.textAlign = 'center';
+      ctx.font = '600 38px Fraunces, Georgia, serif';
+      ctx.fillText('Oh. Again, then.', W/2, H/2 - 6);
+      ctx.font = '400 15px "IBM Plex Mono", monospace';
+      ctx.globalAlpha = 0.6;
+      ctx.fillText(kills + ' Frayed', W/2, H/2 + 26);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+    }
   }
 
   /* ---------- frame ---------- */
@@ -740,6 +989,26 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       if(l > 0){ ax /= l; ay /= l; }
     }
     if(hitPulse > 0) hitPulse -= dt*3;
+    if(hero.hurt > 0) hero.hurt -= dt;
+
+    if(hero.dead > 0){
+      hero.dead -= dt;
+      if(hero.dead <= 0) resetRun();
+      ax = 0; ay = 0;
+    }
+
+    /* dash: 4 frames of startup, 10 invulnerable, 6 of recovery. The i-frames
+       are the whole combat system. Without them every telegraph is unfair. */
+    if(hero.dash >= 0){
+      hero.dash += dt*60;
+      if(hero.dash >= 4 && hero.dash < 14){
+        hero.x += hero.dashX * 640 * dt;
+        hero.y += hero.dashY * 640 * dt;
+      }
+      if(hero.dash > 20) hero.dash = -1;
+      ax = 0; ay = 0;
+    }
+
     var spd = (hero.atk>=0) ? 40 : 240;
     hero.vx = ax*spd; hero.vy = ay*spd;
     hero.x = Math.max(28, Math.min(W-28, hero.x + hero.vx*dt));
@@ -750,36 +1019,41 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     if(hero.atk>=0){
       hero.atk += dt*60;
-      if(hero.atk>=12 && hero.atk<18){
+      if(hero.atk>=12 && hero.atk<18 && !hero.hitThisSwing){
+        hero.hitThisSwing = true;
         for(var i=foes.length-1;i>=0;i--){
           var f=foes[i];
           var dx=f.x-hero.x, dy=(f.y-hero.y)*1.7;
           if(Math.hypot(dx,dy) < 105 && dx*hero.face > -30){
-            washes.push({x:f.x,y:f.y,t:0,dur:0.75,seed:f.seed,base:pal.foe,sh:pal.foeSh});
-            foes.splice(i,1);
+            /* a stunned boar takes the bonus, which is the whole point of
+               baiting the charge into a wall */
+            var dmg = (f.kind==='boar' && f.state==='stun') ? 60 : 20;
+            f.hp -= dmg; f.flash = 0.18;
+            if(f.hp <= 0){
+              washes.push({x:f.x,y:f.y,t:0,dur:0.75,seed:f.seed,base:pal.foe,sh:pal.foeSh});
+              foes.splice(i,1); kills++;
+            }
           }
         }
       }
-      if(hero.atk>32) hero.atk = -1;
+      if(hero.atk>32){ hero.atk = -1; hero.hitThisSwing = false; }
     }
 
-    /* foes drift toward Alegus and circle, which is the Pack behaviour in miniature */
-    for(var j=0;j<foes.length;j++){
-      var g=foes[j];
-      g.wait -= dt;
-      var dx2 = hero.x-g.x, dy2 = hero.y-g.y;
-      var dd = Math.hypot(dx2,dy2)||1;
-      var want = 96;
-      var push = (dd>want? 1 : -0.55) * (g.wait>0 ? 0.25 : 1);
-      var tang = g.seed%2 ? 1 : -1;
-      g.x += ((dx2/dd)*push*62 + (-dy2/dd)*tang*30)*dt;
-      g.y += ((dy2/dd)*push*62 + ( dx2/dd)*tang*30)*dt;
-      g.y = Math.max(GND_TOP+20, Math.min(H-12, g.y));
-      g.face = dx2>0?1:-1;
-      g.step += dt*11;
-      if(g.wait<-3) g.wait = 1.2;
+    for(var j=0;j<foes.length;j++) stepFoe(foes[j], dt);
+    if(foes.length < 2 && Math.random() < dt*0.5) spawnFoe();
+
+    for(var s=shots.length-1;s>=0;s--){
+      var sh=shots[s];
+      sh.x += sh.vx*dt; sh.y += sh.vy*dt; sh.life -= dt;
+      if(Math.hypot(sh.x-hero.x, (sh.y-(hero.y-50))*1.4) < 26){
+        hurtHero(sh.dmg); shots.splice(s,1); continue;
+      }
+      if(sh.life<=0) shots.splice(s,1);
     }
-    if(foes.length===0 && Math.random()<dt*0.6) spawnFoe();
+    for(var tl=tells.length-1;tl>=0;tl--){
+      tells[tl].t += dt;
+      if(tells[tl].t > tells[tl].dur) tells.splice(tl,1);
+    }
 
     for(var w=washes.length-1;w>=0;w--){
       washes[w].t += dt;
@@ -799,6 +1073,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(worldOn) ctx.drawImage(worldCv, 0, 0, W, H);
     else { ctx.fillStyle = pal.paper; ctx.fillRect(0,0,W,H); }
 
+    drawTells();
+
     var all = [];
     for(var j=0;j<foes.length;j++) all.push({y:foes[j].y, d:foes[j], k:'f'});
     for(var w=0;w<washes.length;w++) all.push({y:washes[w].y, d:washes[w], k:'w'});
@@ -811,6 +1087,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         else drawHero();
       }
     }
+
+    if(figuresOn) drawShots();
 
     /* the age transition: the whole frame runs, drains to bare paper, then the next
        palette floods in behind it */
@@ -861,10 +1139,13 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         ctx.globalAlpha = 0.10;
         ctx.beginPath(); ctx.arc(W*0.17, H*0.76, 46, 0, 6.2832); ctx.fill();
       }
-      ctx.globalAlpha = 0.10 + Math.max(0,hitPulse)*0.3;
-      ctx.beginPath(); ctx.arc(W*0.84, H*0.76, 54, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 0.10 + Math.max(0,hitPulse)*0.26;
+      ctx.beginPath(); ctx.arc(W*0.84, H*0.30, 50, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(W*0.84, H*0.74, 44, 0, 6.2832); ctx.fill();
       ctx.globalAlpha = 1;
     }
+
+    drawHud();
   }
 
   function loop(now){
@@ -949,11 +1230,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(opt.quant) on.push('bands'); if(opt.reserve) on.push('reserve');
     if(opt.wob) on.push('wobble'); if(opt.paper) on.push('paper');
     if(opt.ink) on.push('ink'); if(opt.edge) on.push('edge');
+    var dashPhase = hero.dash < 0 ? 'ready'
+      : (hero.dash < 4 ? 'startup' : (hero.dash < 14 ? 'I-FRAMES' : 'recovery'));
     hudEl.innerHTML =
       '<span class="chip">' + pal.name.toUpperCase() + '</span>' +
-      '<span class="chip">passes <b>' + (on.length?on.join(' '):'none') + '</b></span>' +
+      '<span class="chip">hp <b>' + Math.round(hero.hp) + '</b> / kills <b>' + kills + '</b></span>' +
       '<span class="chip' + (hero.atkPhase==='ACTIVE'?' act':'') + '">club <b>' +
-        hero.atkPhase + '</b> 12/6/14</span>';
+        hero.atkPhase + '</b> 12/6/14</span>' +
+      '<span class="chip' + (dashPhase==='I-FRAMES'?' act':'') + '">dash <b>' +
+        dashPhase + '</b> 4/10/6</span>' +
+      '<span class="chip">passes <b>' + (on.length?on.join(' '):'none') + '</b></span>';
   }
 
   function bind(id,key){
@@ -985,12 +1271,13 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     wash.on = true; wash.t = 0;
   });
   document.getElementById('b_bench').addEventListener('click', startBench);
-  document.getElementById('b_wolf').addEventListener('click', function(){ spawnFoe(); spawnFoe(); });
+  document.getElementById('b_wolf').addEventListener('click', function(){ spawnFoe('wolf'); spawnFoe('wolf'); });
+  document.getElementById('b_boar').addEventListener('click', function(){ spawnFoe('boar'); });
+  document.getElementById('b_hunter').addEventListener('click', function(){ spawnFoe('hunter'); });
   document.getElementById('b_reset').addEventListener('click', function(){
     pal = AGES.stone; palFrom = AGES.stone; palTo = AGES.rivers;
-    foes = []; washes = []; wash.on=false;
-    hero.x = W*0.42; hero.y = H*0.72; hero.atk=-1;
-    buildScenery(); spawnFoe(); spawnFoe(); spawnFoe();
+    washes = []; wash.on = false;
+    buildScenery(); bakeWorld(); resetRun();
     document.getElementById('r_age').textContent = 'Stone';
   });
 
@@ -998,7 +1285,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
              a:'l',d:'r',w:'u',s:'d',A:'l',D:'r',W:'u',S:'d'};
   window.addEventListener('keydown', function(e){
     if(e.key==='b' || e.key==='B'){ startBench(); return; }
-    if(e.key===' '){ if(hero.atk<0) hero.atk=0; e.preventDefault(); return; }
+    if(e.key==='Shift' || e.key==='x' || e.key==='X'){
+      startDash((keys.r?1:0)-(keys.l?1:0), (keys.d?1:0)-(keys.u?1:0));
+      e.preventDefault(); return;
+    }
+    if(e.key===' '){ if(hero.atk<0 && hero.dead<=0) hero.atk=0; e.preventDefault(); return; }
     var k = MAP[e.key]; if(k){ keys[k]=1; e.preventDefault(); }
   });
   window.addEventListener('keyup', function(e){
@@ -1020,7 +1311,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     e.preventDefault();
     if(!touchUI){
       touchUI = true;
-      document.getElementById('hint').textContent = 'drag left to move · tap right to attack';
+      document.getElementById('hint').textContent = 'drag left · tap upper right to hit · lower right to dash';
     }
     var p = toCanvas(e);
     if(p[0] < W*0.52){
@@ -1028,8 +1319,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       stick.on = true; stick.id = e.pointerId;
       stick.ox = p[0]; stick.oy = p[1]; stick.x = 0; stick.y = 0;
       cv.setPointerCapture(e.pointerId);
+    } else if(p[1] < H*0.52){
+      if(hero.atk < 0 && hero.dead <= 0) hero.atk = 0;
+      hitPulse = 1;
     } else {
-      if(hero.atk < 0) hero.atk = 0;
+      startDash(stick.on ? stick.x : 0, stick.on ? stick.y : 0);
       hitPulse = 1;
     }
   });
@@ -1052,7 +1346,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     });
   });
   if(window.matchMedia('(pointer: coarse)').matches){
-    document.getElementById('hint').textContent = 'drag left to move · tap right to attack';
+    document.getElementById('hint').textContent = 'drag left · tap upper right to hit · lower right to dash';
     touchUI = true;
   }
 

@@ -82,8 +82,8 @@ Each rung ends with something playable. Hours are total build effort, most of it
 | # | Rung | You can | Hours | Calendar |
 |---|---|---|---|---|
 | 0 | Browser prototype | Move, swing, see the look | done | done |
-| 1 | **Godot port of the look** | Walk a room with the real shader stack at 60fps | 60 | written, awaiting a run |
-| 2 | **Combat feel** | Fight three Frayed types with the Blunt club and die | 110 | 9 weeks |
+| 1 | **The look, running** | Walk a room with the full render stack | 60 | done, in the browser |
+| 2 | **Combat feel** | Fight three Frayed types with the Blunt club and die | 110 | built, awaiting Edward's verdict |
 | 3 | **A run** | Clear six rooms through doors with rewards, then restart | 60 | 5 weeks |
 | 4 | **Inventions** | Build a run out of 20 boons from four Inventors | 60 | 5 weeks |
 | 5 | **The boss** | Fight the Mammoth Mother through three phases | 80 | 7 weeks |

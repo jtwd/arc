@@ -90,3 +90,26 @@ recommending a toolchain.**
 build as a link, James opens it on the Chromebook and plays, nothing is
 installed. The Godot port is parked rather than deleted. `PRODUCTION.md` 7a
 carries the six rules that keep a Steam wrap cheap later.
+
+---
+
+## Rung 2, the combat gate
+
+**Built:** dash with ten invulnerable frames, health and death and restart, hard
+edged ground telegraphs, and the three Stone Age enemies from
+`VERTICAL_SLICE.md` section 3 with the behaviour each one exists to teach.
+
+- **Wolf** flanks and circles, so keep moving.
+- **Boar** warns for 0.8 seconds, commits to a direction, charges, and is
+  stunned for over a second if it hits a wall. A stunned boar takes triple
+  damage. Patience beats aggression, and that is the lesson of the age.
+- **Hunter** holds 150 to 230 pixels, backs away when crowded, and is open only
+  during the long recovery after a throw.
+
+**This is the gate.** `PRODUCTION.md` says that if the combat does not feel
+good, the project stops or changes here, and that the call is Edward's.
+
+**Wanted, and not "it is fine":** which enemy he hated and whether that was a
+good hate or a bad one, and whether he ever died feeling it was not his fault.
+
+**Edward's call:** *(to fill in)*
