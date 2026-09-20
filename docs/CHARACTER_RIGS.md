@@ -80,6 +80,48 @@ Alegus at a distance.
 
 ---
 
+## Faces
+
+At the game's camera a head is about 25 pixels across and a feature is three,
+so a face here is four or five shapes and not one more. The rule that makes it
+work is that the shapes are **flat fills at a third of the wobble**. Two pigment
+bands and a wet bleed on a three-pixel eye is mush, and full-strength drift
+makes an eye crawl around the head.
+
+**Alegus is the only person who gets a whole face**, because he is the only one
+who is fully present. Brow, eye with a highlight, a far eye and brow to stop it
+reading as a flat profile, nose shadow, ear, mouth.
+
+The brow is the character. It sits **up** by default, because wonder is his
+register per the bible, and one shape carries that better than any amount of
+detail. It drops on the active frames of a swing, lifts and opens when he is
+hit, narrows on a dash. He blinks every two to five seconds, and he turns his
+head toward the nearest Frayed, which is four lines and the single cheapest
+thing in the rig that makes him seem to be thinking.
+
+**The Frayed have the features they lost.** An eye is a void of bare paper with
+the paint failing around it. A jaw opens on something it cannot bite with. This
+is not a shortcut at small sizes, it is `ALEGUS.md` beat 8, where the bear "didn't
+have a mouth any more, just the shape of one, and the worst part was that it was
+still trying to use it."
+
+Each also gets one behavioural tell on the face: the wolf pins its ears and
+opens its jaw as it closes, the boar's eye is small, high and set well back
+which is most of why the head reads as a boar and not a dog, and the hunter's
+face is in hood shadow with a single catchlight that brightens when it aims.
+
+## Seeing the work
+
+Faces this size cannot be judged in play. `tools/render-test/index.html` has a
+**model sheet** below the play area showing all four rigs at 1.75 times game
+size, which is as large as the character buffer holds without clipping his hair.
+It redraws at 20 frames a second rather than 60, and it shares the rigs through
+one `artScale` multiplier so it can never drift out of step with what is
+actually in play.
+
+Worth deciding later: the test runs at 960 by 600. At a shipping resolution of
+1920 by 1080 every face doubles and these features stop being marginal.
+
 ## Feel
 
 Three things that are not drawing but sell a body:

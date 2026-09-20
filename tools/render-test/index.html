@@ -137,6 +137,16 @@
   .read dt{color:var(--text-dim)}
   .read dd{margin:0; text-align:right; font-variant-numeric:tabular-nums}
 
+  .sheet-wrap{
+    border:1px solid var(--stage-frame); border-radius:3px; overflow:hidden;
+    background:#EDE6D6;
+  }
+  .sheet-lab{
+    margin:0; padding:9px 12px; font-family:"IBM Plex Mono", monospace;
+    font-size:11px; line-height:1.5; color:#6B5F4C; background:rgba(0,0,0,.04);
+    border-bottom:1px solid rgba(0,0,0,.08);
+  }
+  #sheet{display:block; width:100%; height:auto}
   .bench{
     margin:0; font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:12px;
     line-height:1.65; background:var(--panel); border:1px solid var(--line);
@@ -157,8 +167,8 @@
 <div class="shell">
   <header>
     <p class="eyebrow">EPOCH &middot; rung 2 &middot; character design pass</p>
-    <h1>Knees, weight and things that arrive late</h1>
-    <p>Every limb now has two bones and a foot that stays flat on the ground. The wolf trots on diagonal pairs, the boar gallops when it charges, and Alegus's hair is on a spring so it arrives late and overshoots when he stops. Arrows move, <b>space</b> swings, <b>shift</b> dashes. Watch him turn around: he is a paper cut-out, so he flips through his own edge.</p>
+    <h1>Faces, and what the Frayed lost</h1>
+    <p>Alegus has a brow, an eye that blinks, a nose and a mouth, and they change with what he is doing. The Frayed do not: an eye is a hole where an eye was and a mouth is the shape of one, which is the bible rather than a shortcut. Arrows move, <b>space</b> swings, <b>shift</b> dashes. The model sheet below the play area shows all four at nearly twice game size.</p>
   </header>
 
   <div class="rig">
@@ -175,6 +185,7 @@
         <label class="tog"><input type="checkbox" id="p_res" checked><i class="box"></i><span>Paper reserve</span><i class="cost">new</i></label>
         <label class="tog"><input type="checkbox" id="p_wob" checked><i class="box"></i><span>Bleed &amp; wobble</span><i class="cost">3.5</i></label>
         <label class="tog"><input type="checkbox" id="p_paper" checked><i class="box"></i><span>Paper composite</span><i class="cost">3.6</i></label>
+        <label class="tog"><input type="checkbox" id="p_sheet" checked><i class="box"></i><span>Model sheet</span><i class="cost">20/s</i></label>
         <p class="note">Numbers match the pass sections in RENDER_PIPELINE.md. The reserve is the new one: a ring of bare paper left around each figure, doing the job the ink line used to.</p>
         <h2 style="margin-top:14px">Dropped</h2>
         <label class="tog"><input type="checkbox" id="p_ink"><i class="box"></i><span>Ink outline</span><i class="cost">3.3</i></label>
@@ -225,6 +236,12 @@
     </aside>
   </div>
 
+  <div class="sheet-wrap">
+    <p class="sheet-lab">Model sheet &middot; the same rigs at twice game size, because a head is
+      only about 25 pixels across in play and a face is three</p>
+    <canvas id="sheet" width="960" height="300" aria-label="The four characters drawn large, side by side"></canvas>
+  </div>
+
   <pre class="bench" id="bench">Press B, or the button, to measure where the frame time goes.
 It takes about 15 seconds, then prints a block to send back.</pre>
 
@@ -232,6 +249,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     <h2>The gate</h2>
     <p class="sub">Production plan, rung 2. If the combat does not feel good, the project stops or changes here, and that call is Edward's. It is far cheaper to find out now than in a year.</p>
     <div class="cards">
+      <div class="card">
+        <h3>Is his face doing enough?</h3>
+        <p>Brows up by default, because wonder is his register and one shape carries it. Down and mouth open on the active frames of a swing. Up and open when he is hit. He blinks, and he looks at the nearest Frayed.</p>
+      </div>
       <div class="card">
         <h3>Do they read as different animals?</h3>
         <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. If you cannot tell them apart at a glance, the silhouettes are wrong.</p>
@@ -317,9 +338,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   function moveP(p,dx,dy){ return p.map(function(q){ return [q[0]+dx,q[1]+dy]; }); }
 
   var wobT = 0, maskPt = [0,0], maskOn = false;
-  function wobble(p, seed){
+  function wobble(p, seed, mul){
     if(!opt.wob || opt.wobAmp<=0) return p;
-    var a = opt.wobAmp;
+    var a = opt.wobAmp * (mul === undefined ? 1 : mul);
     return p.map(function(q,i){
       var d = 1;
       if(maskOn && opt.maskR>0){
@@ -412,6 +433,17 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     return p;
   }
 
+  /* Faces are three to six pixels across. Two pigment bands and a wet bleed at
+     that size is illegible mush, and a full-strength wobble makes an eye crawl
+     around the head. Features get one flat fill and a third of the drift. */
+  function paintFine(pts, col, seed, alpha){
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+    ctx.fillStyle = col;
+    trace(wobble(pts, seed, 0.3)); ctx.fill();
+    ctx.globalAlpha = 1;
+    shapeCount++;
+  }
+
   /* scale about a centre and translate in one pass, one array instead of two */
   function scaleMove(p, c, k, dx, dy){
     var out = new Array(p.length);
@@ -449,7 +481,8 @@ It takes about 15 seconds, then prints a block to send back.</pre>
                /* animation state, all eased rather than snapped. An instant
                   turn or an instant stop is what makes a puppet read as a
                   diagram rather than a body. */
-               gait:0, faceVis:1, lean:0, hairA:0, hairV:0, moving:false };
+               gait:0, faceVis:1, lean:0, hairA:0, hairV:0, moving:false,
+               headA:0, blink:2.5 };
   var hitStop = 0;
   var foes = [], washes = [], scenery = [], shots = [], tells = [];
   var kills = 0;
@@ -643,6 +676,70 @@ It takes about 15 seconds, then prints a block to send back.</pre>
      slow drift, so it is baked to its own canvas a few times a second rather
      than rebuilt sixty times. The wobble noise moves at well under 1 Hz, so ten
      bakes a second is already more than the eye can follow. */
+  /* The model sheet redraws the same rigs at nearly twice game size. Nothing
+     is duplicated: artScale is a multiplier the rigs already respect, so the
+     sheet can never drift out of step with what is actually in play. */
+  var artScale = 1;
+  var sheetCv = document.getElementById('sheet'), sheetCtx = sheetCv.getContext('2d');
+  var SHEET_H = 300, sheetT = 0, sheetAcc = 0, sheetOn = true;
+  var sheetFoes = [
+    {kind:'wolf',   x:420, y:500, face:1, step:0, seed:140, state:'approach', flash:0, squash:0, hp:30, maxHp:30},
+    {kind:'boar',   x:640, y:500, face:1, step:0, seed:260, state:'approach', flash:0, squash:0, hp:90, maxHp:90},
+    {kind:'hunter', x:840, y:500, face:1, step:0, seed:380, state:'aim',      flash:0, squash:0, hp:45, maxHp:45}
+  ];
+
+  function drawSheet(){
+    var main = ctx;
+    ctx = sheetCtx;
+    sheetCtx.setTransform(curDpr,0,0,curDpr,0,0);
+    sheetCtx.clearRect(0,0,W,SHEET_H);
+    sheetCtx.fillStyle = pal.paper;
+    sheetCtx.fillRect(0,0,W,SHEET_H);
+    sheetCtx.save();
+    /* the rigs work in world space, so shift world y 500 to the sheet floor */
+    sheetCtx.translate(0, SHEET_H - 40 - 500);
+
+    var prevScale = artScale;
+    /* 1.75 is as large as the character buffer holds without clipping his hair */
+    artScale = 1.75;
+    maskOn = false;
+
+    var hx=hero.x, hy=hero.y, hfv=hero.faceVis, hst=hero.step, hg=hero.gait,
+        hl=hero.lean, ha=hero.hairA, hb=hero.blink, hat=hero.atk, hd=hero.dash;
+    hero.x = 180; hero.y = 500; hero.faceVis = 1; hero.gait = 1;
+    hero.step = sheetT*5; hero.lean = 0.02; hero.hairA = Math.sin(sheetT*1.7)*0.12;
+    hero.blink = hb; hero.atk = -1; hero.dash = -1;
+    drawHero();
+    hero.x=hx; hero.y=hy; hero.faceVis=hfv; hero.step=hst; hero.gait=hg;
+    hero.lean=hl; hero.hairA=ha; hero.atk=hat; hero.dash=hd;
+
+    for(var i=0;i<sheetFoes.length;i++){
+      sheetFoes[i].step = sheetT*5 + i*1.1;
+      drawFoe(sheetFoes[i]);
+    }
+
+    artScale = prevScale;
+    sheetCtx.restore();
+
+    if(opt.paper){
+      sheetCtx.globalCompositeOperation = 'multiply';
+      sheetCtx.globalAlpha = 0.3;
+      sheetCtx.drawImage(paperCv, 0, 0, W, SHEET_H, 0, 0, W, SHEET_H);
+      sheetCtx.globalCompositeOperation = 'source-over';
+      sheetCtx.globalAlpha = 1;
+    }
+
+    sheetCtx.fillStyle = 'rgba(46,36,25,.55)';
+    sheetCtx.font = '500 13px "IBM Plex Mono", monospace';
+    sheetCtx.textAlign = 'center';
+    var names = ['ALEGUS','FRAYED WOLF','FRAYED BOAR','FRAYED HUNTER'];
+    var xs = [180, 420, 640, 840];
+    for(var n=0;n<4;n++) sheetCtx.fillText(names[n], xs[n], SHEET_H - 14);
+    sheetCtx.textAlign = 'left';
+
+    ctx = main;
+  }
+
   var worldCv = document.createElement('canvas'), worldCtx = worldCv.getContext('2d');
   var bakeHz = 10, bakeAccum = 0, bakes = 0, bakeRate = 0, secAccum = 0, bakeMs = 0;
 
@@ -795,6 +892,51 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     });
   }
 
+
+  /* ---------- faces ----------
+
+     Alegus is the only person in the Stone Age who is fully present, so he is
+     the only one who gets a whole face. The Frayed came loose from the weave
+     and their features came loose with them: an eye is a hole where an eye was,
+     a mouth is the shape of one. That is not a shortcut, it is the bible,
+     ALEGUS.md beat 8, where the bear "didn't have a mouth any more, just the
+     shape of one, and the worst part was that it was still trying to use it".
+
+     Everything here is a few pixels across, so it is drawn with paintFine:
+     flat fills, a third of the wobble, no bands. */
+
+  /* A Frayed feature: a void of bare paper with the paint failing around it. */
+  function voidEye(x, y, r, seed){
+    paintFine(blob(x, y, r*1.7, r*1.5, 7, seed), pal.inkc, seed, 0.30);
+    paintFine(blob(x, y, r, r*0.9, 7, seed+0.5), pal.paper, seed+0.5, 0.85);
+  }
+
+  /* brow: -1 is down and hard, +1 is up and open. Alegus sits at +0.35,
+     because wonder is his default register and one shape carries it. */
+  function alegusFace(brow, open, mouth){
+    var ink = pal.hairSh, skinS = pal.skinSh;
+
+    paintFine([[-7,-12],[-3,-9],[-4,-6],[-7,-7]], skinS, 71, 0.55);          /* ear */
+    paintFine([[7,-14],[11,-12],[10,-8],[7,-9]], skinS, 72, 0.45);           /* nose shadow */
+
+    var by = -15 - brow*2.2;
+    paintFine([[1,by+1],[9,by-1.6],[9.6,by+0.7],[1.4,by+2.6]], ink, 73, 0.8);
+    /* the far brow, smaller and paler, is what keeps it from reading as a
+       profile cut-out */
+    paintFine([[-5,by+1.4],[-1,by+0.4],[-0.8,by+2.2],[-5,by+3]], ink, 74, 0.45);
+
+    var eh = 1.1 + open*2.0;
+    paintFine(blob(5.2, -11.4, 2.1, eh*0.55, 7, 75), ink, 75, 0.9);
+    if(open > 0.45) paintFine(blob(5.6, -11.9, 0.8, 0.7, 6, 76), pal.paper, 76, 0.8);
+    paintFine(blob(-2.4, -11.6, 1.5, eh*0.44, 7, 77), ink, 77, 0.5);
+
+    if(mouth > 0.06){
+      paintFine(blob(6.2, -5.2, 2.6, 0.9 + mouth*2.2, 7, 78), ink, 78, 0.75);
+    } else {
+      paintFine([[4,-5.4],[8.4,-6],[8.4,-4.9],[4,-4.4]], ink, 78, 0.55);
+    }
+  }
+
   /* ---------- Alegus ----------
      Lean, long-limbed, a runner and not a brawler, per the bible. Narrow
      waist, high hips, and a club that is slightly too big for him. */
@@ -809,7 +951,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var A_CLUB = [[-4,-2],[4,-2],[5,18],[3.5,25],[-3.5,25],[-5,18]];
 
   function drawHero(){
-    var d = depth(hero.y), s = 1.12*d;
+    var d = depth(hero.y), s = 1.12*d*artScale;
     var th = hero.step;
     var amp = hero.gait;                 /* eased 0..1, so stopping settles */
     var bob, twist;
@@ -839,6 +981,17 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(hero.dash >= 4 && hero.dash < 14) lean += 0.36;
     lean += hero.lean;
 
+    /* expression. Curious by default, because that is the character; teeth
+       bared on the active frames; brows up and mouth open when hit. */
+    var faceBrow = 0.35, faceOpen = 1, faceMouth = 0.12;
+    if(hero.atk >= 12 && hero.atk < 20){ faceBrow = -0.85; faceMouth = 0.95; }
+    else if(hero.atk >= 0){ faceBrow = -0.35; faceMouth = 0.3; }
+    if(hero.dash >= 0){ faceOpen = 0.45; faceBrow = -0.2; }
+    if(hero.hurt > 0.25){ faceBrow = 0.8; faceMouth = 0.9; faceOpen = 0.35; }
+    else if(hero.hp < 35){ faceBrow = 0.55; faceMouth = 0.35; }
+    if(hero.dead > 0){ faceBrow = 0.2; faceOpen = 0; faceMouth = 0.2; }
+    if(hero.blink < 0) faceOpen = 0;
+
     blitChar(hero.x, hero.y,
       function(){ shadow(hero.x, hero.y+2, 25*s); },
       function(){
@@ -865,9 +1018,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
             {seed:16, ink:false, edgeW:3});
 
           /* head and hair ride a counter-twist and arrive late */
-          at(1, -88, -twist*1.6 + hero.hairA*0.35, function(){
+          at(1, -88, -twist*1.6 + hero.hairA*0.35 + hero.headA, function(){
             paint([[-11,-16],[-4,-22],[6,-21],[11,-13],[9,-3],[0,1],[-9,-4]],
               pal.skin, pal.skinSh, {seed:17, ink:false, edgeW:4});
+            alegusFace(faceBrow, faceOpen, faceMouth);
             at(0, 0, hero.hairA, function(){
               paint([[-12,-10],[-15,2],[-11,12],[-5,6],[-7,-6]],
                 pal.hair, pal.hairSh, {seed:18, ink:false, edgeW:4});
@@ -903,7 +1057,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   function drawFoe(f){
     var d = depth(f.y);
-    var s = (f.kind === 'boar' ? 1.16 : f.kind === 'hunter' ? 1.04 : 0.98) * d;
+    var s = (f.kind === 'boar' ? 1.16 : f.kind === 'hunter' ? 1.04 : 0.98) * d * artScale;
     var sq = f.squash > 0 ? f.squash : 0;
     blitChar(f.x, f.y,
       function(){ shadow(f.x, f.y+2, (f.kind==='boar'?38:30)*s); },
@@ -920,6 +1074,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
      spine. It trots, which means diagonal pairs, not four legs on one sine. */
   function wolfBody(f){
     var th = f.step, body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+    /* ears pin and the jaw opens as it closes, so the threat is on the face
+       before it is in the numbers */
+    var dd = Math.hypot(hero.x-f.x, hero.y-f.y);
+    var agg = Math.max(0, Math.min(1, (210-dd)/130));
     var pA = Math.sin(th), pB = Math.sin(th + Math.PI);
     var kA = Math.max(0, Math.sin(th+0.8))*0.8, kB = Math.max(0, Math.sin(th+Math.PI+0.8))*0.8;
     var pitch = 0.035*Math.sin(2*th);
@@ -947,11 +1105,25 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       at(24, -50, 0.5 + pitch*2, function(){
         paint(limb(16, 8, 7), body, sh, {seed:37, ink:false, edgeW:4});
         at(0, 15, -0.75 - pitch*2 + Math.sin(th*0.5)*0.06, function(){
-          paint([[-9,-16],[-4,-24],[-1,-15]], sh, pal.inkc, {seed:38, ink:false, edgeW:2});
-          paint([[3,-15],[8,-23],[9,-14]], sh, pal.inkc, {seed:39, ink:false, edgeW:2});
+          at(-5, -15, agg*0.85, function(){
+            paint([[-4,-1],[1,-9],[4,0]], sh, pal.inkc, {seed:38, ink:false, edgeW:2});
+          });
+          at(6, -14, agg*0.7, function(){
+            paint([[-3,-1],[2,-9],[3,0]], sh, pal.inkc, {seed:39, ink:false, edgeW:2});
+          });
           paint(blob(0,-6,10,9,8,f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:4});
           paint([[4,-10],[18,-6],[20,0],[16,4],[3,3]], sh, pal.inkc,
             {seed:f.seed+8, ink:false, edgeW:3});
+          /* the jaw: the shape of a mouth, opening on something it cannot bite
+             with, because there is nothing behind it */
+          if(agg > 0.12){
+            at(9, 1, agg*0.45, function(){
+              paintFine([[-5,0],[10,-1],[11,3],[-4,4]], pal.inkc, f.seed+21, 0.55);
+              paintFine([[0,0],[3,3],[6,0]], pal.paper, f.seed+22, 0.7);
+            });
+          }
+          voidEye(1.5, -8, 2.0, f.seed+23);
+          paintFine(blob(17,-2,1.5,1.3,6,f.seed+24), pal.inkc, f.seed+24, 0.6);
         });
       });
     });
@@ -1001,7 +1173,15 @@ It takes about 15 seconds, then prints a block to send back.</pre>
         paint(blob(3, 6, 14, 12, 8, f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:5});
         paint([[6,-2],[24,4],[26,13],[19,18],[5,15]], sh, pal.inkc,
           {seed:f.seed+8, ink:false, edgeW:4});
-        paint([[-6,-4],[-1,-13],[4,-3]], sh, pal.inkc, {seed:f.seed+9, ink:false, edgeW:2});
+        at(-1, -8, charging ? -0.5 : Math.sin(th*0.6)*0.2, function(){
+          paint([[-5,4],[0,-5],[5,5]], sh, pal.inkc, {seed:f.seed+9, ink:false, edgeW:2});
+        });
+        /* a boar's eye is small, high and set well back, which is most of why
+           the head reads as a boar's and not a dog's */
+        voidEye(1, 0, 1.6, f.seed+25);
+        paintFine(blob(23, 6, 1.5, 1.2, 6, f.seed+26), pal.inkc, f.seed+26, 0.65);
+        paintFine(blob(23, 11, 1.5, 1.2, 6, f.seed+27), pal.inkc, f.seed+27, 0.65);
+        paintFine([[9,14],[22,15],[22,17],[9,16]], pal.inkc, f.seed+28, 0.4);
         paint([[19,6],[27,-6],[31,-3],[25,10]], pal.stoneW, pal.stoneWSh,
           {seed:f.seed+10, ink:false, edgeW:2});
         paint([[17,13],[26,4],[29,7],[22,16]], pal.stoneW, pal.stoneWSh,
@@ -1037,10 +1217,17 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
       paint([[-10,-69],[10,-69],[12,-56],[10,-42],[-10,-42],[-12,-56]], body, sh,
         {seed:55, ink:false, edgeW:5});
+      /* head first, then the hood over it, so the hood frames a face rather
+         than hiding behind one */
+      paint(blob(3, -77, 8.5, 8.5, 8, f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:3});
+      /* everything under the hood is in shadow, and one eye catches the light.
+         At this size a shadow and a glint says more than a drawn face. */
+      paintFine(blob(4, -76, 7.5, 7, 8, f.seed+29), pal.inkc, f.seed+29, 0.62);
+      paintFine(blob(7.5, -78, 1.6, 1.3, 7, f.seed+30), pal.paper, f.seed+30,
+        f.state === 'aim' ? 0.95 : 0.6);
       /* the hood: a peak and a shoulder cape, nothing like his hair */
-      paint([[-12,-74],[-4,-90],[8,-88],[13,-74],[10,-64],[-9,-65]], sh, pal.inkc,
+      paint([[-12,-74],[-4,-91],[8,-89],[13,-76],[8,-70],[-2,-66],[-10,-66]], sh, pal.inkc,
         {seed:56, ink:false, edgeW:5});
-      paint(blob(3, -76, 8, 8, 8, f.seed+7), body, sh, {seed:f.seed+7, ink:false, edgeW:3});
 
       at(5, -66, arm, function(){
         paint(limb(22, 6, 4.6), body, sh, {seed:57, ink:false, edgeW:4});
@@ -1206,6 +1393,19 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.hairV += ((hairT - hero.hairA)*90 - hero.hairV*13) * dt;
     hero.hairA = Math.max(-0.9, Math.min(0.9, hero.hairA + hero.hairV*dt));
 
+    /* he looks at the nearest Frayed, which is the cheapest thing in the whole
+       rig and the one that most makes him seem to be thinking */
+    var look = 0, nearest = 1e9;
+    for(var q=0;q<foes.length;q++){
+      var qd = Math.hypot(foes[q].x-hero.x, foes[q].y-hero.y);
+      if(qd < nearest){ nearest = qd; look = (foes[q].y - hero.y) * 0.0022; }
+    }
+    if(nearest > 380) look = 0;
+    hero.headA += (Math.max(-0.3, Math.min(0.3, look)) - hero.headA) * Math.min(1, dt*6);
+
+    hero.blink -= dt;
+    if(hero.blink < -0.1) hero.blink = 2.0 + Math.random()*3.2;
+
     maskPt = [hero.x, hero.y-50];
 
     if(hero.atk>=0){
@@ -1346,6 +1546,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     var dt = Math.min(0.05,(now-last)/1000); last = now;
     if(hitStop > 0){ hitStop -= dt; dt *= 0.14; }
     step(dt); render();
+    sheetT += dt;
+    /* a model sheet does not need sixty frames a second, and four more
+       characters at nearly twice size would otherwise double the frame */
+    sheetAcc += dt;
+    if(sheetOn && benchI < 0 && sheetAcc >= 1/20){ sheetAcc = 0; drawSheet(); }
     frames++; acc += dt;
     if(acc>0.5){ fps = frames/acc; frames=0; acc=0; updateHud(); }
     requestAnimationFrame(loop);
@@ -1446,6 +1651,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
   bind('p_quant','quant'); bind('p_ink','ink'); bind('p_edge','edge');
   bind('p_res','reserve'); bind('p_wob','wob'); bind('p_paper','paper');
+  document.getElementById('p_sheet').addEventListener('change', function(e){
+    sheetOn = e.target.checked;
+    document.querySelector('.sheet-wrap').style.display = sheetOn ? '' : 'none';
+  });
 
   var sw1 = document.getElementById('s_wob'), vw1 = document.getElementById('v_wob');
   sw1.addEventListener('input', function(){
@@ -1551,6 +1760,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     var cssW = cv.clientWidth || W;
     cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
     cv.style.height = Math.round(cssW*H/W)+'px';
+    sheetCv.width = Math.round(W*dpr); sheetCv.height = Math.round(SHEET_H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
     sizeBuffers(dpr);
   }

@@ -128,4 +128,17 @@ half-opacity tell during the dash's invulnerable frames.
 Paid for by removing a canvas clip from the paint routine and skipping the wet
 bleed on parts too small to show it.
 
+**Reported:** movement much better, but the faces need more detail.
+
+**Done, with a design answer rather than more shapes.** Alegus gets a full face
+whose brow carries the character, expressions tied to what he is doing, a blink,
+and a head that turns toward the nearest Frayed. The Frayed get the features
+they lost: voids of bare paper where eyes were, a jaw opening on nothing. That
+is `ALEGUS.md` beat 8 rather than a small-size compromise.
+
+**Flagged:** at 960 by 600 a head is 25 pixels and a feature is three, so faces
+are inherently marginal in play. Added a model sheet at 1.75x under the play
+area so the design can be judged at all, and noted that a 1920 by 1080 shipping
+resolution doubles every face.
+
 **Edward's call:** *(to fill in)*
