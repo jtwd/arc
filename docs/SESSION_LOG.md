@@ -287,3 +287,60 @@ still plays; it just forgets.
 
 **Wanted:** whether coming back feels like arriving somewhere, or like a menu
 between attempts.
+
+---
+
+## Rung 7, content and feel
+
+**Built:** a run with a shape. Eight rooms to the Mammoth, eight door kinds, and
+three of the rooms behind those doors contain nothing that wants to kill you.
+
+**The Frayed Cave Bear** is the mini-boss the Mammoth needs you to have met: 220
+health, staggered by heavy hits, and slow enough that everything it does is
+legible. Its grab is the design: it takes hold of Alegus, it costs him health
+while he decides, and the only way out is the dash — the thing he was saving. It
+is the one attack in the game that takes a resource away and then asks for it
+back. Every other verb is locked while he is held, so the decision is small and
+total.
+
+Its face is `ALEGUS.md` beat 8 taken literally. The bear "didn't have a mouth
+any more, just the shape of one, and the worst part was that it was still trying
+to use it", so the mouth is a hole in the paint and it opens.
+
+**The bear could have been a bigger boar.** Two front-heavy quadrupeds with
+shoulder humps is exactly the mistake the first boar pass made against the wolf.
+What separates them is written up in `CHARACTER_RIGS.md`: the boar's outline
+detail spikes upward and the bear's hangs down, the bear is flat-footed where
+both others are on their toes, and it paces — the two legs on one side swing
+together — which nothing else in the Stone Age does.
+
+**Three elite modifiers**, Hardened, Swift and Frayed Deeper, marked with a gold
+paper reserve instead of the plain one. The reserve was built to guarantee
+readability; making it gold is the same mechanism doing a second job for free.
+Each modifier changes how you fight the thing rather than how long it takes,
+which is the boon rule applied to enemies.
+
+**Flint is spent inside a run and does not survive it.** Ochre is what he carries
+home and thinks about; flint is what he decides with while he is still cold. The
+trade fire sells three of six wares, and nobody is sitting at it.
+
+**Buying is a dwell, not a collision.** Walking into an altar offering is a
+gift; walking into a price is a mistake, and the doors are on the far side of
+the fire, so it has to be possible to cross the room without spending anything.
+Standing still for half a second costs nothing to learn and works the same under
+a thumb as under a keyboard.
+
+**Sharp Flint finally has a shop.** The right-hand rank of the third wall row has
+had a name and nothing to spend it on since the wall was built. `CAVE_WALL.md`
+row 3 is amended to match what was built.
+
+**Two harnesses, because I cannot see the screen.** One stubs enough DOM to run
+the real code and drives every creature, every room kind, every door and twelve
+complete runs; the other tracks a real transform stack and measures whether any
+rig overruns the 360-pixel character buffer. A clipped muzzle does not show up in
+a syntax check and does show up to a player. The reared bear has 24 pixels
+spare.
+
+**Wanted:** whether the grab reads as a bill arriving or as a stun; whether the
+quiet rooms earned the fight they each replaced; and whether there was ever
+enough flint to want all three stones and afford two.

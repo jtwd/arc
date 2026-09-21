@@ -20,7 +20,7 @@ Costs are per rank and are cumulative within a position.
 |---|---|---|---|---|---|
 | 1 | **Ember's Grace.** One extra Death Defiance per run | **First Strike.** The first hit in each room deals +50% | 3 / 5 | 30, 60, 120 / 20, 30, 40, 50, 60 | Start |
 | 2 | **Second Step.** One extra dash charge | **Long Step.** Dash i-frames +2 frames per rank | 1 / 4 | 50 / 30 each | Start |
-| 3 | **Red Earth.** +10% Ochre found per rank | **Sharp Flint.** +10% Flint found per rank | 5 / 5 | 40 each | Start |
+| 3 | **Red Earth.** +10% Ochre found per rank | **Sharp Flint.** Shops ask 8% less per rank | 5 / 5 | 40 each | Start |
 | 4 | **Thick Hide.** +5 max health per rank | **Quick Blood.** Heal 2% of damage dealt while below 30% health, +1% per rank | 10 / 5 | 25 each / 60 each | Row 1 rank 1 |
 | 5 | **Steady Hand.** Attack damage +3% per rank | **Sure Hand.** Special damage +5% per rank | 10 / 10 | 40 each | Row 3 rank 1 |
 | 6 | **Far Throw.** Cast damage +10% per rank | **Two Stones.** One extra Ember stone, then +1 Cast damage per rank after | 5 / 1+4 | 50 each / 200, then 60 each | Row 5 rank 3 |
@@ -30,6 +30,11 @@ Costs are per rank and are cumulative within a position.
 | 10 | **Long Memory.** Keep 10% of Flint between runs per rank | **Warm Start.** Begin each run in room 2 with room 1's reward granted | 5 / 1 | 120 each / 800 | Key of Ages, first Age 5 clear |
 | 11 | **Fray's Edge.** Enemies below 15% health die instantly, +3% per rank | **Loom's Mercy.** Death Defiance restores 60% health instead of 50%, +5% per rank | 5 / 4 | 150 each / 200 each | Key of Ages, first Age 7 clear |
 | 12 | **Handprint.** +2% damage per age cleared this run, per rank | **Thread.** Your weapon evolves one age early | 5 / 1 | 250 each / 2,000 | Key of Ages, first Terminus clear |
+
+Row 3 right was "+10% Flint found per rank" until the trade fire was actually
+built. A discount is the same arithmetic and it is felt in the right place: at
+the stone, while you are deciding, rather than invisibly out in a fight. Changed
+to 8% so five ranks is 40% off rather than half price.
 
 Row 12 right runs the timeline forward; holding a form, in `GAME_DESIGN.md` 4.4, refuses to. They are the two ways to take the Loom's hand off the weapon and they pair deliberately. Holding is free and unlocked through the story, so this row is the paid, opposite half of that idea and is priced as a late decision.
 

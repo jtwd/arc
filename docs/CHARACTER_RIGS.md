@@ -49,6 +49,7 @@ A gait is not one sine wave shared by every leg. The phase offsets are the gait.
 | Wolf | Trot | Diagonal pairs. Front-left with rear-right, front-right with rear-left |
 | Boar, approaching | Four-beat walk | Front and rear opposed |
 | Boar, charging | Gallop | Front pair together, rear pair together, offset by about a third of a cycle |
+| Cave Bear | Pace | Lateral pairs. Both legs on one side swing together, which is where the roll comes from |
 
 Two other details carry weight. The body bobs **twice** per stride, down at each
 foot plant, not once. And the knee bends on the forward swing only, never
@@ -62,18 +63,30 @@ The first pass drew the boar as a bigger wolf with tusks. That is why it did not
 read. Real distinction lives in the mass distribution, and it has to survive at
 25% screen size in greyscale.
 
-| | Wolf | Boar |
-|---|---|---|
-| Weight | Even, slightly forward | Heavily front |
-| Shoulder | Deep chest | A huge hump, the tallest point of the animal |
-| Hindquarters | Full, rounded | Small and low |
-| Head carriage | Level with the spine | Low, below the shoulder |
-| Legs | Long | Short and thick |
-| Outline detail | Upright ears, bushy tail | Bristle ridge along the spine, tusks curving up |
+| | Wolf | Boar | Cave Bear |
+|---|---|---|---|
+| Weight | Even, slightly forward | Heavily front | Heavily front, and much heavier |
+| Shoulder | Deep chest | A huge hump, the tallest point of the animal | A higher hump, set further forward, above the head |
+| Hindquarters | Full, rounded | Small and low | Small and low |
+| Head carriage | Level with the spine | Low, below the shoulder | Low, on a long neck, below the hump |
+| Legs | Long | Short and thick | Forelimbs longer than the hind, and flat-footed |
+| Outline detail | Upright ears, bushy tail | Bristle ridge along the spine, tusks curving up | A shaggy fringe hanging off the belly, round ears set wide |
 
 The bristle ridge is six small triangles and it is the single most identifying
 thing about the boar at a glance. Cheap outline detail beats expensive surface
 detail every time, because the outline is what survives being small.
+
+The bear's fringe is the same trick inverted on purpose: the boar's outline
+detail **spikes upward**, the bear's **hangs down**. Two front-heavy quadrupeds
+with humps could easily have become one animal drawn twice, and the direction of
+the fringe is what stops that happening in a thumbnail.
+
+Three other things separate the bear from both. It is **plantigrade**, so the
+whole foot is on the ground where the other two are up on their toes. It
+**paces**, which no other creature in the Stone Age does. And when it grabs, it
+**rears**, rotating everything above the hip while the hind feet stay planted:
+it is the only thing in the game taller than Alegus, and it is only taller for
+three quarters of a second.
 
 The hunter has a hood rather than hair, and a crouch, so it never reads as
 Alegus at a distance.
@@ -113,11 +126,19 @@ face is in hood shadow with a single catchlight that brightens when it aims.
 ## Seeing the work
 
 Faces this size cannot be judged in play. `tools/render-test/index.html` has a
-**model sheet** below the play area showing all four rigs at 1.75 times game
+**model sheet** below the play area showing all five rigs at 1.75 times game
 size, which is as large as the character buffer holds without clipping his hair.
-It redraws at 20 frames a second rather than 60, and it shares the rigs through
-one `artScale` multiplier so it can never drift out of step with what is
-actually in play.
+The bear is shown at two thirds of its fighting size, because at full size it
+does not fit beside the other four. It redraws at 20 frames a second rather than
+60, and it shares the rigs through one `artScale` multiplier so it can never
+drift out of step with what is actually in play.
+
+The character buffer is 360 by 360 with its origin at (180, 260), and a figure
+that overruns it is silently clipped, which is exactly the kind of bug that does
+not show up in a syntax check and does show up to a player. `tools/render-test`
+is measured by a headless bounds harness that runs every rig through every state
+with a real transform stack and reports the worst-case box. A reared bear is the
+tightest: 24 pixels of headroom.
 
 Worth deciding later: the test runs at 960 by 600. At a shipping resolution of
 1920 by 1080 every face doubles and these features stop being marginal.

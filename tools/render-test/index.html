@@ -166,9 +166,9 @@
 
 <div class="shell">
   <header>
-    <p class="eyebrow">EPOCH &middot; rung 6 &middot; the Hearth</p>
-    <h1>Die, come back, put your hand on the wall</h1>
-    <p>The loop is closed. You start at the fire, the Firekeeper says something new every time you return, you spend ochre on the Cave Wall, and you walk into the cold light to go again. Ten conversations, three wall rows with two sides each, and it all persists between visits. Walk to the left for the wall, into the light at the top to leave. <b>Space</b> advances the Firekeeper.</p>
+    <p class="eyebrow">EPOCH &middot; rung 7 &middot; content and feel</p>
+    <h1>Eight rooms, and not all of them want to kill you</h1>
+    <p>The run is a shape now rather than a corridor. Eight rooms to the Mammoth, and behind the doors there is a bounty, a gold-reserved elite, the Frayed Cave Bear that grabs and will not let go until you spend a dash, a trade fire where flint is spent, a hot spring, and one quiet overlook where nothing is trying to kill you. Walk to the left at the Hearth for the wall, into the light at the top to leave. <b>Space</b> advances the Firekeeper. At the trade fire, <b>stand still</b> in front of a stone to buy from it.</p>
   </header>
 
   <div class="rig">
@@ -241,8 +241,9 @@
 
   <div class="sheet-wrap">
     <p class="sheet-lab">Model sheet &middot; the same rigs at twice game size, because a head is
-      only about 25 pixels across in play and a face is three</p>
-    <canvas id="sheet" width="960" height="300" aria-label="The four characters drawn large, side by side"></canvas>
+      only about 25 pixels across in play and a face is three. The bear is shown
+      at two thirds of its fighting size, or it would not fit beside the others</p>
+    <canvas id="sheet" width="960" height="300" aria-label="The five characters drawn large, side by side"></canvas>
   </div>
 
   <pre class="bench" id="bench">Press B, or the button, to measure where the frame time goes.
@@ -258,7 +259,19 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       </div>
       <div class="card">
         <h3>Do they read as different animals?</h3>
-        <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. If you cannot tell them apart at a glance, the silhouettes are wrong.</p>
+        <p>The wolf has a deep chest and carries its head level. The boar is the opposite shape on purpose: a huge shoulder hump, tiny hindquarters, head low, and a bristle ridge that spikes the outline. The bear is flat-footed, front-heavy, shaggy where the boar is spiky, and it paces &mdash; both legs on one side together. If you cannot tell the three apart at a glance, the silhouettes are wrong.</p>
+      </div>
+      <div class="card">
+        <h3>Is the grab a good problem?</h3>
+        <p>The bear takes hold of you and it is costing you health while you decide. The only way out is the dash, which is the thing you were saving. It should feel like a bill arriving, not like a stun. If it just feels like being stunned, the answer is a longer wind-up, not less damage.</p>
+      </div>
+      <div class="card">
+        <h3>Did the quiet rooms earn their place?</h3>
+        <p>The spring, the trade fire and the overlook take a room each away from the fighting. If a run feels better with one of them in it, they stay. If they feel like a corridor with nothing in it, they go, and I will put the flint somewhere else.</p>
+      </div>
+      <div class="card">
+        <h3>Was there ever enough flint?</h3>
+        <p>You should arrive at the trade fire able to afford two of the three stones and want all three. If you can buy everything, the prices are wrong. If you can buy nothing, the bounty room is paying too little.</p>
       </div>
       <div class="card">
         <h3>Where do you leave the stone?</h3>
@@ -540,6 +553,23 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   function startDash(ax, ay){
     if(hero.dead > 0) return;
+    /* held: the dash does not move him, it breaks the grip. It still costs a
+       charge, which is the whole bargain — the bear takes the thing you were
+       saving and then makes you spend it to get it back. */
+    if(hero.held){
+      if(hero.dashUsed >= hero.dashCharges && hero.cartwheel <= 0) return;
+      var grabber = hero.held.by;
+      hero.held = null;
+      if(hero.cartwheel <= 0) hero.dashUsed++;
+      hero.hurt = 0.72;                 /* a breath of invulnerability */
+      hero.sinceDash = 0;
+      grabber.stagger = 0.85;
+      grabber.squash = 0.5;
+      hero.x -= grabber.face*54;
+      hitStop = 0.09;
+      floatText(hero.x, hero.y-76, 'loose', pal.glow);
+      return;
+    }
     /* Free Turn: the slam can be abandoned at any frame, which turns the
        slowest move in the game into something you can throw out safely */
     if(hero.slam >= 0){
@@ -579,22 +609,38 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var KINDS = {
     wolf:   {hp:30,  dmg:8,  speed:62,  reach:34},
     boar:   {hp:90,  dmg:18, speed:52,  reach:42},
-    hunter: {hp:45,  dmg:12, speed:56,  reach:30}
+    hunter: {hp:45,  dmg:12, speed:56,  reach:30},
+    /* the mini-boss. A big single target that teaches sustained damage and the
+       fact that heavy hits stagger, which is what the Mammoth needs you to know */
+    bear:   {hp:220, dmg:25, speed:44,  reach:52}
   };
 
-  function spawnFoe(kind){
+  /* Elite modifiers, one per elite, marked by a gold reserve instead of the
+     plain one. Each changes how you fight it, not how long it takes. */
+  var ELITES = {
+    hardened: {name:'Hardened', desc:'will not be moved until it is hurt'},
+    swift:    {name:'Swift',    desc:'and it barely warns you'},
+    deeper:   {name:'Frayed Deeper', desc:'and it comes apart into more of itself'}
+  };
+
+  function spawnFoe(kind, elite, at, scale){
     if(!kind){
       var r = Math.random();
       kind = r < 0.5 ? 'wolf' : (r < 0.78 ? 'boar' : 'hunter');
     }
     var side = Math.random()<0.5 ? -60 : W+60;
     var k = KINDS[kind];
-    foes.push({ kind:kind, x:side, y: GND_TOP+40+Math.random()*(H-GND_TOP-70),
-                face: side<0?1:-1, step:Math.random()*10,
-                hp:k.hp, maxHp:k.hp, flash:0, squash:0,
-                burn:0, root:0, shatter:0, stagger:0,
-                seed: Math.floor(Math.random()*900)+40,
-                state:'approach', timer: Math.random()*1.4, cool:0 });
+    var hp = k.hp * (scale || 1);
+    if(elite === 'hardened') hp *= 2;
+    var f = { kind:kind, x: at ? at.x : side,
+              y: at ? at.y : GND_TOP+40+Math.random()*(H-GND_TOP-70),
+              face: side<0?1:-1, step:Math.random()*10,
+              hp:hp, maxHp:hp, flash:0, squash:0, scale: scale || 1,
+              burn:0, root:0, shatter:0, stagger:0, elite: elite || null,
+              seed: Math.floor(Math.random()*900)+40,
+              state:'approach', timer: Math.random()*1.4, cool:0 };
+    foes.push(f);
+    return f;
   }
 
 
@@ -609,8 +655,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     /* tar slows them as readily as it slows you, which is the whole point of
        having it in the room */
     var slow = zoneAt(g.x, g.y, 'tar') ? 0.45 : 1;
+    if(g.elite === 'swift') slow *= 1.4;
     stepStatus(g, dt);
     if(foes.indexOf(g) < 0) return;
+    /* Hardened will not be moved while it is still fresh */
+    if(g.elite === 'hardened' && g.hp > g.maxHp*0.7){ g.root = 0; g.stagger = 0; }
     if(g.root > 0 || g.stagger > 0){
       g.step += dt*2;
       if(g.flash > 0) g.flash -= dt;
@@ -669,6 +718,56 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       } else {
         g.timer -= dt;
         if(g.timer <= 0){ g.state = 'approach'; g.cool = 1.4; }
+      }
+
+    } else if(g.kind === 'bear'){
+      /* Slow, enormous, and it does not care about your dash unless you spend
+         it well. The grab is the whole lesson: it is the only attack that takes
+         the dash away from you and then asks for it back. */
+      var tele = g.elite === 'swift' ? 0.68 : 1;
+      if(g.state === 'approach'){
+        g.x += (dx/dd) * k.speed * slow * dt;
+        g.y += (dy/dd) * k.speed * slow * dt;
+        if(dd < 150 && g.cool <= 0){
+          var pick = Math.random();
+          if(pick < 0.42){
+            g.state = 'swipe'; g.timer = 0.9*tele;
+            tell('line', g.x, g.y, Math.atan2(dy,dx), 150, 0.9*tele);
+          } else if(pick < 0.72){
+            g.state = 'grab'; g.timer = 0.75*tele;
+            tell('mark', g.x + (dx/dd)*70, g.y + (dy/dd)*40, 0, 54, 0.75*tele);
+          } else {
+            g.state = 'roar'; g.timer = 0.7*tele;
+            tell('mark', g.x, g.y, 0, 165, 0.7*tele);
+          }
+        }
+      } else if(g.state === 'swipe'){
+        g.timer -= dt;
+        if(g.timer <= 0){
+          if(dd < k.reach + 100 && dx*g.face > -50){ hurtHero(k.dmg); }
+          shock.push({x:g.x + (dx/dd)*50, y:g.y + (dy/dd)*30, t:0, r:90});
+          g.state = 'approach'; g.cool = 1.3;
+        }
+      } else if(g.state === 'grab'){
+        g.timer -= dt;
+        if(g.timer <= 0){
+          if(dd < 110 && !heroInvulnerable()){
+            hero.held = {by:g, t:0};
+            floatText(hero.x, hero.y-84, 'dash', pal.glow);
+          }
+          g.state = 'approach'; g.cool = 2.2;
+        }
+      } else if(g.state === 'roar'){
+        g.timer -= dt;
+        if(g.timer <= 0){
+          if(dd < 190){
+            hurtHero(10);
+            hero.x += (dx/dd)*150; hero.y += (dy/dd)*80;
+          }
+          shock.push({x:g.x, y:g.y, t:0, r:190});
+          hitStop = 0.05;
+          g.state = 'approach'; g.cool = 1.7;
+        }
       }
 
     } else {
@@ -741,11 +840,17 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var artScale = 1;
   var sheetCv = document.getElementById('sheet'), sheetCtx = sheetCv.getContext('2d');
   var SHEET_H = 300, sheetT = 0, sheetAcc = 0, sheetOn = true;
+  /* The bear is drawn at 0.62 of its fighting size, which is the only way it
+     and the other four fit on one sheet without the character buffer clipping
+     its muzzle. Everything about the shape is still there to be judged. */
   var sheetFoes = [
-    {kind:'wolf',   x:420, y:500, face:1, step:0, seed:140, state:'approach', flash:0, squash:0, hp:30, maxHp:30},
-    {kind:'boar',   x:640, y:500, face:1, step:0, seed:260, state:'approach', flash:0, squash:0, hp:90, maxHp:90},
-    {kind:'hunter', x:840, y:500, face:1, step:0, seed:380, state:'aim',      flash:0, squash:0, hp:45, maxHp:45}
+    {kind:'wolf',   x:330, y:500, face:1, step:0, seed:140, state:'approach', flash:0, squash:0, hp:30, maxHp:30},
+    {kind:'boar',   x:480, y:500, face:1, step:0, seed:260, state:'approach', flash:0, squash:0, hp:90, maxHp:90},
+    {kind:'hunter', x:612, y:500, face:1, step:0, seed:380, state:'aim',      flash:0, squash:0, hp:45, maxHp:45},
+    {kind:'bear',   x:800, y:500, face:1, step:0, seed:520, state:'approach', flash:0, squash:0,
+     hp:220, maxHp:220, scale:0.62}
   ];
+  var onSheet = false;
 
   function drawSheet(){
     var main = ctx;
@@ -759,6 +864,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     sheetCtx.translate(0, SHEET_H - 40 - 500);
 
     var prevScale = artScale, prevPal = pal;
+    onSheet = true;
     pal = AGES.stone;
     /* 1.75 is as large as the character buffer holds without clipping his hair */
     artScale = 1.75;
@@ -766,7 +872,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     var hx=hero.x, hy=hero.y, hfv=hero.faceVis, hst=hero.step, hg=hero.gait,
         hl=hero.lean, ha=hero.hairA, hb=hero.blink, hat=hero.atk, hd=hero.dash;
-    hero.x = 180; hero.y = 500; hero.faceVis = 1; hero.gait = 1;
+    hero.x = 140; hero.y = 500; hero.faceVis = 1; hero.gait = 1;
     hero.step = sheetT*5; hero.lean = 0.02; hero.hairA = Math.sin(sheetT*1.7)*0.12;
     hero.blink = hb; hero.atk = -1; hero.dash = -1;
     drawHero();
@@ -780,6 +886,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
     artScale = prevScale;
     pal = prevPal;
+    onSheet = false;
     sheetCtx.restore();
 
     if(opt.paper){
@@ -793,9 +900,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     sheetCtx.fillStyle = 'rgba(46,36,25,.55)';
     sheetCtx.font = '500 13px "IBM Plex Mono", monospace';
     sheetCtx.textAlign = 'center';
-    var names = ['ALEGUS','FRAYED WOLF','FRAYED BOAR','FRAYED HUNTER'];
-    var xs = [180, 420, 640, 840];
-    for(var n=0;n<4;n++) sheetCtx.fillText(names[n], xs[n], SHEET_H - 14);
+    var names = ['ALEGUS','FRAYED WOLF','FRAYED BOAR','FRAYED HUNTER','FRAYED CAVE BEAR'];
+    var xs = [140, 330, 480, 612, 800];
+    for(var n=0;n<names.length;n++) sheetCtx.fillText(names[n], xs[n], SHEET_H - 14);
     sheetCtx.textAlign = 'left';
 
     ctx = main;
@@ -828,7 +935,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     bakes++;
   }
 
-  function blitChar(wx, wy, shadowFn, bodyFn){
+  function blitChar(wx, wy, shadowFn, bodyFn, haloCol){
     charCtx.setTransform(curDpr,0,0,curDpr,0,0);
     charCtx.clearRect(0,0,CB,CB);
     var main = ctx;
@@ -844,13 +951,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     if(opt.reserve){
       haloCtx.setTransform(1,0,0,1,0,0);
       haloCtx.clearRect(0,0,haloCv.width,haloCv.height);
-      var r = 3.4 * curDpr;
+      /* an elite gets a wider reserve in gold. It is the same guarantee of
+         readability doing a second job: you can see what it is from across the
+         room, and you were told before you walked in. */
+      var r = (haloCol ? 5.0 : 3.4) * curDpr;
       for(var a=0;a<12;a++){
         var ang = a/12*Math.PI*2;
         haloCtx.drawImage(charCv, Math.cos(ang)*r, Math.sin(ang)*r);
       }
       haloCtx.globalCompositeOperation = 'source-in';
-      haloCtx.fillStyle = pal.paper;
+      haloCtx.fillStyle = haloCol || pal.paper;
       haloCtx.fillRect(0,0,haloCv.width,haloCv.height);
       haloCtx.globalCompositeOperation = 'source-over';
       ctx.drawImage(haloCv, dx, dy, CB, CB);
@@ -1225,6 +1335,92 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     ctx.textAlign = 'left';
   }
 
+  /* ---------- the trade fire ----------
+     Nobody is sitting at it. The room says one thing — someone lit this and is
+     not here any more — and then it lets you shop without comment. */
+  function drawTradeFire(){
+    var fx = W*0.5, fy = GND_TOP + 66;
+    ctx.globalAlpha = 0.18; ctx.fillStyle = pal.inkc;
+    trace(blob(fx, fy+16, 50, 14, 9, 701)); ctx.fill();
+    ctx.globalAlpha = 1;
+    for(var i=0;i<6;i++){
+      var a = i/6*Math.PI*2 + 0.4;
+      paint(blob(fx + Math.cos(a)*34, fy + 12 + Math.sin(a)*10, 12, 8, 8, 702+i),
+        pal.rock, pal.rockSh, {seed:702+i, ink:false, edgeW:4});
+    }
+    at(fx, fy, 0, function(){
+      var w1 = 1 + Math.sin(wobT*6.9)*0.16, w2 = 1 + Math.sin(wobT*5.1+1.7)*0.2;
+      paint([[-19,12],[-9,-17*w1],[-1,2],[9,-25*w2],[19,12]], '#C96A22', '#8A3D12',
+        {seed:711, ink:false, edgeW:5});
+      paint([[-10,12],[-3,-11*w2],[3,0],[9,-15*w1],[12,12]], pal.glow, '#C96A22',
+        {seed:712, ink:false, edgeW:4});
+      /* the smoke goes straight up, because nothing here is moving */
+      ctx.globalAlpha = 0.16;
+      paint(blob(2 + Math.sin(wobT*0.9)*5, -52, 13, 26, 10, 713), pal.inkc, pal.inkc,
+        {seed:713, ink:false, edgeW:9});
+      ctx.globalAlpha = 1;
+    });
+    drawWares();
+  }
+
+  function drawWares(){
+    if(!run.wares) return;
+    ctx.textAlign = 'center';
+    for(var i=0;i<run.wares.length;i++){
+      var o = run.wares[i];
+      var can = run.flint >= o.cost;
+      var lift = Math.sin(wobT*1.5 + i)*3;
+      ctx.save();
+      ctx.translate(o.x, o.y + lift);
+      ctx.globalAlpha = 0.2; ctx.fillStyle = pal.inkc;
+      trace(blob(0, 66, 40, 11, 9, i+3)); ctx.fill();
+      ctx.globalAlpha = o.sold ? 0.34 : 1;
+      paint([[-46,-64],[46,-66],[50,58],[-50,60]], pal.paper, '#D6CBB4',
+        {seed:i*13+90, ink:false, edgeW:6});
+      /* gold when you can afford it, grey when you cannot, and the price is
+         always on the stone: never make anyone count in their head */
+      paint([[-40,-56],[40,-58],[42,-30],[-42,-28]],
+        o.sold ? '#9A9081' : (can ? '#D8A62B' : '#8A7F6B'), pal.inkc,
+        {seed:i*13+91, ink:false, edgeW:5});
+      ctx.fillStyle = pal.inkc;
+      ctx.font = '600 15px Fraunces, Georgia, serif';
+      ctx.fillText(o.sold ? 'taken' : o.name, 0, -2);
+      ctx.font = '400 10.5px "IBM Plex Mono", monospace';
+      ctx.globalAlpha = (o.sold ? 0.34 : 1) * 0.62;
+      ctx.fillText(o.sold ? '—' : (o.cost + ' FLINT'), 0, -40);
+      ctx.globalAlpha = (o.sold ? 0.34 : 1) * 0.78;
+      if(!o.sold) wrapText(o.desc, 0, 18, 84, 13);
+      /* the dwell, filling: stand here and it is yours */
+      if(o.t > 0 && !o.sold){
+        ctx.globalAlpha = 0.2; ctx.fillStyle = pal.inkc;
+        ctx.fillRect(-34, 46, 68, 6);
+        ctx.globalAlpha = 1; ctx.fillStyle = pal.glow;
+        ctx.fillRect(-34, 46, 68*o.t, 6);
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    ctx.textAlign = 'left';
+  }
+
+  /* ---------- the overlook ----------
+     One line at a time, slowly, with the doors held back until they are done.
+     It is the only place in a run where the game asks him to stop. */
+  function drawStory(){
+    if(run.state !== 'story' || !run.story) return;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = pal.inkc;
+    for(var i=0;i<run.story.length;i++){
+      var t = run.storyT - (0.9 + i*2.6);
+      if(t <= 0) continue;
+      ctx.globalAlpha = Math.min(1, t*1.4) * 0.88;
+      ctx.font = '400 20px Fraunces, Georgia, serif';
+      ctx.fillText(run.story[i], W*0.5, H*0.30 + i*34);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+  }
+
   function wrapText(txt, x, y, maxw, lh){
     var words = txt.split(' '), line = '', lines = [];
     ctx.font = '400 12px "IBM Plex Sans", sans-serif';
@@ -1275,16 +1471,34 @@ It takes about 15 seconds, then prints a block to send back.</pre>
 
   function drawFoe(f){
     var d = depth(f.y);
-    var s = (f.kind === 'boar' ? 1.16 : f.kind === 'hunter' ? 1.04 : 0.98) * d * artScale;
+    var s = (f.kind === 'boar' ? 1.16 : f.kind === 'hunter' ? 1.04 :
+             f.kind === 'bear' ? 1.72 : 0.98) * (f.scale || 1) * d * artScale;
     var sq = f.squash > 0 ? f.squash : 0;
     blitChar(f.x, f.y,
-      function(){ shadow(f.x, f.y+2, (f.kind==='boar'?38:30)*s); },
+      function(){ shadow(f.x, f.y+2, (f.kind==='boar'?38:f.kind==='bear'?52:30)*s); },
       function(){
         ctx.scale(f.face*s*(1+sq*0.16), s*(1-sq*0.2));
         if(f.kind === 'hunter') hunterBody(f);
         else if(f.kind === 'boar') boarBody(f);
+        else if(f.kind === 'bear') bearBody(f);
         else wolfBody(f);
-      });
+      },
+      f.elite ? '#D8A62B' : null);
+
+    /* Ordinary Frayed get no health bar: the flash when they are hit and the
+       wash when they die is the whole readout, and it keeps the screen paper.
+       Anything that takes more than a few swings has earned one, because
+       otherwise sustained damage feels like nothing is happening. */
+    if((f.maxHp >= 120 || f.elite) && !onSheet){
+      var bw = f.kind === 'bear' ? 74 : 44, k = Math.max(0, f.hp/f.maxHp);
+      var by = f.y - (f.kind === 'bear' ? 104 : 74)*d*artScale;
+      ctx.globalAlpha = 0.18; ctx.fillStyle = pal.inkc;
+      ctx.fillRect(f.x - bw/2 - 1, by - 1, bw + 2, 6);
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = f.elite ? '#D8A62B' : '#8A4A26';
+      ctx.fillRect(f.x - bw/2, by, bw*k, 4);
+      ctx.globalAlpha = 1;
+    }
   }
 
   /* ---------- wolf ----------
@@ -1463,6 +1677,119 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     });
   }
 
+  /* ---------- the Frayed Cave Bear ----------
+
+     It has to be neither the wolf nor the boar at a glance, so the whole
+     design is in three decisions:
+
+       plantigrade   both feet flat on the ground, heel and all, where the
+                     wolf and the boar are up on their toes
+       front-heavy   a shoulder hump higher than the boar's and set further
+                     forward, forelimbs longer than the hind, tiny rump
+       paced         the two legs on one side swing together, which gives it
+                     a roll no other creature in the Stone Age has
+
+     And one more that is behaviour rather than shape: when it grabs, it rears.
+     It is the only thing in the game that is taller than Alegus, and it is only
+     taller for three quarters of a second.
+
+     The face is ALEGUS.md beat 8 verbatim: it "didn't have a mouth any more,
+     just the shape of one, and the worst part was that it was still trying to
+     use it". So the mouth is a hole in the paint, and it opens. */
+  function bearBody(f){
+    var th = f.step, body = foeInk(f, pal.foe), sh = foeInk(f, pal.foeSh);
+
+    var rear = 0;
+    if(f.state === 'grab')       rear = 1 - Math.max(0, f.timer)/0.75;
+    else if(f.state === 'swipe') rear = (1 - Math.max(0, f.timer)/0.90)*0.82;
+    else if(f.state === 'roar')  rear = (1 - Math.max(0, f.timer)/0.70)*0.34;
+    rear = Math.max(0, Math.min(1, rear));
+
+    /* the pace: near pair together, far pair together, half a cycle apart */
+    var pN = Math.sin(th), pF = Math.sin(th + Math.PI);
+    var kN = Math.max(0, Math.sin(th + 0.9))*0.5;
+    var kF = Math.max(0, Math.sin(th + Math.PI + 0.9))*0.5;
+    /* the roll. A paced walk rocks side to side, and at this size the rock is
+       what sells the weight. The body still bobs twice a stride. */
+    var roll = 0.055*Math.sin(th) + 0.018*Math.sin(2*th);
+
+    /* the swiping arm, which is the whole tell: back, over, and slow home */
+    var sw = f.state === 'swipe' ? 1 - Math.max(0, f.timer)/0.90 : -1;
+    var swing = sw < 0 ? 0 : (sw < 0.62 ? -1.5*(sw/0.62) : -1.5 + 3.3*((sw-0.62)/0.38));
+
+    /* far hind leg stays planted: everything above the hip rotates, the feet
+       do not, which is what makes the rear read as a rear and not a tilt */
+    legIK(-30, -30, pF*0.34, kF + 0.34, 15, 14, 9, sh, pal.inkc, 81, true);
+
+    at(-24, -12, -rear*1.16 + roll, function(){
+
+      /* far foreleg, behind the barrel and darker for it */
+      at(0, 0, 0, function(){
+        var hipF2 = rear > 0.05 ? -1.25 - rear*0.55 : (sw >= 0 ? swing*0.55 : pF*0.36);
+        legIK(52, -34, hipF2, rear > 0.05 ? 0.8 : kF + 0.3, 19, 16, 9.5,
+              sh, pal.inkc, 82, true);
+      });
+
+      /* rump: small, and it has to look small */
+      paint(blob(2, -34, 16, 14, 9, f.seed+2), body, sh,
+        {seed:f.seed+2, ink:false, edgeW:6});
+      /* the barrel, rising steeply into the shoulder */
+      paint([[-4,-40],[10,-50],[34,-56],[54,-54],[62,-40],[58,-24],[18,-22],[-2,-26]],
+        body, sh, {seed:f.seed+3, ink:false, edgeW:7});
+      /* the hump. The silhouette lives on this one shape, so it is painted
+         last of the mass and it overlaps the neck. */
+      paint(blob(46, -58, 19, 15, 10, f.seed), body, sh,
+        {seed:f.seed, ink:false, edgeW:7});
+
+      /* shag. The boar has a ridge that spikes upward; the bear has a fringe
+         that hangs down, so the two silhouettes cannot be confused even in a
+         thumbnail. */
+      for(var i=0;i<7;i++){
+        var t = i/6;
+        var bx = 2 + t*52, by = -24 + Math.sin(t*3.1)*3;
+        paint([[bx-4,by-3],[bx+4,by-3],[bx+1,by+7+((i*37)%5)]], sh, pal.inkc,
+          {seed:64+i, ink:false, edgeW:2});
+      }
+
+      /* near foreleg, in front of everything, painted light */
+      var hipN2 = rear > 0.05 ? -1.05 - rear*0.75 : (sw >= 0 ? swing : pN*0.36);
+      legIK(56, -36, hipN2, rear > 0.05 ? 0.55 : kN + 0.28, 19, 16, 10,
+            body, sh, 83, true);
+
+      /* the neck is long and the head hangs off the end of it below the hump,
+         which is the last thing that separates it from a boar */
+      at(62, -46, 0.30 - rear*0.55 + (f.state === 'roar' ? -0.5 : 0), function(){
+        paint(limb(15, 11, 10), body, sh, {seed:84, ink:false, edgeW:5});
+        at(0, 14, -0.22 + rear*0.35, function(){
+          /* skull */
+          paint(blob(0, 0, 13, 11, 9, f.seed+7), body, sh,
+            {seed:f.seed+7, ink:false, edgeW:5});
+          /* round ears, set wide and low. A wolf's are pinned and pointed. */
+          paint(blob(-7, -11, 5.5, 5.5, 8, f.seed+12), sh, pal.inkc,
+            {seed:f.seed+12, ink:false, edgeW:3});
+          paint(blob(6, -12, 5, 5, 8, f.seed+13), body, sh,
+            {seed:f.seed+13, ink:false, edgeW:3});
+          /* the muzzle: short, blunt, dished, nothing like the boar's snout */
+          paint([[6,-5],[21,-3],[23,5],[17,10],[5,9]], sh, pal.inkc,
+            {seed:f.seed+8, ink:false, edgeW:4});
+
+          var gape = f.state === 'roar' ? 1 :
+                     (f.state === 'grab' ? 0.55 + rear*0.4 : 0.18);
+          /* the shape of a mouth, and nothing behind it */
+          paintFine(blob(15, 4 + gape*2, 6.5, 1.6 + gape*5.2, 9, f.seed+31),
+            pal.inkc, f.seed+31, 0.34);
+          paintFine(blob(15, 4 + gape*2, 4.8, 0.9 + gape*4.0, 9, f.seed+32),
+            pal.paper, f.seed+32, 0.9);
+          voidEye(0, -3, 2.4, f.seed+33);
+          paintFine(blob(22, 0, 2.0, 1.6, 7, f.seed+34), pal.inkc, f.seed+34, 0.7);
+        });
+      });
+    });
+
+    /* near hind leg last, so it sits in front of the rump */
+    legIK(-26, -31, pN*0.34, kN + 0.34, 15, 14, 9.6, body, sh, 85, true);
+  }
+
   /* death: the figure runs like a wet painting and drains into the paper */
   function drawWash(w){
     var k = w.t/w.dur;
@@ -1502,6 +1829,13 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       } else if(o.k === 'ice'){
         paint(blob(o.x, o.y, o.rx, o.ry, 13, o.x), '#E3EEF4', '#BCD4E2',
           {seed:o.x, ink:false, edgeW:10});
+      } else if(o.k === 'pool'){
+        paint(blob(o.x, o.y, o.rx, o.ry, 13, o.x), '#79ADA8', '#47787A',
+          {seed:o.x, ink:false, edgeW:11});
+        ctx.globalAlpha = 0.42;
+        paint(blob(o.x, o.y-6, o.rx*0.62, o.ry*0.48, 11, o.x+3), '#D2E7E2', '#79ADA8',
+          {seed:o.x+7, ink:false, edgeW:8});
+        ctx.globalAlpha = 1;
       } else if(o.k === 'gap'){
         paint(blob(o.x, o.y, o.rx, o.ry, 15, o.x), '#4E5E6B', '#26313A',
           {seed:o.x, ink:false, edgeW:10});
@@ -1521,6 +1855,32 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       paint(blob(0,0,10,10,9,5), '#D9883D', '#8A4F1E', {seed:5, ink:false, edgeW:3});
       paintFine(blob(0,0,4.5,4.5,8,6), pal.paper, 6, 0.9);
       paintFine(blob(3,-1,2,2,7,7), '#8A4F1E', 7, 0.9);
+    } else if(kind === 'flint'){
+      /* a struck flake, with the bare paper of the fresh break down one edge */
+      paint([[-8,6],[-2,-11],[9,-2],[5,9]], pal.stoneW, pal.stoneWSh,
+        {seed:9, ink:false, edgeW:3});
+      paintFine([[-2,-10],[6,-2],[3,4]], pal.paper, 10, 0.85);
+    } else if(kind === 'elite'){
+      /* three claw marks in gold: the same gold as the reserve it is warning
+         you about, so the promise and the thing match */
+      for(var c=0;c<3;c++){
+        paint([[-8+c*7,-10],[-5+c*7,-10],[-2+c*7,9],[-6+c*7,9]], '#D8A62B', '#8A6512',
+          {seed:11+c, ink:false, edgeW:2});
+      }
+    } else if(kind === 'shop'){
+      paint([[-8,9],[8,9],[6,2],[0,-11],[-6,2]], '#C96A22', '#8A3D12',
+        {seed:14, ink:false, edgeW:3});
+      paintFine([[-3,8],[3,8],[1,1],[-1,-4],[-3,2]], pal.glow, 15, 0.9);
+    } else if(kind === 'spring'){
+      paint(blob(0,3,10,6,9,16), '#79ADA8', '#47787A', {seed:16, ink:false, edgeW:3});
+      paintFine(blob(0,1,5.5,3,8,17), '#D2E7E2', 17, 0.85);
+      paintFine([[-4,-8],[-2,-12],[-3,-6]], pal.paper, 18, 0.7);
+      paintFine([[4,-7],[2,-12],[5,-5]], pal.paper, 19, 0.7);
+    } else if(kind === 'story'){
+      /* a horizon: a pale band with a dark land under it */
+      paintFine([[-11,-3],[11,-4],[11,-9],[-11,-8]], pal.paper, 20, 0.85);
+      paint([[-11,-2],[-3,-7],[3,-4],[11,-8],[11,9],[-11,9]], pal.rock, pal.rockSh,
+        {seed:21, ink:false, edgeW:3});
     } else {
       paint([[-9,4],[0,-9],[9,4],[3,4],[3,10],[-3,10],[-3,4]], pal.stoneW, pal.stoneWSh,
         {seed:8, ink:false, edgeW:3});
@@ -1587,7 +1947,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.dashUsed = 0; hero.sinceDash = 9; hero.dashHits = {};
     hitStop = 0; kills = 0;
     boons = {attack:null, special:null, cast:null, dash:null, call:null, duo:null};
-    run.ochre = 0; run.over = 0; run.layout = null;
+    run.ochre = 0; run.flint = 0; run.over = 0; run.layout = null;
+    run.seen = {}; run.bounty = 1; run.wares = null; run.noFlintT = 0;
+    hero.held = null;
     floats = []; roomWash.on = false; wash.on = false;
     shock = []; seeds = []; embers = []; boss = null;
     stone = {state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0};
@@ -2002,8 +2364,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     ctx.font = '500 12px "IBM Plex Mono", monospace';
     ctx.fillText('room ' + run.room + ' / ' + run.rooms +
       (run.layout ? '   ' + run.layout.name.toLowerCase() : ''), 14, 40);
-    ctx.fillText('ochre ' + run.ochre, 14, 56);
+    ctx.fillText('ochre ' + run.ochre + '    flint ' + run.flint, 14, 56);
     ctx.globalAlpha = 1;
+    drawStory();
 
     if(run.state === 'cleared' && run.clearT < 1.6){
       ctx.globalAlpha = Math.min(1, run.clearT*3) * Math.max(0, 1-(run.clearT-1.1)/0.5);
@@ -2080,6 +2443,29 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       ax = 0; ay = 0;
     }
     if(talk.on){ ax = 0; ay = 0; }
+
+    /* The bear's grab. It has him, it is costing him, and the only way out is
+       the dash. A held Alegus cannot walk and cannot swing, so the decision is
+       small and total: spend the charge now or bleed while you keep it. */
+    if(hero.held){
+      var hb = hero.held.by;
+      if(foes.indexOf(hb) < 0 || hero.dead > 0 || run.state !== 'fight'){
+        hero.held = null;
+      } else {
+        hero.held.t += dt;
+        hero.x += (hb.x + hb.face*46 - hero.x) * Math.min(1, dt*9);
+        hero.y += (hb.y + 8 - hero.y) * Math.min(1, dt*9);
+        if(hero.held.t > 0.5){
+          hero.held.t -= 0.5;
+          hero.hp -= 7; hero.taken += 7; hero.hurt = 0.34;
+          hitPulse = 0.6;
+          if(hero.hp <= 0 && !tryDefiance()){
+            hero.hp = 0; hero.dead = 2.2; hero.held = null;
+          }
+        }
+        ax = 0; ay = 0;
+      }
+    }
 
     /* dash: 4 frames of startup, 10 invulnerable, 6 of recovery. The i-frames
        are the whole combat system. Without them every telegraph is unfair. */
@@ -2320,10 +2706,11 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       return;
     }
 
-    if(run.state === 'cleared') drawDoors();
+    if(run.state === 'cleared' || run.state === 'shop') drawDoors();
     drawGroundFx();
     drawTells();
     if(run.state === 'altar') drawOffers();
+    if(run.state === 'shop') drawTradeFire();
 
     var all = [];
     if(boss) all.push({y:boss.y, d:boss, k:'b'});
@@ -2619,7 +3006,7 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   var stone = { state:'held', x:0, y:0, vx:0, vy:0, host:null, t:0 };
 
   function castStone(){
-    if(stone.state !== 'held' || hero.dead > 0 || hero.atk >= 0) return;
+    if(stone.state !== 'held' || hero.dead > 0 || hero.atk >= 0 || hero.held) return;
     var a = 0, best = 1e9;
     for(var i=0;i<foes.length;i++){
       var d = Math.hypot(foes[i].x-hero.x, foes[i].y-hero.y);
@@ -2706,14 +3093,14 @@ It takes about 15 seconds, then prints a block to send back.</pre>
   }
 
   function startAttack(){
-    if(hero.atk >= 0 || hero.dead > 0) return;
+    if(hero.atk >= 0 || hero.dead > 0 || hero.held) return;
     /* Rolling Strike: straight to the active frames. Dash, hit, dash, hit. */
     hero.atk = (has('attack','rolling') && hero.sinceDash < 0.4) ? 11.5 : 0;
     hero.hitThisSwing = false;
   }
 
   function startSlam(){
-    if(hero.slam >= 0 || hero.atk >= 0 || hero.dead > 0) return;
+    if(hero.slam >= 0 || hero.atk >= 0 || hero.dead > 0 || hero.held) return;
     hero.slam = 0;
     hero.slamHit = false;
   }
@@ -2838,6 +3225,16 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     var i = foes.indexOf(f);
     if(i < 0) return;
     washes.push({x:f.x, y:f.y, t:0, dur:0.75, seed:f.seed, base:pal.foe, sh:pal.foeSh});
+    /* Frayed Deeper: it was never one thing to begin with */
+    if(f.elite === 'deeper' && (f.scale || 1) > 0.6){
+      for(var d=0;d<2;d++){
+        spawnFoe(f.kind, null, {x:f.x + (d?34:-34), y:f.y + (d?12:-12)}, 0.5);
+      }
+    }
+    run.flint += Math.round(
+      (3 + Math.floor(Math.random()*4) + (f.kind === 'bear' ? 14 : 0) + (f.elite ? 6 : 0))
+      * (run.bounty || 1) * (f.scale || 1));
+    if(hero.held && hero.held.by === f) hero.held = null;
     if(has('dash','tread') && f.root > 0){
       hero.hp = Math.min(hero.maxHp, hero.hp + 3*mul('dash'));
     }
@@ -3299,8 +3696,9 @@ It takes about 15 seconds, then prints a block to send back.</pre>
      ------------------------------------------------------------------ */
 
   var run = {
-    room: 1, rooms: 6, state: 'fight', clearT: 0,
-    ochre: 0, layout: null, doors: [], over: 0
+    room: 1, rooms: 8, state: 'fight', clearT: 0,
+    ochre: 0, flint: 0, bounty: 1, layout: null, doors: [], over: 0,
+    seen: {}, wares: null, story: null, storyT: 0, noFlintT: 0
   };
   var obstacles = [];
   var floats = [];
@@ -3336,7 +3734,126 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       note:'anything in the tar is slowed, including them',
       build:function(){
         obstacles.push({k:'tar', x:W*0.5, y:H*0.70, rx:120, ry:52});
+      } },
+
+    /* The three quiet rooms. A roguelike that is nothing but fights is a
+       corridor, and the rooms between the fights are where a run gets a shape
+       you can remember afterwards. None of them can be entered by accident:
+       you saw the door. */
+    { id:'trade',   name:'Trade fire',
+      note:'someone is still keeping a fire',
+      build:function(){} },
+    { id:'spring',  name:'Hot spring',
+      note:'warm water, and nothing in it',
+      build:function(){
+        obstacles.push({k:'pool', x:W*0.5, y:H*0.66, rx:128, ry:58});
+      } },
+    { id:'overlook',name:'The overlook',
+      note:'you can see a long way from here',
+      build:function(){
+        obstacles.push({k:'rock', x:W*0.22, y:H*0.44, rx:52, ry:22});
+        obstacles.push({k:'rock', x:W*0.79, y:H*0.47, rx:46, ry:20});
       } }
+  ];
+
+  /* layouts that are only reached deliberately, so the random fight picker
+     must never hand you one */
+  var QUIET = {lake:1, trade:1, spring:1, overlook:1};
+  function layoutById(id){
+    for(var i=0;i<LAYOUTS.length;i++) if(LAYOUTS[i].id === id) return LAYOUTS[i];
+    return LAYOUTS[0];
+  }
+
+  /* ---------- what is behind a door ----------
+     A door kind is a promise about the next room. Six of the eight change the
+     room itself rather than handing you a number, which is the difference
+     between a choice and a slot machine. */
+  var DOORS = {
+    ochre:  {room:'fight',  label:'ochre'},
+    heal:   {room:'fight',  label:'a spring'},
+    idea:   {room:'altar',  label:'an idea'},
+    flint:  {room:'flint',  label:'a bounty'},
+    elite:  {room:'elite',  label:'something bigger'},
+    shop:   {room:'shop',   label:'a trade fire'},
+    spring: {room:'spring', label:'hot water'},
+    story:  {room:'story',  label:'a long view'},
+    out:    {room:'fight',  label:'the way home'}
+  };
+
+  /* ---------- the trade fire ----------
+     Flint is spent here and nowhere else, and it does not survive the run.
+     That is deliberate: ochre is what you carry home and think about, flint is
+     what you decide with while you are still cold. */
+  var WARES = [
+    {id:'bound', name:'Bound wound', cost:30,
+     desc:'forty back, and it stays bound',
+     buy:function(){ hero.hp = Math.min(hero.maxHp, hero.hp + 40); }},
+    {id:'axle',  name:'Second axle', cost:55,
+     desc:'one more dash, for the rest of the run',
+     buy:function(){ hero.dashCharges++; }},
+    {id:'hide',  name:'Thicker hide', cost:45,
+     desc:'twenty more to lose before you lose',
+     buy:function(){ hero.maxHp += 20; hero.hp += 20; }},
+    {id:'ground',name:'Ground ochre', cost:25,
+     desc:'flint is no use at the Hearth. Ochre is',
+     buy:function(){ run.ochre += 34; }},
+    {id:'half',  name:'A half-thought', cost:60,
+     desc:'an Invention, and you do not get to choose it',
+     buy:function(){
+       var pool = INVENTIONS.filter(function(x){ return !boons[x.slot]; });
+       if(!pool.length) pool = INVENTIONS;
+       var p = pool[Math.floor(Math.random()*pool.length)];
+       var rar = rollRarity();
+       boons[p.slot] = {id:p.id, inv:p.inv, slot:p.slot, name:p.name,
+                        desc:p.desc, mul:rar.mul, rar:rar.name};
+       floatText(W*0.5, H*0.42, rar.name + '  ' + p.name, INVENTORS[p.inv].col);
+     }},
+    {id:'stoke', name:'Stoked fire', cost:35,
+     desc:'the Call comes back full',
+     buy:function(){ hero.call = 100; }}
+  ];
+
+  /* Sharp Flint, the right-hand rank of row three, has had a name and no
+     shop to spend it in since the wall was built. It has one now. */
+  function wareCost(base){
+    return Math.max(8, Math.round(base * (1 - 0.08*wallIs('r3','R'))));
+  }
+
+  function makeWares(){
+    var pool = WARES.slice(), out = [];
+    while(out.length < 3 && pool.length){
+      out.push(pool.splice(Math.floor(Math.random()*pool.length), 1)[0]);
+    }
+    var xs = [W*0.27, W*0.5, W*0.73];
+    return out.map(function(w, i){
+      return {id:w.id, name:w.name, cost:wareCost(w.cost), desc:w.desc, buy:w.buy,
+              x:xs[i], y:H*0.60, sold:false, t:0};
+    });
+  }
+
+  function buyWare(w){
+    if(w.sold || run.flint < w.cost) return;
+    run.flint -= w.cost;
+    w.sold = true;
+    w.buy();
+    floatText(hero.x, hero.y-76, w.name, pal.glow);
+  }
+
+  /* ---------- the overlook ----------
+     One quiet room per run where nothing is trying to kill him and the game
+     says what the run is about. Lines are the Stone Age beats of
+     STORY_SCHEDULE.md, and they are timed slowly enough to be read. */
+  var OVERLOOK = [
+    ['The ice goes on until it stops being white and starts being sky.',
+     'Somewhere under it is the summer he was born in.'],
+    ['He counts the fires on the plain. Four. Last winter it was nine.',
+     'He does not count his own.'],
+    ['From up here the Frayed move like weather.',
+     'They do not hunt. They drift, and things die where they drift.'],
+    ['Wren said the mammoth was here before the cold was.',
+     'He has never been sure whether that was comfort.'],
+    ['He has come this far four times and he knows the way now.',
+     'Knowing the way is not the same as arriving.']
   ];
 
   var REWARDS = {
@@ -3376,23 +3893,33 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     floats.push({x:x, y:y, t:0, txt:txt, col:col || pal.inkc});
   }
 
+  function eliteRoll(){
+    var k = Object.keys(ELITES);
+    return k[Math.floor(Math.random()*k.length)];
+  }
+
   function enterRoom(n, kind){
     run.room = n;
     run.kind = kind || 'fight';
-    run.state = run.kind === 'altar' ? 'altar' : 'fight';
     run.offers = [];
+    run.wares = null;
+    run.story = null; run.storyT = 0;
+    run.bounty = run.kind === 'flint' ? 3 : 1;
     run.clearT = 0;
     run.doors = [];
     obstacles = [];
     foes = []; shots = []; tells = []; washes = [];
+    hero.held = null;
 
     /* never the same layout twice running, so a run never feels like a corridor */
     var pick;
-    if(run.kind === 'boss'){
-      pick = LAYOUTS.filter(function(l){ return l.id === 'lake'; })[0];
-    } else {
+    if(run.kind === 'boss')        pick = layoutById('lake');
+    else if(run.kind === 'shop')   pick = layoutById('trade');
+    else if(run.kind === 'spring') pick = layoutById('spring');
+    else if(run.kind === 'story')  pick = layoutById('overlook');
+    else {
       do { pick = LAYOUTS[Math.floor(Math.random()*LAYOUTS.length)]; }
-      while((run.layout && pick.id === run.layout.id) || pick.id === 'lake');
+      while((run.layout && pick.id === run.layout.id) || QUIET[pick.id]);
     }
     run.layout = pick;
     pick.build();
@@ -3405,42 +3932,111 @@ It takes about 15 seconds, then prints a block to send back.</pre>
     hero.taken = 0;
     run.firstHit = false;
     boss = null;
+
     if(run.kind === 'boss'){
+      run.state = 'fight';
       spawnBoss();
       hero.y = H*0.92;
       floatText(W*0.5, H*0.44, 'She has not moved in a long time', pal.inkc);
+
     } else if(run.kind === 'altar'){
+      run.state = 'altar';
       run.offers = makeOffers();
-      floatText(W*0.5, H*0.44, 'An altar to ' + INVENTORS[run.altarOf].name, INVENTORS[run.altarOf].col);
+      floatText(W*0.5, H*0.44, 'An altar to ' + INVENTORS[run.altarOf].name,
+        INVENTORS[run.altarOf].col);
+
+    } else if(run.kind === 'shop'){
+      /* the doors are open from the moment you arrive. Nothing here is a fight,
+         so nothing here should feel like being kept */
+      run.state = 'shop';
+      run.wares = makeWares();
+      makeDoors();
+      floatText(W*0.5, H*0.42, 'Someone is still keeping a fire', pal.glow);
+
+    } else if(run.kind === 'spring'){
+      run.state = 'cleared';
+      makeDoors();
+      floatText(W*0.5, H*0.42, 'Warm water, and nothing in it', '#79ADA8');
+
+    } else if(run.kind === 'story'){
+      run.state = 'story';
+      run.story = OVERLOOK[Math.floor(Math.random()*OVERLOOK.length)];
+      run.storyT = 0;
+
+    } else if(run.kind === 'elite'){
+      run.state = 'fight';
+      if(Math.random() < 0.5){
+        spawnFoe('bear', null, {x:W*0.5, y:GND_TOP+90});
+        floatText(W*0.5, H*0.42, 'It has been waiting out of the wind', '#D8A62B');
+      } else {
+        var kinds2 = ['wolf','boar','hunter'];
+        for(var e=0;e<2;e++){
+          var el = eliteRoll();
+          spawnFoe(kinds2[Math.floor(Math.random()*kinds2.length)], el);
+          if(e === 0){
+            floatText(W*0.5, H*0.42, ELITES[el].name + ', ' + ELITES[el].desc, '#D8A62B');
+          }
+        }
+      }
+
     } else {
-      /* the roster thickens as the run goes on */
-      var budget = 2 + Math.floor(n*0.9);
+      run.state = 'fight';
+      /* the roster thickens as the run goes on, and a bounty room is simply a
+         thicker one that pays in flint */
+      var budget = Math.min(9, 2 + Math.floor(n*0.85)) + (run.kind === 'flint' ? 2 : 0);
       while(budget > 0){
         var r = Math.random();
-        if(budget >= 3 && r < 0.35){ spawnFoe('boar'); budget -= 3; }
-        else if(budget >= 2 && r < 0.62){ spawnFoe('hunter'); budget -= 2; }
-        else { spawnFoe('wolf'); budget -= 1; }
+        /* from the third room on, ordinary fights start carrying one gold
+           reserve, so the elite door is a promise of more of a thing you have
+           already met rather than a surprise */
+        var el2 = (run.room >= 3 && Math.random() < 0.13) ? eliteRoll() : null;
+        if(budget >= 3 && r < 0.35){ spawnFoe('boar', el2); budget -= 3; }
+        else if(budget >= 2 && r < 0.62){ spawnFoe('hunter', el2); budget -= 2; }
+        else { spawnFoe('wolf', el2); budget -= 1; }
       }
-      floatText(W*0.5, H*0.46, pick.name, pal.inkc);
+      floatText(W*0.5, H*0.46,
+        run.kind === 'flint' ? 'A bounty: ' + pick.name.toLowerCase() : pick.name, pal.inkc);
     }
   }
 
   function makeDoors(){
-    var kinds = ['ochre','heal','idea'];
     var n = run.room >= run.rooms ? 1 : (Math.random() < 0.35 ? 3 : 2);
     var xs = n === 1 ? [W*0.5] : (n === 2 ? [W*0.34, W*0.66] : [W*0.24, W*0.5, W*0.76]);
     run.doors = [];
+
+    /* The pool is weighted by repetition rather than by numbers, which keeps
+       the whole thing readable at a glance. A quiet room can only be offered
+       once per run, so finding one still means something. */
+    var pool = ['ochre','ochre','heal','heal','idea','idea','flint'];
+    var nextIsBoss = run.room + 1 >= run.rooms;
+    if(!nextIsBoss){
+      if(run.room >= 2 && !run.seen.elite)  pool.push('elite');
+      if(run.room >= 3 && !run.seen.shop){
+        pool.push('shop');
+        if(run.room >= 4) pool.push('shop');
+      }
+      if(run.room >= 3 && !run.seen.spring) pool.push('spring');
+      if(run.room >= 2 && run.room <= 4 && !run.seen.story) pool.push('story','story','story');
+    }
+
+    var used = {};
     for(var i=0;i<n;i++){
-      run.doors.push({
-        x: xs[i], y: GND_TOP + 34,
-        kind: run.room >= run.rooms ? 'out' : kinds[Math.floor(Math.random()*kinds.length)],
-        t: 0
-      });
+      var kind = 'ochre';
+      if(run.room >= run.rooms){
+        kind = 'out';
+      } else {
+        for(var t=0;t<30;t++){
+          kind = pool[Math.floor(Math.random()*pool.length)];
+          if(!used[kind]) break;
+        }
+        used[kind] = 1;
+      }
+      run.doors.push({x: xs[i], y: GND_TOP + 34, kind: kind, t: 0});
     }
   }
 
   function takeDoor(d){
-    if(run.state !== 'cleared') return;
+    if(run.state !== 'cleared' && run.state !== 'shop') return;
     run.state = 'leaving';
     roomWash.on = true; roomWash.t = 0; roomWash.half = false;
     run.pending = d.kind;
@@ -3482,7 +4078,52 @@ It takes about 15 seconds, then prints a block to send back.</pre>
       run.clearT = 0;
       makeDoors();
     }
-    if(run.state === 'cleared'){
+    if(run.noFlintT > 0) run.noFlintT -= dt;
+
+    /* You have to stand still in front of a stone to buy from it. Walking
+       into an altar offering is a gift; walking into a price is a mistake, and
+       the doors are on the far side of the fire, so it has to be possible to
+       cross the room without spending anything. Dwelling costs nothing to
+       learn and works the same under a thumb as under a keyboard. */
+    if(run.state === 'shop'){
+      for(var w=0;w<run.wares.length;w++){
+        var wr = run.wares[w];
+        var near = !wr.sold && Math.hypot(hero.x-wr.x, (hero.y-wr.y)*1.3) < 58;
+        if(near && run.flint >= wr.cost){
+          wr.t = Math.min(1, wr.t + dt/0.55);
+          if(wr.t >= 1) buyWare(wr);
+        } else {
+          if(near && run.noFlintT <= 0){
+            run.noFlintT = 1.4;
+            floatText(hero.x, hero.y-76, 'not enough flint', '#8A7F6B');
+          }
+          wr.t = Math.max(0, wr.t - dt*2.4);
+        }
+      }
+    }
+
+    /* the hot spring is the one place health comes back without being bought,
+       and it comes back slowly enough that standing in it is a decision */
+    if(run.kind === 'spring' && zoneAt(hero.x, hero.y, 'pool')){
+      if(hero.hp < hero.maxHp){
+        hero.hp = Math.min(hero.maxHp, hero.hp + 17*dt);
+        if(Math.random() < dt*2.2){
+          floatText(hero.x + (Math.random()-0.5)*40, hero.y-52, '\u00b7', '#79ADA8');
+        }
+      }
+    }
+
+    /* the overlook holds the doors back until the lines have been read */
+    if(run.state === 'story'){
+      run.storyT += dt;
+      if(run.storyT > 2.4 + run.story.length*2.6){
+        run.state = 'cleared';
+        run.clearT = 0;
+        makeDoors();
+      }
+    }
+
+    if(run.state === 'cleared' || run.state === 'shop'){
       run.clearT += dt;
       for(var d=0;d<run.doors.length;d++){
         var dr = run.doors[d];
@@ -3500,11 +4141,10 @@ It takes about 15 seconds, then prints a block to send back.</pre>
           run.state = 'done';
         } else if(run.room + 1 >= run.rooms){
           enterRoom(run.room + 1, 'boss');
-          if(run.pending !== 'idea') applyReward(run.pending);
-        } else if(run.pending === 'idea'){
-          enterRoom(run.room + 1, 'altar');
+          applyReward(run.pending);
         } else {
-          enterRoom(run.room + 1);
+          run.seen[run.pending] = 1;
+          enterRoom(run.room + 1, (DOORS[run.pending] || DOORS.ochre).room);
           applyReward(run.pending);
         }
       }

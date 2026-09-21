@@ -77,6 +77,13 @@ Six rooms per run drawn from a pool of ten layouts. Room 1 is always a combat ro
 
 **Door reward types:** Ochre, Flint, Invention (shows the Inventor's symbol), Health, and the boss door which is always visible from room 5.
 
+As built in `tools/render-test/index.html`, a door kind is a promise about the
+next *room*, not only about a reward, and there are eight: ochre, health, an
+Invention altar, a bounty room that pays triple Flint, an elite room, the trade
+fire, the hot spring, and the overlook. The quiet three can each appear at most
+once in a run, so finding one still means something. A run is eight rooms
+because three of them may not contain a fight.
+
 ---
 
 ## 5. The Mammoth Mother

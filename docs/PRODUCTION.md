@@ -87,8 +87,8 @@ Each rung ends with something playable. Hours are total build effort, most of it
 | 3 | **A run** | Clear six rooms through doors with rewards, then restart | 60 | built |
 | 4 | **Inventions** | Build a run out of 20 boons from four Inventors | 60 | built, rewritten once after playtest |
 | 5 | **The boss** | Fight the Mammoth Mother through three phases | 80 | built |
-| 6 | **The Hearth** | Die, come back, spend Ochre, read the Firekeeper, go again | 70 | built, awaiting a verdict |
-| 7 | **Content and feel** | Play ten runs without repeating a room or getting bored | 140 | 12 weeks |
+| 6 | **The Hearth** | Die, come back, spend Ochre, read the Firekeeper, go again | 70 | built, passed |
+| 7 | **Content and feel** | Play ten runs without repeating a room or getting bored | 140 | first pass built |
 | 8 | **Ship** | Buy it on Steam | 120 | 10 weeks |
 
 Roughly **800 hours, 12 to 18 months**, and the spread is entirely about how many hours the two of you actually find.
@@ -98,6 +98,30 @@ Roughly **800 hours, 12 to 18 months**, and the spread is entirely about how man
 **Rung 2 is the gate.** If the combat does not feel good, nothing after it matters and the project should stop or change. Edward decides, and he should be ruthless about it. It is much cheaper to fail at week fourteen than at month twelve.
 
 **Rung 7 is where projects like this die.** The work stops being new and becomes ten room layouts and a balance pass. Budget it honestly, which is why it is the largest rung on the ladder.
+
+The first pass of rung 7 is in the build. What it added, and why each thing is
+there rather than being more of what was already there:
+
+- **A run is eight rooms**, not six, because three of the new room kinds do not
+  contain a fight and the fighting had to stay the same length.
+- **The Frayed Cave Bear**, a mini-boss that teaches sustained damage and the
+  fact that heavy hits stagger, which is what the Mammoth Mother needs you to
+  already know.
+- **Three elite modifiers** — Hardened, Swift, Frayed Deeper — marked by a gold
+  paper reserve instead of the plain one. Each changes how you fight the thing,
+  not how long it takes: the rule for boons applies to enemies too.
+- **Flint**, a second currency that is spent inside a run and does not survive
+  it, so it is decided with while you are still cold. Ochre remains the thing
+  you carry home and think about.
+- **Four new door kinds** behind the standing stones: a bounty, an elite, a
+  trade fire, a hot spring, and one overlook. You still see what is behind a
+  door before you commit.
+- **The trade fire** finally gives Sharp Flint, the right-hand rank of the third
+  wall row, something to be sharp about. It has had a name and no shop since the
+  wall was built.
+
+What is left in rung 7: a real balance pass across ten runs, and more layouts.
+Six fight layouts is not ten.
 
 ---
 
